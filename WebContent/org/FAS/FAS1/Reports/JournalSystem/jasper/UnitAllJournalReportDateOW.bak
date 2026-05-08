@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="UnitAllJournalReportDateOW"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="680"
+		 pageHeight="842"
+		 columnWidth="620"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="txtCB_Year_from" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year_to" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="officeCode" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords_to" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="txtCB_Month_from" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month_to" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT M.Accounting_Unit_Id AS Unit_Id ,A.Accounting_Unit_Name,
+  m.cashbook_year ,m.ACCOUNTING_FOR_OFFICE_ID ,a.ACCOUNTING_UNIT_OFFICE_ID,
+  M.Cashbook_Month ,m.REMARKS,
+  M.Voucher_Date,m.JOURNAL_TYPE_CODE,
+  (SELECT ACCOUNTING_UNIT_NAME
+    FROM FAS_MST_ACCT_UNITS unit
+    Where Accounting_Unit_Id=M.ACCOUNTING_UNIT_ID
+    )As Orgname,
+  (select JOURNAL_TYPE_DESC from FAS_MST_JOURNAL_TYPE where JOURNAL_TYPE_CODE=m.JOURNAL_TYPE_CODE) as journal_desc,
+  t.account_head_code ,
+  m.VOUCHER_NO AS voc_no ,
+  T.Amount ,
+  T.Cr_Dr_Indicator,T.SL_NO,
+  T.Sub_Ledger_Type_Code,
+  (SELECT Sub_Ledger_Type_Desc
+  FROM Com_Mst_Sl_Types
+  WHERE Sub_Ledger_Type_Code=T.Sub_Ledger_Type_Code
+  )AS Typedesc,
+ (select SL_CODENAME from SL_TYPE_CODE_NAME_VIEW_M where SL_CODE=T.SL_NO and SL_TYPE=T.Sub_Ledger_Type_Code)AS sl_desc
+ from FAS_JOURNAL_MASTER m,
+  FAS_JOURNAL_TRANSACTION t ,
+  Fas_Mst_Acct_Units A,
+  Fas_Mst_Journal_Type B
+WHERE m.accounting_unit_id =t.accounting_unit_id
+and  T.Cr_Dr_Indicator='CR' 
+AND m.cashbook_year        = t.cashbook_year
+AND m.cashbook_month       = t.cashbook_month
+and m.ACCOUNTING_FOR_OFFICE_ID=$P{officeCode}
+AND m.VOUCHER_NO           = t.VOUCHER_NO
+AND m.JOURNAL_STATUS       ='L'
+
+And M.ACCOUNTING_FOR_OFFICE_ID  = A.ACCOUNTING_UNIT_OFFICE_ID
+and  M.ACCOUNTING_FOR_OFFICE_ID in
+ (SELECT office_id
+FROM COM_MST_ALL_OFFICES_VIEW
+WHERE region_office_id =$P{officeCode}
+)
+and To_Date((m.Cashbook_Month
+  ||'-'
+  || m.Cashbook_Year),'mm-yyyy') BETWEEN To_Date($P{txtCB_Month_from}
+  ||'-'
+  ||$P{txtCB_Year_from},'mm-yyyy')
+AND to_date($P{txtCB_Month_to}
+  ||'-'
+  ||$P{txtCB_Year_to},'mm-yyyy') 
+AND M.Journal_Type_Code       =B.Journal_Type_Code
+AND m.accounting_unit_id IN
+  (Select Accounting_Unit_Id
+  FROM FAS_TRIAL_BALANCE_STATUS
+  Where Tb_Status   ='Y'
+ And Cashbook_Year =M.Cashbook_Year
+AND cashbook_month=M.Cashbook_Month
+  )Order By Unit_Id,
+voc_no,T.sl_no]]></queryString>
+
+	<field name="UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="REMARKS" class="java.lang.String"/>
+	<field name="VOUCHER_DATE" class="java.sql.Timestamp"/>
+	<field name="JOURNAL_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="ORGNAME" class="java.lang.String"/>
+	<field name="JOURNAL_DESC" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="VOC_NO" class="java.math.BigDecimal"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CR_DR_INDICATOR" class="java.lang.String"/>
+	<field name="SL_NO" class="java.math.BigDecimal"/>
+	<field name="SUB_LEDGER_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="TYPEDESC" class="java.lang.String"/>
+	<field name="SL_DESC" class="java.lang.String"/>
+
+	<variable name="tot_jnl" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_1" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="grd_tot" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+
+		<group  name="grp_1" >
+			<groupExpression><![CDATA[$F{TYPEDESC}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="241"
+						y="0"
+						width="71"
+						height="17"
+						forecolor="#05A4A4"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Voucher Total:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="318"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_jnl}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="grp_tot" >
+			<groupExpression><![CDATA[$F{AMOUNT}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="25"
+						y="11"
+						width="576"
+						height="29"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Report for Journal Details]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="498"
+						y="32"
+						width="34"
+						height="16"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="533"
+						y="32"
+						width="66"
+						height="16"
+						key="textField-1"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="34"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="6"
+						width="24"
+						height="25"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Vr.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="37"
+						y="6"
+						width="51"
+						height="25"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Vr.Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="88"
+						y="6"
+						width="94"
+						height="25"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[ Journal Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="186"
+						y="6"
+						width="11"
+						height="25"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Sl.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="200"
+						y="6"
+						width="18"
+						height="25"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[ A/c code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="231"
+						y="6"
+						width="66"
+						height="25"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="297"
+						y="6"
+						width="15"
+						height="25"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[CR/DR]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="318"
+						y="6"
+						width="51"
+						height="25"
+						key="staticText-10"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Sl Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="369"
+						y="6"
+						width="39"
+						height="25"
+						key="staticText-11"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[SL Code ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="449"
+						y="6"
+						width="100"
+						height="25"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Remarks]]></text>
+				</staticText>
+				<line direction="BottomUp">
+					<reportElement
+						x="5"
+						y="31"
+						width="600"
+						height="2"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="BottomUp">
+					<reportElement
+						x="5"
+						y="2"
+						width="600"
+						height="2"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="23"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="37"
+						y="0"
+						width="54"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{VOUCHER_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="91"
+						y="0"
+						width="91"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TYPEDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="318"
+						y="0"
+						width="51"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TYPEDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="200"
+						y="0"
+						width="31"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JOURNAL_TYPE_CODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="231"
+						y="0"
+						width="66"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="297"
+						y="0"
+						width="21"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_DR_INDICATOR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="0"
+						width="33"
+						height="21"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="449"
+						y="0"
+						width="160"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REMARKS}.trim()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="185"
+						y="0"
+						width="14"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SL_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="369"
+						y="2"
+						width="70"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SL_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="21"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="432"
+						y="-32"
+						width="71"
+						height="17"
+						forecolor="#05A4A4"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Grand Total:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="509"
+						y="-32"
+						width="100"
+						height="18"
+						key="textField-3"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{grd_tot}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

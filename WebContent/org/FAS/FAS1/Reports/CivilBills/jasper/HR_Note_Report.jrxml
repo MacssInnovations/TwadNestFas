@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="HR_Note_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="Fin_year" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="CByear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="CBmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="billmajorcode" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="billminorcode" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="billsubcode" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="note_No" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT hr_note_no,
+  note_date,
+  note_amount,
+--'( '||to_char(to_date(note_amount,'J'), 'JSP')|| ' ONLY )' as note_amount_1,
+
+    replace(upper(substr(to_char(to_date(note_amount,'J'), 'JSP'), 1, 1)) || lower(substr(to_char(to_date(note_amount,'J'), 'JSP'), 2))||' only','-',' ')
+ as note_amount_1,  a.account_head_code AS acctcode,
+  b.account_head_desc,
+  c.CURRENT_YEAR_BUDGET_ALLOTTED               AS bud_provided,
+  a.note_amount                                AS bud_spent,
+  c.CURRENT_YEAR_BUDGET_ALLOTTED-a.note_amount AS bal_amt,
+  d.office_name,
+  a.FINANCIAL_YEAR
+FROM
+  (SELECT accounting_unit_id,
+    accounting_for_office_id,
+    hr_note_no,
+    FINANCIAL_YEAR,
+    note_date,
+    note_amount,
+    account_head_code
+  FROM fas_hr_note_details
+  WHERE accounting_unit_id     =$P{accountingunitid}
+  AND accounting_for_office_id = $P{accountofficeid}
+  AND bill_major_type_code     =$P{billmajorcode}
+  AND bill_minor_type_code     =$P{billminorcode}
+  AND bill_sub_type_code       = $P{billsubcode}
+  AND financial_year           =$P{Fin_year}
+  AND hr_note_no               =$P{note_No}
+  )a
+INNER JOIN
+  (SELECT account_head_code,account_head_desc FROM com_mst_account_heads
+  ) b
+ON a.account_head_code = b.account_head_code
+JOIN
+  (SELECT office_id,office_name FROM com_mst_offices
+  )d
+ON d.office_id = a.accounting_for_office_id
+INNER JOIN
+  (SELECT account_head_code,
+    CURRENT_YEAR_BUDGET_ALLOTTED,
+    BUDGET_SOFAR_SPENT,
+    FINANCIAL_YEAR
+  FROM COM_BUDGET_DETAILS
+  WHERE accounting_unit_id     =$P{accountingunitid}
+  AND accounting_for_office_id =$P{accountofficeid}
+  )c
+ON trim(c.FINANCIAL_YEAR)=trim(a.FINANCIAL_YEAR)
+AND c.account_head_code  = a.account_head_code]]></queryString>
+
+	<field name="HR_NOTE_NO" class="java.math.BigDecimal"/>
+	<field name="NOTE_DATE" class="java.sql.Timestamp"/>
+	<field name="NOTE_AMOUNT" class="java.lang.Double"/>
+	<field name="NOTE_AMOUNT_1" class="java.lang.String"/>
+	<field name="ACCTCODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="BUD_PROVIDED" class="java.math.BigDecimal"/>
+	<field name="BUD_SPENT" class="java.lang.Double"/>
+	<field name="BAL_AMT" class="java.math.BigDecimal"/>
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="FINANCIAL_YEAR" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="90"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="14"
+						width="535"
+						height="14"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Hand Receipt Bill Note Preparation
+ ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="45"
+						y="69"
+						width="161"
+						height="16"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Ref : Hand Receipt received from staff of ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="44"
+						y="36"
+						width="476"
+						height="29"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sub : Contingent Bill - Reimbursement of office Expenses- incurred by Staff of "+$F{OFFICE_NAME}+"  sanction - requested - regarding"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="187"
+						y="69"
+						width="336"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="0"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="90"
+						key="line-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="90"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="564"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="13"
+						y="1"
+						width="520"
+						height="499"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[          
+
+
+
+          The staff of                                                                      has submitted their Hand Receipt towards
+
+reimbursement of office expenses incurred by them wide statement inclosed separately 
+
+for Rs.
+
+                  
+
+          The nature of expenses incurred by them (viz) cost of newspaper supplied to the residence of
+
+officers,Auto fare,Bus fare, Train ticket cancellation charges, Binding, Xerox, Telephone cleaning charges
+
+pocket allowence to drivers etc.,
+
+                 
+
+           
+
+                  
+
+          The Budget Estimate for the finanacial year                    under the Head of the A/C is Rs.      
+
+cost of bills a sum of Rs.                        has been incurred so far and balance amount of Rs.                   
+
+is available as Contingent.
+
+
+                 
+    Hence it is submitted for orders whether the bill may be admitted for payment of Rs.                          
+
+                  
+
+    Subject for orders on X above a draft payment order is put up below for approval please.]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="105"
+						y="47"
+						width="203"
+						height="13"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" isBold="false" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="44"
+						y="94"
+						width="66"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{NOTE_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="241"
+						y="281"
+						width="54"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{FINANCIAL_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="120"
+						y="304"
+						width="66"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{BUD_SPENT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="233"
+						width="477"
+						height="12"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["The said expenditure has to be debited to the Head of Account "+$F{ACCTCODE}+" "+$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="431"
+						y="281"
+						width="92"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BUD_PROVIDED}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="420"
+						y="304"
+						width="99"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BAL_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="396"
+						y="374"
+						width="104"
+						height="12"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{NOTE_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="40"
+						y="455"
+						width="80"
+						height="20"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Asst]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="150"
+						y="455"
+						width="80"
+						height="20"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Supdt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="270"
+						y="455"
+						width="80"
+						height="20"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[AO]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="400"
+						y="455"
+						width="80"
+						height="20"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[JCEGl]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="112"
+						y="95"
+						width="420"
+						height="12"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["( "+$F{NOTE_AMOUNT_1}+" )"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="564"
+						key="line-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="564"
+						key="line-10"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="563"
+						width="535"
+						height="0"
+						key="line-11"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

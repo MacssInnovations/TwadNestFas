@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="subledger_partyWise_bk_subreport0"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="496"
+		 pageHeight="992"
+		 columnWidth="496"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="aid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="aofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="path" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[$P{path}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="frommonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="tomonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="fromyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="toyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="sub_ledgerCode" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="sub_ledger_type" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["/home1/twadonline/public_html/org/FAS/FAS1/Reports/ReceiptSystem/jasper/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="acode" isForPrompting="true" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[SELECT m.MONTH_OPENING_BALANCE,
+  m1.MONTH_CLOSING_BALANCE,
+  Trim(M.Month_Opening_Bal_Dr_Cr_Ind)  AS Month_Ob_Dr_Cr_Ind,
+  trim(m1.MONTH_CLOSING_BAL_DR_CR_IND) AS MONTH_CL_DR_CR_IND
+FROM
+  (SELECT *
+  FROM FAS_SUB_LEDGER_MASTER
+  WHERE MONTH                 =$P{frommonth}
+  AND YEAR                    =$P{fromyear}
+  AND ACCOUNTING_UNIT_ID      =$P{aid}
+  AND ACCOUNTING_FOR_OFFICE_ID=$P{aofficeid}
+  AND Sub_Ledger_Code         =$P{sub_ledgerCode}
+  AND SUB_LEDGER_TYPE_CODE    =$P{sub_ledger_type}
+  AND ACCOUNT_HEAD_CODE       =$P{acode}
+  )m
+FULL JOIN
+  (SELECT *
+  FROM FAS_SUB_LEDGER_MASTER
+  WHERE MONTH                 =$P{tomonth}
+  AND YEAR                    =$P{toyear}
+  AND ACCOUNTING_UNIT_ID      =$P{aid}
+  AND ACCOUNTING_FOR_OFFICE_ID=$P{aofficeid}
+  AND Sub_Ledger_Code         =$P{sub_ledgerCode}
+  AND SUB_LEDGER_TYPE_CODE    =$P{sub_ledger_type}
+  AND ACCOUNT_HEAD_CODE       =$P{acode}
+  ) m1
+ON m1.ACCOUNTING_UNIT_ID       =m.ACCOUNTING_UNIT_ID
+AND m1.ACCOUNTING_FOR_OFFICE_ID=m.ACCOUNTING_FOR_OFFICE_ID
+AND m1.FINANCIAL_YEAR          =m.FINANCIAL_YEAR
+AND m1.YEAR                    =m.YEAR
+AND m1.ACCOUNT_HEAD_CODE       =m.ACCOUNT_HEAD_CODE
+AND m1.SUB_LEDGER_TYPE_CODE    =m.SUB_LEDGER_TYPE_CODE
+AND M1.Sub_Ledger_Code         =M.Sub_Ledger_Code
+AND m1.ACCOUNT_HEAD_CODE       =m.ACCOUNT_HEAD_CODE]]></queryString>
+
+	<field name="MONTH_OPENING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="MONTH_CLOSING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="MONTH_OB_DR_CR_IND" class="java.lang.String"/>
+	<field name="MONTH_CL_DR_CR_IND" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="30"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="117"
+						y="6"
+						width="43"
+						height="20"
+						forecolor="#000000"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[( ( $F{MONTH_OPENING_BALANCE}==null) ? new java.math.BigDecimal("0") :$F{MONTH_OPENING_BALANCE})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="307"
+						y="6"
+						width="45"
+						height="20"
+						forecolor="#000000"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isItalic="false" isUnderline="false" isPdfEmbedded ="false" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[( ( $F{MONTH_CLOSING_BALANCE}==null) ? new java.math.BigDecimal("0") :$F{MONTH_CLOSING_BALANCE})]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="6"
+						width="116"
+						height="20"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[OPENING BALANCE :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="198"
+						y="6"
+						width="109"
+						height="20"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[CLOSING BALANCE :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="8"
+						width="15"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MONTH_OB_DR_CR_IND}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="352"
+						y="7"
+						width="15"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MONTH_CL_DR_CR_IND}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

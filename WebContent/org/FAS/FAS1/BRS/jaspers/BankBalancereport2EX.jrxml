@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BankBalancereport2EX"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="715"
+		 pageHeight="842"
+		 columnWidth="715"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="openingmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="closingmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="openingyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="closingyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="unitStr" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="month" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT 
+
+to_char(A.Accounting_Unit_Id,'000')|| '-'
+    ||u.accounting_unit_name as UnitIdName,
+a.bank_id, (Select bank.bank_name From Fas_Mst_Banks Bank Where Bank.Bank_Id=a.Bank_Id
+    ) bak_name,
+  a.Bankname,
+  a.branch_id,
+  a.Bank_Ac_No,
+  a.Bank_Ac_Type_Id,
+  a.acc_type_desc,
+  a.Ac_Operational_Mode_Id,
+  a.acc_Mode_desc,
+  a.Ac_Opening_Date,
+  a.initial_deposit_amt,
+  a.Cr_Dr_Type AS open_CR_Drtype,
+  a.Pb_Balance AS open_PB_Bal,
+  b.Cr_Dr_Type AS closing_CR_Drtype,
+  b.Pb_Balance AS closing_PB_Bal
+FROM
+  (SELECT Balnce.Accounting_Unit_Id,
+    (SELECT BANK_SHORT_NAME FROM fas_mst_banks bank WHERE bank.bank_id=balnce.bank_id
+    )
+    || '-'
+    ||N.Branch_Name AS Bankname,  balnce.bank_id,
+    n.branch_id,
+    Balnce.Bank_Ac_No,
+    Balnce.Bank_Ac_Type_Id,
+    (SELECT ac_t.account_type
+    FROM FAS_MST_BANK_AC_TYPES ac_t
+    WHERE ac_t.account_type_id=Balnce.Bank_Ac_Type_Id
+    ) acc_type_desc,
+    Balnce.Ac_Operational_Mode_Id,
+    (SELECT ac_mo.ac_operational_mode
+    FROM FAS_MST_AC_OPER_MODES ac_mo
+    WHERE ac_mo.Ac_Operational_Mode_Id=Balnce.Ac_Operational_Mode_Id
+    ) acc_Mode_desc,
+    Balnce.Ac_Opening_Date,
+    balnce.initial_deposit_amt,
+    Up.Cr_Dr_Type,
+    Up.Pb_Balance
+  FROM FAS_MST_BANK_BRANCHES n,
+    FAS_MST_BANK_BALANCE balnce,
+    BRS_BANK_BALANCE_UPDATE up
+  WHERE balnce.accounting_unit_id  =up.accounting_unit_id
+  AND balnce.bank_ac_no            =up.bank_ac_no
+  AND balnce.BANK_AC_TYPE_ID       =up.BANK_AC_TYPE_ID
+  AND Balnce.Ac_Operational_Mode_Id=Up.Ac_Operational_Mode_Id
+  AND Balnce.Status                ='Y'
+  AND N.Bank_Id                    =Up.Bank_Id
+  AND n.branch_id                  =up.branch_id
+  AND Up.PS_Year                   =$P{openingyear}
+  AND UP.PS_MONTH                  =$P{openingmonth}
+   $P!{unitStr}
+ 
+  )a
+INNER JOIN
+  (SELECT Balnce.Accounting_Unit_Id,
+    (SELECT BANK_SHORT_NAME FROM fas_mst_banks bank WHERE bank.bank_id=balnce.bank_id
+    )
+    || '-'
+    ||N.Branch_Name AS Bankname,
+    n.branch_id,
+    Balnce.Bank_Ac_No,
+    Balnce.Bank_Ac_Type_Id,
+    (SELECT ac_t.account_type
+    FROM FAS_MST_BANK_AC_TYPES ac_t
+    WHERE ac_t.account_type_id=Balnce.Bank_Ac_Type_Id
+    ) acc_type_desc,
+    Balnce.Ac_Operational_Mode_Id,
+    (SELECT ac_mo.ac_operational_mode
+    FROM FAS_MST_AC_OPER_MODES ac_mo
+    WHERE ac_mo.Ac_Operational_Mode_Id=Balnce.Ac_Operational_Mode_Id
+    ) acc_Mode_desc,
+    Balnce.Ac_Opening_Date,
+    balnce.initial_deposit_amt,
+    Up.Cr_Dr_Type,
+    Up.Pb_Balance
+  FROM FAS_MST_BANK_BRANCHES n,
+    FAS_MST_BANK_BALANCE balnce,
+    BRS_BANK_BALANCE_UPDATE up
+  WHERE balnce.accounting_unit_id  =up.accounting_unit_id
+  AND balnce.bank_ac_no            =up.bank_ac_no
+  AND balnce.BANK_AC_TYPE_ID       =up.BANK_AC_TYPE_ID
+  AND Balnce.Ac_Operational_Mode_Id=Up.Ac_Operational_Mode_Id
+  AND Balnce.Status                ='Y'
+  AND N.Bank_Id                    =Up.Bank_Id
+  And N.Branch_Id                  =Up.Branch_Id
+  AND Up.PS_Year                   =$P{closingyear}
+  AND UP.PS_MONTH                  =$P{closingmonth}
+$P!{unitStr}
+ 
+  )b
+ON 
+a.Ac_Operational_Mode_Id=b.Ac_Operational_Mode_Id and
+a. Accounting_Unit_Id=b.Accounting_Unit_Id
+AND a.bank_ac_no        =b.bank_ac_no
+inner join fas_mst_acct_units u
+on a.Accounting_Unit_Id=u.Accounting_Unit_Id
+
+order by a.Ac_Operational_Mode_Id,a.bank_id,b.Accounting_Unit_Id]]></queryString>
+
+	<field name="UNITIDNAME" class="java.lang.String"/>
+	<field name="BANK_ID" class="java.math.BigDecimal"/>
+	<field name="BAK_NAME" class="java.lang.String"/>
+	<field name="BANKNAME" class="java.lang.String"/>
+	<field name="BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_TYPE_ID" class="java.lang.String"/>
+	<field name="ACC_TYPE_DESC" class="java.lang.String"/>
+	<field name="AC_OPERATIONAL_MODE_ID" class="java.lang.String"/>
+	<field name="ACC_MODE_DESC" class="java.lang.String"/>
+	<field name="AC_OPENING_DATE" class="java.sql.Timestamp"/>
+	<field name="INITIAL_DEPOSIT_AMT" class="java.math.BigDecimal"/>
+	<field name="OPEN_CR_DRTYPE" class="java.lang.String"/>
+	<field name="OPEN_PB_BAL" class="java.math.BigDecimal"/>
+	<field name="CLOSING_CR_DRTYPE" class="java.lang.String"/>
+	<field name="CLOSING_PB_BAL" class="java.math.BigDecimal"/>
+
+	<variable name="pagecount" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[$V{PAGE_COUNT}]]></variableExpression>
+	</variable>
+	<variable name="open_amt_bank" class="java.math.BigDecimal" resetType="Group" resetGroup="bank_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{OPEN_PB_BAL}]]></variableExpression>
+	</variable>
+	<variable name="close_amt_bank" class="java.math.BigDecimal" resetType="Group" resetGroup="bank_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{CLOSING_PB_BAL}]]></variableExpression>
+	</variable>
+	<variable name="open_amt_mode" class="java.math.BigDecimal" resetType="Group" resetGroup="modewise" calculation="Sum">
+		<variableExpression><![CDATA[$F{OPEN_PB_BAL}]]></variableExpression>
+	</variable>
+	<variable name="close_amt_mode" class="java.math.BigDecimal" resetType="Group" resetGroup="modewise" calculation="Sum">
+		<variableExpression><![CDATA[$F{CLOSING_PB_BAL}]]></variableExpression>
+	</variable>
+
+		<group  name="modewise" >
+			<groupExpression><![CDATA[$F{AC_OPERATIONAL_MODE_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="18"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="715"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACC_MODE_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="26"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="540"
+						y="0"
+						width="65"
+						height="26"
+						key="textField-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{open_amt_mode}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="650"
+						y="0"
+						width="65"
+						height="26"
+						key="textField-7"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{close_amt_mode}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="540"
+						height="26"
+						key="staticText-22"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[GRAND TOTAL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="605"
+						y="0"
+						width="45"
+						height="26"
+						key="staticText-23"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="bank_grp" >
+			<groupExpression><![CDATA[$F{BANK_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="26"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="715"
+						height="26"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BAK_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="26"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="540"
+						y="0"
+						width="65"
+						height="26"
+						key="textField-4"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{open_amt_bank}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="650"
+						y="0"
+						width="65"
+						height="26"
+						key="textField-5"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{close_amt_bank}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="540"
+						height="26"
+						key="staticText-20"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="605"
+						y="0"
+						width="45"
+						height="26"
+						key="staticText-21"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="75"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="605"
+						y="0"
+						width="110"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="605"
+						height="21"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bank Balance Report for the month of  "+$P{month}+" "+$P{openingyear}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="21"
+						width="248"
+						height="54"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[UnitIdName]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="248"
+						y="21"
+						width="77"
+						height="54"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Bank Accnt No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="325"
+						y="21"
+						width="53"
+						height="54"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Acc_Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="378"
+						y="21"
+						width="68"
+						height="54"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[OpningDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="446"
+						y="21"
+						width="49"
+						height="54"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Initial Deposit Amt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="495"
+						y="21"
+						width="110"
+						height="24"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Opening Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="540"
+						y="45"
+						width="65"
+						height="30"
+						key="staticText-12"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="495"
+						y="45"
+						width="45"
+						height="30"
+						key="staticText-16"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[DR/CR]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="605"
+						y="21"
+						width="110"
+						height="24"
+						key="staticText-17"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Closing Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="605"
+						y="45"
+						width="45"
+						height="30"
+						key="staticText-18"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[DR/CR]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="650"
+						y="45"
+						width="65"
+						height="30"
+						key="staticText-19"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="27"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="248"
+						y="0"
+						width="77"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BANK_AC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="325"
+						y="0"
+						width="53"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACC_TYPE_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="378"
+						y="0"
+						width="68"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{AC_OPENING_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="446"
+						y="0"
+						width="49"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{INITIAL_DEPOSIT_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="495"
+						y="0"
+						width="45"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OPEN_CR_DRTYPE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="540"
+						y="0"
+						width="65"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{OPEN_PB_BAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="248"
+						height="27"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNITIDNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="650"
+						y="0"
+						width="65"
+						height="27"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CLOSING_PB_BAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="605"
+						y="0"
+						width="45"
+						height="27"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CLOSING_CR_DRTYPE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

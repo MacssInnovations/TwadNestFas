@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Promotion_Final_Proceedingv2"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="order" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="office" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="suffix" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="pwhole" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="fwd" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="copyto" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="no_date" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="proceed" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="address" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="sd" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="fwddesig" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="new" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="comment" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select a.promotion_issue_office_id,a.promotion_order_id,a.employee_id,a.to_which_office_id,decode(a.reposts_required,'Y','Yes','N','No') as reposts_required , 
+a.new_designation,decode(a.ta_da_eligible,'Y','Yes','N','No')as ta_da_eligible,b.proceeding_date,b.proceeding_no,
+b.proceed_subject,decode(b.proceed_subject,null,null,'Sub : ' || b.proceed_subject) as proc_sub,
+b.proceed_reference,decode(b.proceed_reference,null,null,'Ref : ' || b.proceed_reference) as proc_ref,
+b.addl_para_1,b.addl_para_2,b.copy_to,b.presiding_officer,
+b.presiding_officer_designation,b.signed,b.suffix,b.prefix,c.employee_name,d.trf_office_name,
+decode(s.new_office_name,null, 
+( select office_name as new_office_name from com_mst_offices
+where office_id=a.to_which_office_id),s.new_office_name)as new_office_name ,g.current_designation, decode(a.posted,'Y','Yes','No','NO') as posted,
+h.new_designation_name,ff.org_office_name from 
+( 
+select promotion_issue_office_id,promotion_order_id,employee_id,to_which_office_id,reposts_required,new_designation, 
+process_flow_status_id,ta_da_eligible,posted,dept_id
+from HRM_promotion_DETAILS 
+where process_flow_status_id in ('FR')
+) a
+left outer join 
+( 
+select promotion_issue_office_id as trf_off_id,promotion_order_id as trf_ord_id,proceeding_date,proceeding_no,proceed_subject,proceed_reference, 
+addl_para_1,addl_para_2,copy_to,prefix,presiding_officer,presiding_officer_designation,process_flow_status_id,signed_po as signed,suffix 
+from HRM_promotion_ORDERS 
+where process_flow_status_id in ('FR') 
+) b 
+on a.promotion_issue_office_id=b.trf_off_id and a.promotion_order_id=b.trf_ord_id 
+left outer join 
+( 
+select employee_id as emp_id, employee_prefix || '.' || employee_name || '.' || employee_initial as employee_name from 
+hrm_mst_employees 
+) c 
+on a.employee_id=c.emp_id 
+left outer join 
+( 
+select office_id,office_name as trf_office_name from com_mst_offices 
+where office_status_id not in ('CL','RD','NC')
+) d 
+on a.promotion_issue_office_id=d.office_id
+left outer join  
+( 
+select office_id,office_name as new_office_name from com_mst_offices 
+where office_status_id not in ('CL','RD','NC') 
+) e 
+on a.to_which_office_id=e.office_id 
+left outer join
+( 
+select employee_id as emp_id2, office_id as off_id2, designation_id as desig_id2 from hrm_emp_current_posting 
+where employee_status_id in 'WKG' and process_flow_status_id in 'FR' 
+) f 
+on a.employee_id=f.emp_id2 
+left outer join  
+( 
+select office_id,office_name as org_office_name from com_mst_offices 
+where office_status_id not in ('CL','RD','NC') 
+) ff
+on f.off_id2=ff.office_id 
+left outer join 
+( 
+select designation_id as desig_id3, designation as current_designation from hrm_mst_designations 
+) g 
+on f.desig_id2=g.desig_id3
+left outer join 
+( 
+select designation_id as desig_id4, designation as new_designation_name from hrm_mst_designations 
+) h
+on a.new_designation=h.desig_id4
+left outer join  
+( 
+select other_dept_id,other_dept_office_id,other_dept_office_name as new_office_name from hrm_mst_other_dept_offices 
+)s                                         
+on   s.other_dept_id=a.dept_id and s.other_dept_office_id=a.to_which_office_id
+where a.promotion_issue_office_id=$P{office} and a.promotion_order_id=$P{order}]]></queryString>
+
+	<field name="PROMOTION_ISSUE_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="PROMOTION_ORDER_ID" class="java.math.BigDecimal"/>
+	<field name="EMPLOYEE_ID" class="java.math.BigDecimal"/>
+	<field name="TO_WHICH_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="REPOSTS_REQUIRED" class="java.lang.String"/>
+	<field name="NEW_DESIGNATION" class="java.math.BigDecimal"/>
+	<field name="TA_DA_ELIGIBLE" class="java.lang.String"/>
+	<field name="PROCEEDING_DATE" class="java.sql.Timestamp"/>
+	<field name="PROCEEDING_NO" class="java.lang.String"/>
+	<field name="PROCEED_SUBJECT" class="java.lang.String"/>
+	<field name="PROC_SUB" class="java.lang.String"/>
+	<field name="PROCEED_REFERENCE" class="java.lang.String"/>
+	<field name="PROC_REF" class="java.lang.String"/>
+	<field name="ADDL_PARA_1" class="java.lang.String"/>
+	<field name="ADDL_PARA_2" class="java.lang.String"/>
+	<field name="COPY_TO" class="java.lang.String"/>
+	<field name="PRESIDING_OFFICER" class="java.lang.String"/>
+	<field name="PRESIDING_OFFICER_DESIGNATION" class="java.lang.String"/>
+	<field name="SIGNED" class="java.lang.String"/>
+	<field name="SUFFIX" class="java.lang.String"/>
+	<field name="PREFIX" class="java.lang.String"/>
+	<field name="EMPLOYEE_NAME" class="java.lang.String"/>
+	<field name="TRF_OFFICE_NAME" class="java.lang.String"/>
+	<field name="NEW_OFFICE_NAME" class="java.lang.String"/>
+	<field name="CURRENT_DESIGNATION" class="java.lang.String"/>
+	<field name="POSTED" class="java.lang.String"/>
+	<field name="NEW_DESIGNATION_NAME" class="java.lang.String"/>
+	<field name="ORG_OFFICE_NAME" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="64"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="3"
+						width="530"
+						height="19"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Bookman Old Style" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Tamil Nadu Water Supply And Drainage Board]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="26"
+						width="530"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{proceed}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="44"
+						width="530"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{address}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="173"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="188"
+						y="4"
+						width="54"
+						height="18"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica" size="11" isBold="false" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Present :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="16"
+						y="147"
+						width="479"
+						height="24"
+						key="staticText-22"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font size="11"/>
+					</textElement>
+				<text><![CDATA[The   following   Employee(s)  is/are promoted and posted to the following places]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="93"
+						y="77"
+						width="399"
+						height="29"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROC_SUB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="246"
+						y="27"
+						width="187"
+						height="16"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PRESIDING_OFFICER_DESIGNATION}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="94"
+						y="112"
+						width="395"
+						height="29"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROC_REF}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="245"
+						y="5"
+						width="160"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{suffix}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="29"
+						y="47"
+						width="481"
+						height="22"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{no_date}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="45"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="4"
+						y="6"
+						width="531"
+						height="39"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="6"
+						y="11"
+						width="29"
+						height="18"
+						key="staticText-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Sl.No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="38"
+						y="11"
+						width="38"
+						height="31"
+						key="staticText-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Emp ID]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="103"
+						y="9"
+						width="116"
+						height="33"
+						key="staticText-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Employee Name & Present Posting]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="407"
+						y="11"
+						width="49"
+						height="30"
+						key="staticText-20"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TA_DA Eligibility]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="467"
+						y="8"
+						width="65"
+						height="33"
+						key="staticText-26"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Reposting Required?]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="80"
+						y="7"
+						width="0"
+						height="38"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="37"
+						y="7"
+						width="0"
+						height="38"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="260"
+						y="6"
+						width="0"
+						height="38"
+						key="line-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="406"
+						y="7"
+						width="0"
+						height="37"
+						key="line-11"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="465"
+						y="6"
+						width="1"
+						height="38"
+						key="line-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="286"
+						y="9"
+						width="74"
+						height="34"
+						key="staticText-33"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[New Posting Details]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="47"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="4"
+						y="1"
+						width="530"
+						height="46"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="10"
+						y="4"
+						width="26"
+						height="13"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Times New Roman" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="37"
+						y="0"
+						width="0"
+						height="47"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="86"
+						y="4"
+						width="171"
+						height="15"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isRemoveLineWhenBlank="true"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{EMPLOYEE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="4"
+						width="37"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{EMPLOYEE_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="86"
+						y="31"
+						width="171"
+						height="16"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ORG_OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="86"
+						y="17"
+						width="171"
+						height="14"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CURRENT_DESIGNATION}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="260"
+						y="-1"
+						width="0"
+						height="48"
+						key="line-13"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="80"
+						y="0"
+						width="0"
+						height="47"
+						key="line-14"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="465"
+						y="0"
+						width="0"
+						height="47"
+						key="line-16"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="406"
+						y="1"
+						width="0"
+						height="46"
+						key="line-17"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="411"
+						y="10"
+						width="45"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TA_DA_ELIGIBLE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="264"
+						y="22"
+						width="133"
+						height="23"
+						key="textField-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NEW_OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="264"
+						y="4"
+						width="138"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NEW_DESIGNATION_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="480"
+						y="11"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REPOSTS_REQUIRED}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="293"  isSplitAllowed="false" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="6"
+						y="8"
+						width="520"
+						height="73"
+						key="textField-4"
+						isPrintRepeatedValues="false"
+						isRemoveLineWhenBlank="true"
+						isPrintInFirstWholeBand="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{pwhole}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="249"
+						width="528"
+						height="18"
+						key="textField"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{comment}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="141"
+						width="408"
+						height="97"
+						key="textField"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{copyto}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="369"
+						y="271"
+						width="158"
+						height="18"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{fwddesig}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="360"
+						y="87"
+						width="166"
+						height="49"
+						key="textField"
+						positionType="Float"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{new}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

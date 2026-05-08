@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Emp_ValidationSummarySpeRegion"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[$P{SUBREPORT_DIR}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="REGION_OFFICE_ID" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select  A.OFFICE_NAME,A.CONTROLLING_OFFICE_ID,
+decode(ADDL_AVAIL,null,0,ADDL_AVAIL) ADDL_AVAIL,
+decode(ADDL_VALID,null,0,ADDL_VALID) ADDL_VALID,
+decode(SR_CTRL_OFFICE_AVAIL,null,0,SR_CTRL_OFFICE_AVAIL) SR_CTRL_OFFICE_AVAIL,
+decode(SR_CTRL_OFFICE_VALID,null,0,SR_CTRL_OFFICE_VALID) SR_CTRL_OFFICE_VALID,
+decode(CURRENT_POSTING_AVAIL,null,0,CURRENT_POSTING_AVAIL) CURRENT_POSTING_AVAIL,
+decode(CURRENT_POSTING_VALID,null,0,CURRENT_POSTING_VALID) CURRENT_POSTING_VALID,
+decode(SR_DATA_AVAIL,null,0,SR_DATA_AVAIL) SR_DATA_AVAIL,
+decode(SR_DATA_VALID,null,0,SR_DATA_VALID) SR_DATA_VALID
+
+from 
+(
+select DISTINCT b.office_name,b.office_level_id,a.CONTROLLING_OFFICE_ID,c.HIERARCHICAL_SEQUENCE  from hrm_emp_controlling_office a
+inner join com_mst_offices b on b.office_id=a.CONTROLLING_OFFICE_ID
+inner join com_mst_office_levels c on c.office_level_id=b.office_level_id
+where b.OFFICE_LEVEL_ID='HO'
+ORDER BY c.HIERARCHICAL_SEQUENCE,a.CONTROLLING_OFFICE_ID
+) a
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) ADDL_AVAIL   from hrm_emp_controlling_office  a
+inner join HRM_MST_EMP_ADDL_TMP b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID!='DL' or b.PROCESS_FLOW_STATUS_ID is null
+group by controlling_office_id
+) b  on b.controlling_office_id=a.controlling_office_id
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) ADDL_VALID   from hrm_emp_controlling_office  a
+inner join HRM_MST_EMP_ADDL_TMP b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID='FR' and b.PROCESS_FLOW_STATUS_ID is not null
+group by controlling_office_id
+) C  on C.controlling_office_id=a.controlling_office_id
+
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) SR_CTRL_OFFICE_AVAIL   from hrm_emp_controlling_office  a
+inner join HRM_EMP_CONTROLLING_OFFICE_TMP b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID!='DL' or b.PROCESS_FLOW_STATUS_ID is null
+group by A.controlling_office_id
+) D  on D.controlling_office_id=a.controlling_office_id
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) SR_CTRL_OFFICE_VALID   from hrm_emp_controlling_office  a
+inner join HRM_EMP_CONTROLLING_OFFICE_TMP b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID='FR' and b.PROCESS_FLOW_STATUS_ID is not null
+group by A.controlling_office_id
+) E  on E.controlling_office_id=a.controlling_office_id
+
+
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) CURRENT_POSTING_AVAIL   from hrm_emp_controlling_office  a
+inner join HRM_EMP_CURRENT_POSTING_TMP b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID!='DL' or  b.PROCESS_FLOW_STATUS_ID is null
+group by A.controlling_office_id
+) F  on F.controlling_office_id=a.controlling_office_id
+left outer join
+(
+select a.controlling_office_id,count(b.employee_id) CURRENT_POSTING_VALID   from hrm_emp_controlling_office  a
+inner join HRM_EMP_CURRENT_POSTING_TMP  b on b.employee_id=a.employee_id where b.PROCESS_FLOW_STATUS_ID='FR' and b.PROCESS_FLOW_STATUS_ID is not null
+group by A.controlling_office_id
+) G  on G.controlling_office_id=a.controlling_office_id
+
+
+left outer join
+(
+    select controlling_office_id,count(SERVICE_DATA_AVAIL) SR_DATA_AVAIL from
+    (
+    select a.controlling_office_id,b.employee_id,count(b.employee_id) SERVICE_DATA_AVAIL   from hrm_emp_controlling_office  a
+    inner join HRM_EMP_SERVICE_DATA  b on b.employee_id=a.employee_id
+    where (b.PROCESS_FLOW_STATUS_ID!='DL' OR b.PROCESS_FLOW_STATUS_ID is null)  
+    group by A.controlling_office_id,b.employee_id
+    order by b.employee_id
+    ) group by controlling_office_id
+) H  on H.controlling_office_id=a.controlling_office_id
+
+left outer join
+(
+   select controlling_office_id,count(SERVICE_DATA_AVAIL) SR_DATA_VALID from
+    (
+    select a.controlling_office_id,b.employee_id,count(b.employee_id) SERVICE_DATA_AVAIL   from hrm_emp_controlling_office  a
+    inner join HRM_EMP_SERVICE_DATA  b on b.employee_id=a.employee_id
+    where (b.PROCESS_FLOW_STATUS_ID='FR' and b.PROCESS_FLOW_STATUS_ID is not null)  
+    group by A.controlling_office_id,b.employee_id
+    order by b.employee_id
+    )  group by controlling_office_id
+) I  on I.controlling_office_id=a.controlling_office_id]]></queryString>
+
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="CONTROLLING_OFFICE_ID" class="java.lang.Integer"/>
+	<field name="ADDL_AVAIL" class="java.math.BigDecimal"/>
+	<field name="ADDL_VALID" class="java.math.BigDecimal"/>
+	<field name="SR_CTRL_OFFICE_AVAIL" class="java.math.BigDecimal"/>
+	<field name="SR_CTRL_OFFICE_VALID" class="java.math.BigDecimal"/>
+	<field name="CURRENT_POSTING_AVAIL" class="java.math.BigDecimal"/>
+	<field name="CURRENT_POSTING_VALID" class="java.math.BigDecimal"/>
+	<field name="SR_DATA_AVAIL" class="java.math.BigDecimal"/>
+	<field name="SR_DATA_VALID" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="53"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="23"
+						width="780"
+						height="30"
+						forecolor="#FFFFFF"
+						backcolor="#0000CC"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[List of All Employees Validation Status - Summary]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="0"
+						width="779"
+						height="23"
+						forecolor="#FFFFFF"
+						backcolor="#0000CC"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Tamil Nadu Water Supply and Drainage Board]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="60"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="0"
+						width="780"
+						height="18"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl.No     Office Id            SR. Controlling Office Name                          SR. Controlling                      Additional                   Current Posting                 SR Particulars]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="18"
+						width="780"
+						height="20"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[                                                                                                                     Office                                 Details                           Details]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="39"
+						width="780"
+						height="20"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[                                                                                                         Available        Validated               Validated                        Validated                        Validated]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="61"  isSplitAllowed="true" >
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="0"
+						y="29"
+						width="780"
+						height="30"
+						key="subreport-1"/>
+					<subreportParameter  name="REGION_OFFICE_ID">
+						<subreportParameterExpression><![CDATA[$P{REGION_OFFICE_ID}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "Emp_ValidationSummaryRegionSubReportForSpeRegion.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="419"
+						y="1"
+						width="49"
+						height="20"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ADDL_VALID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="1"
+						width="46"
+						height="20"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SR_CTRL_OFFICE_AVAIL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="326"
+						y="1"
+						width="52"
+						height="20"
+						key="textField-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SR_CTRL_OFFICE_VALID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="647"
+						y="1"
+						width="50"
+						height="20"
+						key="textField-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SR_DATA_VALID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="533"
+						y="1"
+						width="47"
+						height="20"
+						key="textField-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CURRENT_POSTING_VALID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="1"
+						width="40"
+						height="20"
+						key="textField-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{CONTROLLING_OFFICE_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="81"
+						y="1"
+						width="192"
+						height="28"
+						key="textField-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="1"
+						width="28"
+						height="20"
+						key="textField-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="520"
+						y="24"
+						width="100"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="624"
+						y="24"
+						width="100"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,704 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd"> 
+<%@ page session="false"  contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*,java.util.*,Servlets.Security.classes.UserProfile"%>
+<%@ include file="//org/Security/jsps/Check_SessionJSPF.jspf" %>
+<html> 
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>     
+    <meta http-equiv="cache-control" content="no-cache">
+    <title>Transfer Proforma Accounting System (Credit / Debit) </title>
+    
+    <link href="../../../../../css/Sample3.css" rel="stylesheet"  media="screen"/>
+    <link href="../../../../../css/CalendarControl.css" rel="stylesheet" media="screen"/>
+    <link href='../../../../../css/Fas_Account.css' rel='stylesheet' media='screen'/>
+    
+    <script type="text/javascript" src="<%=request.getContextPath()%>/org/Library/scripts/comJS.js"></script>
+    <script type="text/javascript"  src="../../../../../org/Library/scripts/checkDate.js"></script>
+    
+ <script type="text/javascript" src="../../../../../org/FAS/FAS1/ReceiptSystem/scripts/Com_Popup_XMLreq_SL.js"></script> 
+
+    <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/FAS/FAS1/CommonControls/scripts/Common_Load_Accounting_Unit_ID.js"></script>
+    <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/FAS/FAS1/CommonControls/scripts/Common_Load_Accounting_office.js"></script>
+    
+    
+    <script type="text/javascript" src="../scripts/Common_ReceiptType.js"></script>
+    
+    <script type="text/javascript" src="../scripts/TPA_Raised_Create.js"></script>
+    <script type="text/javascript"   src="../../../../Security/scripts/tabpane.js"></script>
+   
+      
+          <script type="text/javascript" src="../scripts/CalenderControl_ParticularMnt.js"></script>
+      
+    <!-- to avoid future date the above script used-->
+    <script type="text/javascript" language="javascript">
+         function foc()
+         {
+         }
+         function loadDate()
+         {
+             var today= new Date(); 
+             var day=today.getDate();
+             var month=today.getMonth();
+             month=month+1;
+             var mon;
+             mon=month;
+             if(day<=9 && day>=1)
+             day="0"+day;
+             if(month<=9 && month>=1)
+                
+             month="0"+month;
+             var year=today.getYear();
+             if(year < 1900) year += 1900;
+             var monthArray =new Array("January", "February", "March", 
+                       "April", "May", "June", "July", "August",
+                       "September", "October", "November", "December");
+            document.frm_TPA_Raised_Create.Voucher_Date.value=day+"/"+month+"/"+year;
+            document.frm_TPA_Raised_Create.txtCB_Year.value=year;
+            document.frm_TPA_Raised_Create.txtCB_Month.value=mon;
+            
+         }
+</script>
+
+
+ </head>
+ <body onload="loadDate();foc();LoadAccountingUnitID('LIST_ALL_UNITS');setTimeout('loadTransferUnit()',500);" bgcolor="rgb(255,255,225)">
+
+  <%
+  
+  Connection con=null;
+  ResultSet rs=null,rs2=null,rsbank=null;
+  PreparedStatement ps=null,ps2=null,psbank=null;
+  ResultSet results=null;
+  ResultSet results1=null;
+  ResultSet results2=null;
+   try
+  {
+  
+             ResourceBundle rs1=ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString="";
+
+            String strDriver=rs1.getString("Config.DATA_BASE_DRIVER");
+            String strdsn=rs1.getString("Config.DSN");
+            String strhostname=rs1.getString("Config.HOST_NAME");
+            String strportno=rs1.getString("Config.PORT_NUMBER");
+            String strsid=rs1.getString("Config.SID");
+            String strdbusername=rs1.getString("Config.USER_NAME");
+            String strdbpassword=rs1.getString("Config.PASSWORD");
+
+            //ConnectionString = strdsn.trim() + "@" + strhostname.trim() + ":" + strportno.trim() + ":" +strsid.trim() ;
+				ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+             Class.forName(strDriver.trim());
+             con=DriverManager.getConnection(ConnectionString,strdbusername.trim(),strdbpassword.trim());
+             
+  }
+  catch(Exception e)
+  {
+    System.out.println("Exception in connection...."+e);
+  }
+ %>
+    <table cellspacing="1" cellpadding="3" width="100%" >
+      <tr class="tdH">
+        <td colspan="2">
+          <div align="center">
+            <font size="4">Transfer Proforma Accounting System (Credit / Debit) </font>
+          </div>
+        </td>
+      </tr>
+    </table>
+    
+    
+    <form name="frm_TPA_Raised_Create" id="frm_TPA_Raised_Create" method="POST" action="../../../../../TPA_Raised_Create?Command=Add" onsubmit="return checkNull()">
+   
+     
+
+
+<div class="tab-pane" id="tab-pane-1">
+        <!-- 1st Tab General Starts --> 
+        <div class="tab-page">
+          <h2 class="tab" >General </h2>
+           
+          <div align="center">
+            <table cellspacing="1" cellpadding="2" border="0" width="100%">
+           
+                <tr class="tdTitle">
+                <td colspan="2">
+                  <div align="left">
+                    <strong>General Details</strong>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table">
+                <td>
+                  <div align="left">
+                    Accounting Unit Code 
+                    <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <select size="1" name="cmbAcc_UnitCode" id="cmbAcc_UnitCode" tabindex="1" onchange="common_LoadOffice(this.value);loadTransferUnit();">
+                  
+                    </select>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table">
+                <td>
+                  <div align="left">
+                    Accounting For Office Code
+                    <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <select size="1" name="cmbOffice_code" id="cmbOffice_code" tabindex="2">
+                    </select>
+                  </div>
+                </td>
+              </tr>
+               <tr  class="table">
+          <td >
+         <div align="left">
+             TPA For Year &amp; Month<font color="#ff2121">*</font>
+             </div>
+              </td>
+              <td>
+              <div align="left">
+	          <input type="text" name="txtCB_Year" id="txtCB_Year"  maxlength="4" size="5" onkeypress="return numbersonly(event)">
+	          <select name="txtCB_Month"  id="txtCB_Month"   >
+	          <option value="1">January</option>
+	          <option value="2">February</option>
+	          <option value="3">March</option>
+	          <option value="4">April</option>
+	          <option value="5">May</option>
+	          <option value="6">June</option>
+	          <option value="7">July</option>
+	          <option value="8">August</option>
+	          <option value="9">September</option>
+	          <option value="10">October</option>
+	          <option value="11">November</option>
+	          <option value="12">December</option>
+	          </select>
+          </div>
+          </td>
+           
+         
+        </tr>
+              <tr class="table">
+                <td>
+                  <div align="left">
+                     Date
+                    <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <input type="text" name="Voucher_Date" id="Voucher_Date" 
+                           maxlength="10" size="11"  
+                           onfocus="javascript:vDateType='3';" 
+                           
+                           onkeypress="return calins(event,this);"
+                           onblur="call_date(this);"/>
+                     <img src="../../../../../images/calendr3.gif"
+                         onclick="showCalendarControl(document.frm_TPA_Raised_Create.Voucher_Date,1);"
+                         alt="Show Calendar"></img>                   
+                  </div>
+                </td>
+              </tr>
+              
+              <tr class="table">
+                <td>
+                  <div align="left">
+                    Transfer Proforma Advice Number <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left" >
+                  (System Generated)
+                  </div>
+                </td>
+              </tr>
+              
+              <tr class="table">
+                <td>
+                  <div align="left">Transfer Proforma Type <font color="#ff2121">*</font> </div>
+                </td>
+                <td>
+                  <div align="left">                  
+                    <input id="Org_CR_DR" type="radio" value="CR"  name="Org_CR_DR" onclick="loadAccountHead();loadtranfercategory()"/> Credit     
+                    <input id="Org_CR_DR" type="radio" value="DR" name="Org_CR_DR" onclick="loadAccountHead();loadtranfercategory()"/> Debit  
+                    <input type="hidden" name="indicrdr" id="indicrdr">                               
+                  </div>
+                </td>
+              </tr>
+              
+              <tr class="table">
+                <td>
+                  <div align="left">Accounting Unit to which the accounts are transfered <font color="#ff2121">*</font> </div>
+                </td>
+                <td>
+                  <div align="left">
+                     <select name="TransferedID" id="TransferedID"  onchange="loadsltype()">
+                      <option value="" >-- Select Accounting Unit ID --  </option>                    
+                    </select>                   
+                  </div>
+                </td>
+              </tr>
+                
+        
+              <tr class="table">
+                <td>
+                  <div align="left">
+                     Reason for Transfer <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <select name="Reason4Trf" id="Reason4Trf" onchange="loadtranfercategory()" >
+                       <option value="" >Select Reason </option>
+                      <option value="Closure" >Closure </option>
+                      <option value="Shift" >Shift </option>
+                      <option value="Re-style" >Re-style </option>
+                      <option value="Redeployment" >Redeployment </option>
+                      <option value="Others" >Others</option>
+                    </select>                   
+                  </div>
+                </td>
+              </tr>
+              
+               <tr class="table" >
+               <td colspan="2">
+               <div id="tohide" style="display:none"> 
+               <table cellspacing="1" cellpadding="2" border="0" width="100%">
+               <tr class="table">
+                <td>
+               
+                  <div align="left">
+                    Transfer Category <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td >
+                  <div align="center">
+                    <select name="transfercategory" id="transfercategory"  onchange="loadGlSlGrid()">
+                     <option value="" >Select Category </option> 
+                      <%ps=con.prepareStatement("select MINOR_HEAD_CODE,MINOR_HEAD_DESC from com_mst_minor_heads order by MINOR_HEAD_DESC");
+                      rs=ps.executeQuery();
+                      while(rs.next()){
+                      %>
+                      
+                      
+                      <option value="<%=rs.getInt("MINOR_HEAD_CODE") %>" ><%=rs.getString("MINOR_HEAD_DESC") %></option>
+                     <%}
+                      rs.close();
+                      ps.close();
+                      %>
+                    </select>                   
+                  </div>
+                </td>
+                </tr>
+                </table>
+                </div>
+                </td>
+              </tr>
+              
+              <tr class="table">
+                <td>
+                  <div align="left">Particulars</div>
+                </td>
+                <td>
+                  <div align="left">
+                    <textarea name="GenParticulars" id="GenParticulars" cols="50"  onkeypress="return check_leng(this.value,'remarks');"
+                              rows="4"></textarea>
+                  </div>
+                </td>
+              </tr>
+          
+            </table>
+          </div>
+        </div>  <!-- 1st General Tab Ends --> 
+         
+         
+         
+        <!-- Second TPA Tab Starts --> 
+        
+        <div class="tab-page" id="tab-pane-2" >
+          <h2 class="tab" > TPA </h2>
+           
+          <div align="center">
+            <table cellspacing="1" cellpadding="2" border="0" width="100%">
+              <tr>
+                <td colspan="2">
+                  <div id="sub_ledge_dis" >
+              
+                    <table cellspacing="1" cellpadding="2" border="0" width="100%">
+                      <tr class="tdTitle">
+                        <td colspan="2">
+                          <div align="left">
+                            <strong> Details</strong>
+                          </div>
+                        </td>
+                      </tr>
+              
+               <tr class="table">
+                <td>
+                  <div align="left">
+                    Account Head Code 
+                    <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <input type="text" name="txtAcc_HeadCode" 
+                           id="txtAcc_HeadCode" maxlength="6" readonly="readonly"  size="9"/>                   
+                    <input type="text" name="txtAcc_HeadDesc" readonly="readonly" 
+                           id="txtAcc_HeadDesc" style="background-color: #ececec"  maxlength="125" size="70"/>
+                  </div>
+                </td>
+              </tr>
+             
+             
+             <tr class="table">
+                <td width="40%">
+                  <div align="left">
+                            SubLedger Type
+                          </div>
+                </td>
+                <td width="60%">
+                  <div align="left">
+                    <select size="1" name="cmbSL_type" id="cmbSL_type" disabled="disabled" >
+                      <option value="15" selected="selected">Accounting Units</option>
+                     
+                    </select>
+                  </div>
+                  <div align="left" style="display:none">
+                   
+                    <input type="hidden" value="" name="cmbMas_SL_type" id="cmbMas_SL_type">
+                  </div>
+                </td>
+              </tr>
+             
+              <tr class="table">
+                <td>
+                  <div align="left">
+                      SubLedger Code
+                  </div>
+                </td>
+                <td>
+                 <table align="left">
+                                 <tr align="left">
+                                 <td>
+                  <div align="left"><!--
+                        <select size="1" name="cmbSL_Code" id="cmbSL_Code" onchange="doFunction('Load_SL_Code',this.value);">
+                      			<option value="">--Select SL Code --</option>
+                    	</select>    
+                    	-->
+                    	
+                    	<select name="cmbSL_Code" id="cmbSL_Code"  disabled="disabled">
+                      <option value="" >-- Select Accounting Unit ID --  </option>                    
+                    </select>   
+                    	        
+                  </div>
+                  <div align="left" style="display:none">
+	                    
+	                      <input type="hidden" value="" name="cmbMas_SL_Code" id="cmbMas_SL_Code">
+	              </div>
+              </td>
+             <td>
+                  <div align="left" id="offlist_div_trans"  style="display:none">
+                         <img src="../../../../../images/c-lovi.gif" width="20" height="20" alt="OfficeList" onclick="jobpopup_trans();"></img>
+                         <input type="text" name="txtOfficeID_trs" id="txtOfficeID_trs" maxlength="4" size="5"    onblur="trs_office(this.value);" />
+                  </div>
+                  <div align="left" id="emplist_div_trans"  style="display:none">
+                         <img src="../../../../../images/c-lovi.gif" width="20" height="20" alt="empList" onclick="employee_popup_trans();"></img>
+                         <input type="text" name="txtEmpID_trs" id="txtEmpID_trs" maxlength="5" size="5"  onchange="trs_employee(this.value);" />                                                                         
+                 </div>
+                </td>		
+                
+                                </tr>
+                          </table>
+                        </td>
+                      </tr>
+              
+              
+              <tr class="table">
+                <td>
+                  <div align="left">
+                     Amount 
+                    <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <input type="text" name="Amount" readonly="readonly" onkeypress="return limit_amt(this,event);" id="Amount" maxlength="17" size="18"/>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr class="table">
+                <td>
+                  <div align="left">
+                    CR/ DR <font color="#ff2121">*</font>
+                  </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <input type="radio" name="Indi_CR_DR" id="Indi_CR_DR" disabled="disabled"
+                           checked="checked" value="CR"/>Credit &nbsp;&nbsp;&nbsp;&nbsp; 
+                    <input type="radio" name="Indi_CR_DR" id="Indi_CR_DR"  disabled="disabled"
+                           value="DR"/>Debit  &nbsp;&nbsp;&nbsp;&nbsp;    
+                  </div>
+                </td>
+              </tr>
+              
+              
+              <tr class="table">
+                <td>
+                  <div align="left">
+                    Particulars 
+                          </div>
+                </td>
+                <td>
+                  <div align="left">
+                    <textarea name="DetParticular" id="DetParticular" cols="70" onkeypress="return check_leng(this.value,'particulars');"
+                              rows="3"></textarea>
+                  </div>
+                </td>
+              </tr>
+              
+               </table>
+             </div>
+                  
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>  <!-- 2nd TPA tab ends --> 
+        
+        
+        
+        
+        
+           <!-- 3rd Detail Tab Starts --> 
+        
+        <div class="tab-page" id="gd2" >
+          <h2 class="tab" >SL Details </h2>
+           
+          <div align="center">
+            <table cellspacing="1" cellpadding="2" border="0" width="100%">
+              <tr>
+                <td colspan="2">
+                  <div id="sub_ledge_dis" >
+              
+              
+              
+                  <table cellspacing="1" cellpadding="2" border="0" width="100%">
+                    
+                  <tr class="tdTitle">
+                    <td colspan="6">
+                      <div align="left">
+                        <strong> Details</strong>
+                      </div>
+                    </td>
+                  </tr>
+               
+              
+              
+               <tr class="table">
+               
+               
+                          <th>
+            <font >
+             Select
+                 <a href="javascript:selectAll('ALL');">All</a>
+                 <a href="javascript:selectAll('UNSelect');">Unselect</a> 
+             </font>
+             
+            </th>
+               
+                <th>
+                  <div align="left">
+                    Account Head Code &amp; Decs                   
+                  </div>
+                </th>
+                
+                <th>
+                  <div align="left">
+                     SL Type
+                  </div>
+                </th>
+               
+                <th>
+                  <div align="left">
+                     SL Code
+                  </div>
+                </th>
+               
+                <th>
+                  <div align="left">
+                    CR/DR                  
+                  </div>
+                </th>
+                
+                <th>
+                  <div align="left">
+                    Amount
+                  </div>
+                </th>
+               
+               <th>
+                  <div align="left">
+                    Particulars
+                  </div>
+                </th>
+               
+               
+              </tr>
+              <tbody id="grid_body" class="table" align="left" >
+              </tbody>
+              
+              
+               </table>
+               
+               
+             </div>
+                  
+                </td>
+              </tr>
+             <tr><td align="right">
+              <input type="button" name="total1" id="total1" value="Find Total"  onclick="test123();" style="display:none"/></td></tr>
+            </table>
+          </div>
+        </div>  <!-- 3rd Detail tab ends --> 
+        
+        
+          <!-- 4th Detail Tab Starts --> 
+        
+        <div class="tab-page" id="sl" >
+          <h2 class="tab" > GL Details </h2>
+           
+          <div align="center">
+            <table cellspacing="1" cellpadding="2" border="0" width="100%">
+              <tr>
+                <td colspan="2">
+                  <div id="gen_ledge_dis" >
+              
+              
+              
+                  <table cellspacing="1" cellpadding="2" border="0" width="100%">
+                    
+                  <tr class="tdTitle">
+                    <td colspan="6">
+                      <div align="left">
+                        <strong> Details</strong>
+                      </div>
+                    </td>
+                  </tr>
+               
+             
+              
+               <tr class="table">
+               
+                    <th>
+            <font >
+             Select
+                 <a href="javascript:selectAll('ALL');">All</a>
+                 <a href="javascript:selectAll('UNSelect');">Unselect</a> 
+             </font>
+             
+            </th>
+               
+                <th>
+                  <div align="left">
+                    Account Head Code &amp; Decs                   
+                  </div>
+                </th>
+                
+                <th>
+                  <div align="left">
+                     SL Type
+                  </div>
+                </th>
+               
+                <th>
+                  <div align="left">
+                     SL Code
+                  </div>
+                </th>
+               
+                <th>
+                  <div align="left">
+                    CR/DR                  
+                  </div>
+                </th>
+                
+                <th>
+                  <div align="left">
+                    Amount
+                  </div>
+                </th>
+               
+               <th>
+                  <div align="left">
+                    Particulars
+                  </div>
+                </th>
+               
+               
+              </tr>
+              <tbody id="grid_body_gen" class="table" align="left" >
+              </tbody>
+              
+               </table>
+             </div>
+                  
+                </td>
+              </tr>
+              <tr><td  align="right">
+              <input type="button" name="total" id="total" value="Find Total"  onclick="test123();" style="display:none"/></td></tr>
+            </table>
+          </div>
+        </div>  <!-- 4th Detail tab ends --> 
+        
+      </div>  <!-- Main Tag -->
+      
+      
+     
+      
+      <br>
+      
+    
+      <div align="center">
+        <table cellspacing="1" cellpadding="6" width="100%" >
+          <tr class="tdH">
+            <td >
+              <div align="center">
+             
+                <input type="submit" name="butSub" id="butSub" value="SUBMIT"/>
+                 &nbsp;&nbsp;&nbsp; 
+               <input type="button" name="butCan" id="butCan" value="CANCEL"
+                       onclick="clear_all();"/>
+                 &nbsp;&nbsp;&nbsp; 
+                 
+                <input type="button" name="butCan" id="butCan" value="EXIT"
+                       onclick="javascript:self.close();"/>
+                     &nbsp;&nbsp;&nbsp;   
+                 
+                       
+              </div>
+              <div id="imgfld" style="position: absolute; top: 354px; visibility: hidden; left: 378px; width: 212px; height: 6px;"
+			left=100 top=100><input type="image" name="img1" id="img1"
+			src="../../../../../images/Loading.gif" height="200"></div>
+		
+            </td>
+           
+          </tr>
+        </table>
+      </div>
+      
+      
+      
+    </form></body>
+</html>

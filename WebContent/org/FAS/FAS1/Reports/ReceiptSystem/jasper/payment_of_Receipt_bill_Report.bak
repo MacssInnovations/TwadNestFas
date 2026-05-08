@@ -1,0 +1,1147 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="payment_of_Receipt_bill_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1019"
+		 pageHeight="842"
+		 columnWidth="959"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="unitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="officeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cashbookmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cashbookyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="heading" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT a.*,
+  b.row_numm
+FROM (
+  (SELECT aa.Accounting_Unit_Id,
+    aa.Accounting_For_Office_Id,
+    (SELECT Uu.Accounting_Unit_Name
+    FROM fas_mst_acct_units uu
+    WHERE Uu.Accounting_Unit_Id=aa.Accounting_Unit_Id
+    )AS orgunitname,
+    aa.CASHBOOK_YEAR,
+    aa.CASHBOOK_MONTH,
+    aa.SL_NO,
+    AA.RECEIPT_DATE,
+    aa.RECEIPT_NO,
+    aa.CHEQUE_DD_NO,
+    aa.CHEQUE_DD_DATE,
+    aa.AMOUNT,
+    aa.SUB_LEDGER_TYPE_CODE,
+    (SELECT S.Sub_Ledger_Type_Desc
+    FROM com_mst_sl_types s
+    WHERE s.SUB_LEDGER_TYPE_CODE=Aa.Sub_Ledger_Type_Code
+    )AS sl_desc,
+    aa.Sub_Ledger_Code,
+    (SELECT l.SL_CODENAME
+    FROM SL_TYPE_CODE_NAME_VIEW_M l
+    WHERE L.Sl_Type=Aa.Sub_Ledger_Type_Code
+    AND L.Sl_Code  =Aa.Sub_Ledger_Code
+    AND rownum = 1
+    )AS code_desc ,
+    aa.cb_ref_no,
+    aa.cb_ref_date,
+    aa.cheque_or_dd ,
+    aa.ljvamount,
+    bb.VOUCHER_NO pay_no,
+    bb.PAYMENT_DATE,
+    bb.AMOUNT AS pay_amt,
+    aa.multiple_pvrs,
+    aa.account_head_code ,
+    (SELECT h.account_head_desc
+    FROM com_mst_account_heads h
+    WHERE h.account_head_code= aa.account_head_code
+    ) AS head_desc
+  FROM
+    (SELECT a.Accounting_Unit_Id,
+      a.Accounting_For_Office_Id,
+      a.CASHBOOK_YEAR,
+      a.CASHBOOK_MONTH,
+      b.SL_NO,
+      A.RECEIPT_DATE,
+      a.RECEIPT_NO,
+      b.CHEQUE_DD_NO,
+      b.CHEQUE_DD_DATE,
+      b.AMOUNT,
+      b.SUB_LEDGER_TYPE_CODE,
+      b.Sub_Ledger_Code,
+      b.cb_ref_no,
+      b.cb_ref_date,
+      b.cheque_or_dd ,
+      b.AMOUNT AS ljvamount,
+      b.multiple_pvrs,
+      b.account_head_code
+    FROM FAS_RECEIPT_MASTER a
+    INNER JOIN FAS_RECEIPT_TRANSACTION b
+    ON A.Accounting_Unit_Id       =B.Accounting_Unit_Id
+    AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+    AND A.Cashbook_Year           =B.Cashbook_Year
+    AND A.Cashbook_Month          =B.Cashbook_Month
+    AND A.RECEIPT_NO              =B.RECEIPT_NO
+    AND a.ACCOUNTING_UNIT_ID      =$P{unitid}
+    AND a.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+    AND A.CASHBOOK_MONTH          =$P{cashbookmonth}
+    AND a.CASHBOOK_YEAR           =$P{cashbookyear}
+    AND A.RECEIPT_STATUS          ='L'
+    AND B.CR_DR_INDICATOR='CR'
+         AND B.SUB_LEDGER_TYPE_CODE !=0
+         AND B.SUB_LEDGER_CODE!=0
+      --AND b.cheque_dd_date         IS NOT NULLf
+      --AND b.cheque_dd_no            > 0
+    AND ( b.multiple_pvrs IS NULL
+    OR b.multiple_pvrs     = 'N')
+    )AA
+  LEFT OUTER JOIN
+    (SELECT a1.ACCOUNTING_UNIT_ID ,
+      a1.ACCOUNTING_FOR_OFFICE_ID,
+      a1.CASHBOOK_YEAR,
+      a1.CASHBOOK_MONTH,
+      B1.SL_NO,
+      b1.PAYABLE_VOUCHER_SLNO,
+      a1.PAYMENT_DATE,
+      a1.VOUCHER_NO,
+      b1.CHEQUE_DD_NO,
+      b1.CHEQUE_DD_DATE,
+      b1.AMOUNT,
+      a1.SUB_LEDGER_TYPE_CODE,
+      A1.Sub_Ledger_Code,
+      b1.PAYABLE_VOUCHER_NO,
+      b1.PAYABLE_VOUCHER_DATE
+    FROM FAS_PAYMENT_MASTER a1
+    INNER JOIN FAS_PAYMENT_TRANSACTION b1
+    ON A1.Accounting_Unit_Id       =B1.Accounting_Unit_Id
+    AND A1.Accounting_For_Office_Id=B1.Accounting_For_Office_Id
+    AND A1.Cashbook_Year           =B1.Cashbook_Year
+    AND A1.CASHBOOK_MONTH          =B1.CASHBOOK_MONTH
+    AND A1.VOUCHER_NO              =B1.VOUCHER_NO
+    AND a1.CREATED_BY_MODULE       ='BPP'
+    AND a1.PAYMENT_STATUS          ='L'
+    AND a1.ACCOUNTING_UNIT_ID      =$P{unitid}
+    AND a1.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+    )bb ON aa.Accounting_Unit_Id   =bb.Accounting_Unit_Id
+  AND aa.Accounting_For_Office_Id  =bb.Accounting_For_Office_Id
+  AND AA.RECEIPT_NO                = BB.PAYABLE_VOUCHER_NO
+  AND aa.RECEIPT_DATE              = bb.PAYABLE_VOUCHER_DATE
+  AND aa.SUB_LEDGER_TYPE_CODE      =bb.SUB_LEDGER_TYPE_CODE
+  AND AA.SUB_LEDGER_CODE           =BB.SUB_LEDGER_CODE
+  AND aa.CHEQUE_DD_NO              =bb.CHEQUE_DD_NO
+  AND AA.CHEQUE_DD_DATE            =BB.CHEQUE_DD_DATE
+ AND aa.SL_NO                     =bb.PAYABLE_VOUCHER_SLNO
+  )
+UNION ALL
+  (SELECT aa.Accounting_Unit_Id,
+    aa.Accounting_For_Office_Id,
+    (SELECT Uu.Accounting_Unit_Name
+    FROM fas_mst_acct_units uu
+    WHERE Uu.Accounting_Unit_Id=aa.Accounting_Unit_Id
+    )AS orgunitname,
+    aa.CASHBOOK_YEAR,
+    aa.CASHBOOK_MONTH,
+    aa.SL_NO,
+    AA.RECEIPT_DATE,
+    aa.RECEIPT_NO,
+    aa.CHEQUE_DD_NO,
+    aa.CHEQUE_DD_DATE,
+    aa.AMOUNT,
+    aa.SUB_LEDGER_TYPE_CODE,
+    (SELECT S.Sub_Ledger_Type_Desc
+    FROM com_mst_sl_types s
+    WHERE s.SUB_LEDGER_TYPE_CODE=Aa.Sub_Ledger_Type_Code
+    )AS sl_desc,
+    aa.Sub_Ledger_Code,
+    (SELECT l.SL_CODENAME
+    FROM SL_TYPE_CODE_NAME_VIEW_M l
+    WHERE L.Sl_Type=Aa.Sub_Ledger_Type_Code
+    AND L.Sl_Code  =Aa.Sub_Ledger_Code
+    )AS code_desc ,
+    aa.cb_ref_no,
+    aa.cb_ref_date,
+    aa.cheque_or_dd ,
+    aa.ljvamount,
+    bb.VOUCHER_NO pay_no,
+    bb.PAYMENT_DATE,
+    bb.AMOUNT AS pay_amt,
+    aa.multiple_pvrs,
+    aa.account_head_code ,
+    (SELECT h.account_head_desc
+    FROM com_mst_account_heads h
+    WHERE h.account_head_code= aa.account_head_code
+    ) AS head_desc
+  FROM
+    (SELECT a.Accounting_Unit_Id,
+      a.Accounting_For_Office_Id,
+      a.CASHBOOK_YEAR,
+      a.CASHBOOK_MONTH,
+      b.SL_NO,
+      A.RECEIPT_DATE,
+      a.RECEIPT_NO,
+      b.CHEQUE_DD_NO,
+      b.CHEQUE_DD_DATE,
+      b.AMOUNT,
+      b.SUB_LEDGER_TYPE_CODE,
+      b.Sub_Ledger_Code,
+      b.cb_ref_no,
+      b.cb_ref_date,
+      b.cheque_or_dd ,
+      b.AMOUNT AS ljvamount,
+      b.multiple_pvrs,
+      b.account_head_code
+    FROM FAS_RECEIPT_MASTER a
+    INNER JOIN FAS_RECEIPT_TRANSACTION b
+    ON A.Accounting_Unit_Id       =B.Accounting_Unit_Id
+    AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+    AND A.Cashbook_Year           =B.Cashbook_Year
+    AND A.Cashbook_Month          =B.Cashbook_Month
+    AND A.RECEIPT_NO              =B.RECEIPT_NO
+    AND a.ACCOUNTING_UNIT_ID      =$P{unitid}
+    AND a.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+    AND a.CASHBOOK_MONTH          =$P{cashbookmonth}
+    AND a.CASHBOOK_YEAR           =$P{cashbookyear}
+    AND A.RECEIPT_STATUS          ='L'
+    AND B.CR_DR_INDICATOR='CR'
+         AND B.SUB_LEDGER_TYPE_CODE !=0
+         and b.Sub_Ledger_Code!=0
+      --AND b.cheque_dd_date         IS NOT NULL
+      --AND b.cheque_dd_no            > 0
+    AND b.multiple_pvrs = 'Y'
+    )AA
+  LEFT OUTER JOIN
+    (SELECT a1.ACCOUNTING_UNIT_ID ,
+      a1.ACCOUNTING_FOR_OFFICE_ID,
+      a1.CASHBOOK_YEAR,
+      a1.CASHBOOK_MONTH,
+      B1.SL_NO,
+      b1.PAYABLE_VOUCHER_SLNO,
+      a1.PAYMENT_DATE,
+      a1.VOUCHER_NO,
+      b1.CHEQUE_DD_NO,
+      b1.CHEQUE_DD_DATE,
+      b1.AMOUNT,
+      a1.SUB_LEDGER_TYPE_CODE,
+      A1.Sub_Ledger_Code,
+      b1.PAYABLE_VOUCHER_NO,
+      b1.PAYABLE_VOUCHER_DATE
+    FROM FAS_PAYMENT_MASTER a1
+    INNER JOIN FAS_PAYMENT_TRANSACTION b1
+    ON A1.Accounting_Unit_Id       =B1.Accounting_Unit_Id
+    AND A1.Accounting_For_Office_Id=B1.Accounting_For_Office_Id
+    AND A1.Cashbook_Year           =B1.Cashbook_Year
+    AND A1.CASHBOOK_MONTH          =B1.CASHBOOK_MONTH
+    AND A1.VOUCHER_NO              =B1.VOUCHER_NO
+    AND a1.CREATED_BY_MODULE       ='BPP'
+    AND a1.PAYMENT_STATUS          ='L'
+    AND a1.ACCOUNTING_UNIT_ID      =$P{unitid}
+    AND a1.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+    )bb ON aa.Accounting_Unit_Id   =bb.Accounting_Unit_Id
+  AND aa.Accounting_For_Office_Id  =bb.Accounting_For_Office_Id
+  AND AA.RECEIPT_NO                = BB.PAYABLE_VOUCHER_NO
+  AND AA.RECEIPT_DATE             = bb.PAYABLE_VOUCHER_DATE
+  AND aa.SUB_LEDGER_TYPE_CODE      =bb.SUB_LEDGER_TYPE_CODE
+  AND AA.SUB_LEDGER_CODE           =BB.SUB_LEDGER_CODE
+AND aa.SL_NO                     =bb.PAYABLE_VOUCHER_SLNO
+  )
+ORDER BY Accounting_Unit_Id,
+  ljvamount ) A
+INNER JOIN
+  (SELECT rownum AS row_numm,
+    Sub_Ledger_Code
+  FROM
+    (SELECT DISTINCT Sub_Ledger_Code
+    FROM (
+      (SELECT aa.Accounting_Unit_Id,
+        aa.Accounting_For_Office_Id,
+        (SELECT Uu.Accounting_Unit_Name
+        FROM fas_mst_acct_units uu
+        WHERE Uu.Accounting_Unit_Id=aa.Accounting_Unit_Id
+        )AS orgunitname,
+        aa.CASHBOOK_YEAR,
+        aa.CASHBOOK_MONTH,
+        aa.SL_NO,
+        AA.RECEIPT_DATE,
+        aa.RECEIPT_NO,
+        aa.CHEQUE_DD_NO,
+        aa.CHEQUE_DD_DATE,
+        aa.AMOUNT,
+        aa.SUB_LEDGER_TYPE_CODE,
+        (SELECT S.Sub_Ledger_Type_Desc
+        FROM com_mst_sl_types s
+        WHERE s.SUB_LEDGER_TYPE_CODE=Aa.Sub_Ledger_Type_Code
+        )AS sl_desc,
+        aa.Sub_Ledger_Code,
+        (SELECT l.SL_CODENAME
+        FROM SL_TYPE_CODE_NAME_VIEW_M l
+        WHERE L.Sl_Type=Aa.Sub_Ledger_Type_Code
+        AND L.Sl_Code  =Aa.Sub_Ledger_Code
+        )AS code_desc ,
+        aa.cb_ref_no,
+        aa.cb_ref_date,
+        aa.cheque_or_dd ,
+        aa.ljvamount,
+        bb.VOUCHER_NO pay_no,
+        bb.PAYMENT_DATE,
+        bb.AMOUNT AS pay_amt,
+        aa.multiple_pvrs,
+        aa.account_head_code ,
+        (SELECT h.account_head_desc
+        FROM com_mst_account_heads h
+        WHERE h.account_head_code= aa.account_head_code
+        ) AS head_desc
+      FROM
+        (SELECT a.Accounting_Unit_Id,
+          a.Accounting_For_Office_Id,
+          a.CASHBOOK_YEAR,
+          a.CASHBOOK_MONTH,
+          b.SL_NO,
+          A.RECEIPT_DATE,
+          a.RECEIPT_NO,
+          b.CHEQUE_DD_NO,
+          b.CHEQUE_DD_DATE,
+          b.AMOUNT,
+          b.SUB_LEDGER_TYPE_CODE,
+          b.Sub_Ledger_Code,
+          b.cb_ref_no,
+          b.cb_ref_date,
+          b.cheque_or_dd ,
+          b.AMOUNT AS ljvamount,
+          b.multiple_pvrs,
+          b.account_head_code
+        FROM FAS_RECEIPT_MASTER a
+        INNER JOIN FAS_RECEIPT_TRANSACTION b
+        ON A.Accounting_Unit_Id       =B.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.CASHBOOK_MONTH          =B.CASHBOOK_MONTH
+        AND A.RECEIPT_NO              =B.RECEIPT_NO                          ---RECEIPT_NO
+        AND a.ACCOUNTING_UNIT_ID      =$P{unitid}
+        AND a.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+        AND a.CASHBOOK_MONTH          =$P{cashbookmonth}
+        AND A.CASHBOOK_YEAR           =$P{cashbookyear}
+        AND A.RECEIPT_STATUS          ='L'                                ----RECEIPT_STATUS
+        AND B.CR_DR_INDICATOR='CR'
+         AND B.SUB_LEDGER_TYPE_CODE !=0
+         and b.Sub_Ledger_Code!=0
+          --AND b.cheque_dd_date         IS NOT NULL
+          -- AND b.cheque_dd_no            > 0
+        AND ( b.multiple_pvrs IS NULL
+        OR b.multiple_pvrs     = 'N')
+        )AA
+      LEFT OUTER JOIN
+        (SELECT a1.ACCOUNTING_UNIT_ID ,
+          a1.ACCOUNTING_FOR_OFFICE_ID,
+          a1.CASHBOOK_YEAR,
+          a1.CASHBOOK_MONTH,
+          B1.SL_NO,
+          b1.PAYABLE_VOUCHER_SLNO,
+          a1.PAYMENT_DATE,
+          a1.VOUCHER_NO,
+          b1.CHEQUE_DD_NO,
+          b1.CHEQUE_DD_DATE,
+          b1.AMOUNT,
+          a1.SUB_LEDGER_TYPE_CODE,
+          A1.Sub_Ledger_Code,
+          b1.PAYABLE_VOUCHER_NO,
+          b1.PAYABLE_VOUCHER_DATE
+        FROM FAS_PAYMENT_MASTER a1
+        INNER JOIN FAS_PAYMENT_TRANSACTION b1
+        ON A1.Accounting_Unit_Id       =B1.Accounting_Unit_Id
+        AND A1.Accounting_For_Office_Id=B1.Accounting_For_Office_Id
+        AND A1.Cashbook_Year           =B1.Cashbook_Year
+        AND A1.CASHBOOK_MONTH          =B1.CASHBOOK_MONTH
+        AND A1.VOUCHER_NO              =B1.VOUCHER_NO
+        AND a1.CREATED_BY_MODULE       ='BPP'
+        AND a1.PAYMENT_STATUS          ='L'
+        AND a1.ACCOUNTING_UNIT_ID      =$P{unitid}
+        AND a1.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+        )bb ON aa.Accounting_Unit_Id   =bb.Accounting_Unit_Id
+      AND aa.Accounting_For_Office_Id  =bb.Accounting_For_Office_Id
+      AND aa.RECEIPT_NO                = bb.PAYABLE_VOUCHER_NO
+      AND aa.RECEIPT_DATE              = bb.PAYABLE_VOUCHER_DATE
+      AND aa.SUB_LEDGER_TYPE_CODE      =bb.SUB_LEDGER_TYPE_CODE
+      AND AA.SUB_LEDGER_CODE           =BB.SUB_LEDGER_CODE
+      AND aa.CHEQUE_DD_NO              =bb.CHEQUE_DD_NO
+      AND AA.CHEQUE_DD_DATE            =BB.CHEQUE_DD_DATE
+   AND aa.SL_NO                     =bb.PAYABLE_VOUCHER_SLNO
+      )
+    UNION ALL
+      (SELECT aa.Accounting_Unit_Id,
+        aa.Accounting_For_Office_Id,
+        (SELECT Uu.Accounting_Unit_Name
+        FROM fas_mst_acct_units uu
+        WHERE Uu.Accounting_Unit_Id=aa.Accounting_Unit_Id
+        )AS orgunitname,
+        aa.CASHBOOK_YEAR,
+        aa.CASHBOOK_MONTH,
+        aa.SL_NO,
+        AA.RECEIPT_DATE,
+        aa.RECEIPT_NO,
+        aa.CHEQUE_DD_NO,
+        aa.CHEQUE_DD_DATE,
+        aa.AMOUNT,
+        aa.SUB_LEDGER_TYPE_CODE,
+        (SELECT S.Sub_Ledger_Type_Desc
+        FROM com_mst_sl_types s
+        WHERE s.SUB_LEDGER_TYPE_CODE=Aa.Sub_Ledger_Type_Code
+        )AS sl_desc,
+        aa.Sub_Ledger_Code,
+        (SELECT l.SL_CODENAME
+        FROM SL_TYPE_CODE_NAME_VIEW_M l
+        WHERE L.Sl_Type=Aa.Sub_Ledger_Type_Code
+        AND L.Sl_Code  =Aa.Sub_Ledger_Code
+        )AS code_desc ,
+        aa.cb_ref_no,
+        aa.cb_ref_date,
+        aa.cheque_or_dd ,
+        aa.ljvamount,
+        bb.VOUCHER_NO pay_no,
+        bb.PAYMENT_DATE,
+        bb.AMOUNT AS pay_amt,
+        aa.multiple_pvrs,
+        aa.account_head_code ,
+        (SELECT h.account_head_desc
+        FROM com_mst_account_heads h
+        WHERE h.account_head_code= aa.account_head_code
+        ) AS head_desc
+      FROM
+        (SELECT a.Accounting_Unit_Id,
+          a.Accounting_For_Office_Id,
+          a.CASHBOOK_YEAR,
+          a.CASHBOOK_MONTH,
+          b.SL_NO,
+          A.RECEIPT_DATE,
+          a.RECEIPT_NO,
+          b.CHEQUE_DD_NO,
+          b.CHEQUE_DD_DATE,
+          b.AMOUNT,
+          b.SUB_LEDGER_TYPE_CODE,
+          b.Sub_Ledger_Code,
+          b.cb_ref_no,
+          b.cb_ref_date,
+          b.cheque_or_dd ,
+          b.AMOUNT AS ljvamount,
+          b.multiple_pvrs,
+          b.account_head_code
+        FROM FAS_RECEIPT_MASTER a
+        INNER JOIN FAS_RECEIPT_TRANSACTION b
+        ON A.Accounting_Unit_Id       =B.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        AND A.RECEIPT_NO              =B.RECEIPT_NO
+        AND a.ACCOUNTING_UNIT_ID      =$P{unitid}
+        AND a.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+        AND a.CASHBOOK_MONTH          =$P{cashbookmonth}
+        AND a.CASHBOOK_YEAR           =$P{cashbookyear}
+        AND A.RECEIPT_STATUS          ='L'
+        AND B.CR_DR_INDICATOR='CR'
+         AND B.SUB_LEDGER_TYPE_CODE !=0
+         and b.Sub_Ledger_Code!=0
+          --AND b.cheque_dd_date         IS NOT NULL
+          --AND b.cheque_dd_no            > 0
+        AND b.multiple_pvrs = 'Y'
+        )AA
+      LEFT OUTER JOIN
+        (SELECT a1.ACCOUNTING_UNIT_ID ,
+          a1.ACCOUNTING_FOR_OFFICE_ID,
+          a1.CASHBOOK_YEAR,
+          a1.CASHBOOK_MONTH,
+          B1.SL_NO,
+          b1.PAYABLE_VOUCHER_SLNO,
+          a1.PAYMENT_DATE,
+          a1.VOUCHER_NO,
+          b1.CHEQUE_DD_NO,
+          b1.CHEQUE_DD_DATE,
+          b1.AMOUNT,
+          a1.SUB_LEDGER_TYPE_CODE,
+          A1.Sub_Ledger_Code,
+          b1.PAYABLE_VOUCHER_NO,
+          b1.PAYABLE_VOUCHER_DATE
+        FROM FAS_PAYMENT_MASTER a1
+        INNER JOIN FAS_PAYMENT_TRANSACTION b1
+        ON A1.Accounting_Unit_Id       =B1.Accounting_Unit_Id
+        AND A1.Accounting_For_Office_Id=B1.Accounting_For_Office_Id
+        AND A1.Cashbook_Year           =B1.Cashbook_Year
+        AND A1.CASHBOOK_MONTH          =B1.CASHBOOK_MONTH
+        AND A1.VOUCHER_NO              =B1.VOUCHER_NO
+        AND a1.CREATED_BY_MODULE       ='BPP'
+        AND a1.PAYMENT_STATUS          ='L'
+        AND a1.ACCOUNTING_UNIT_ID      =$P{unitid}
+        AND a1.ACCOUNTING_FOR_OFFICE_ID=$P{officeid}
+        )bb ON aa.Accounting_Unit_Id   =bb.Accounting_Unit_Id
+      AND aa.Accounting_For_Office_Id  =bb.Accounting_For_Office_Id
+      AND aa.RECEIPT_NO                = bb.PAYABLE_VOUCHER_NO
+      AND aa.RECEIPT_DATE              = bb.PAYABLE_VOUCHER_DATE
+      AND aa.SUB_LEDGER_TYPE_CODE      =bb.SUB_LEDGER_TYPE_CODE
+      AND AA.SUB_LEDGER_CODE           =BB.SUB_LEDGER_CODE
+      AND aa.SL_NO                     =bb.PAYABLE_VOUCHER_SLNO
+      ) )
+    ORDER BY Sub_Ledger_Code
+    )
+  ) B ON A.SUB_LEDGER_CODE=B.SUB_LEDGER_CODE
+ORDER BY A.RECEIPT_NO,
+	A.SL_No,
+  A.RECEIPT_DATE,
+  A.Sub_Ledger_Code,
+  A.SUB_LEDGER_TYPE_CODE
+  --ORDER BY a.Accounting_Unit_Id,  A.Ljvamount,  A.RECEIPT_NO,  A.Cb_Ref_Date, a. pay_no]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="ORGUNITNAME" class="java.lang.String"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="SL_NO" class="java.math.BigDecimal"/>
+	<field name="RECEIPT_DATE" class="java.sql.Timestamp"/>
+	<field name="RECEIPT_NO" class="java.math.BigDecimal"/>
+	<field name="CHEQUE_DD_NO" class="java.lang.String"/>
+	<field name="CHEQUE_DD_DATE" class="java.sql.Timestamp"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="SUB_LEDGER_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="SL_DESC" class="java.lang.String"/>
+	<field name="SUB_LEDGER_CODE" class="java.math.BigDecimal"/>
+	<field name="CODE_DESC" class="java.lang.String"/>
+	<field name="CB_REF_NO" class="java.math.BigDecimal"/>
+	<field name="CB_REF_DATE" class="java.sql.Timestamp"/>
+	<field name="CHEQUE_OR_DD" class="java.lang.String"/>
+	<field name="LJVAMOUNT" class="java.math.BigDecimal"/>
+	<field name="PAY_NO" class="java.math.BigDecimal"/>
+	<field name="PAYMENT_DATE" class="java.sql.Timestamp"/>
+	<field name="PAY_AMT" class="java.math.BigDecimal"/>
+	<field name="MULTIPLE_PVRS" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="HEAD_DESC" class="java.lang.String"/>
+	<field name="ROW_NUMM" class="java.math.BigDecimal"/>
+
+	<variable name="sum_pay" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{PAY_AMT}]]></variableExpression>
+	</variable>
+	<variable name="jus" class="java.lang.Integer" resetType="None" calculation="Nothing">
+		<variableExpression><![CDATA[$V{REPORT_COUNT}]]></variableExpression>
+	</variable>
+	<variable name="new_ar" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[new Integer(0)]]></variableExpression>
+		<initialValueExpression><![CDATA[new Integer(0)]]></initialValueExpression>
+	</variable>
+	<variable name="sum_rpt" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{LJVAMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="vrno" class="java.math.BigDecimal" resetType="Group" resetGroup="vr_grp" calculation="Count">
+		<variableExpression><![CDATA[$F{RECEIPT_NO}]]></variableExpression>
+	</variable>
+	<variable name="pay_Amt" class="java.math.BigDecimal" resetType="Group" resetGroup="sl_wise_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{PAY_AMT}]]></variableExpression>
+	</variable>
+	<variable name="pending_amt" class="java.math.BigDecimal" resetType="Group" resetGroup="sl_wise_grp" calculation="Nothing">
+		<variableExpression><![CDATA[($V{rpt_Amt}.subtract($V{pay_Amt} ))==null?($V{rpt_Amt}.subtract($V{pay_Amt} )).valueOf(0.00):($V{rpt_Amt}.subtract($V{pay_Amt} ))]]></variableExpression>
+		<initialValueExpression><![CDATA[($V{rpt_Amt}.subtract($V{pay_Amt} )).valueOf(0.00)]]></initialValueExpression>
+	</variable>
+	<variable name="rpt_Amt" class="java.math.BigDecimal" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[$F{LJVAMOUNT}]]></variableExpression>
+	</variable>
+
+		<group  name="first_group" >
+			<groupExpression><![CDATA[$F{SUB_LEDGER_CODE}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="vr_grp" >
+			<groupExpression><![CDATA[$F{RECEIPT_NO}]]></groupExpression>
+			<groupHeader>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="39"
+						y="0"
+						width="920"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{RECEIPT_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="38"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{RECEIPT_NO}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="sl_wise_grp" >
+			<groupExpression><![CDATA[$F{SL_NO}]]></groupExpression>
+			<groupHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="267"
+						y="0"
+						width="77"
+						height="20"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SL_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="344"
+						y="0"
+						width="163"
+						height="20"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CODE_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="0"
+						width="452"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{LJVAMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="132"
+						y="0"
+						width="135"
+						height="20"
+						key="textField-6"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_CODE}+ "-" +$F{HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="77"
+						y="0"
+						width="55"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SL_NO}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="1"
+						width="76"
+						height="19"
+						key="staticText-23"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="794"
+						y="0"
+						width="146"
+						height="15"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{rpt_Amt}.subtract($V{pay_Amt} )]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="1"
+						width="793"
+						height="14"
+						key="staticText-24"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="940"
+						y="0"
+						width="19"
+						height="15"
+						key="staticText-25"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[]]></text>
+				</staticText>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="48"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="602"
+						y="28"
+						width="33"
+						height="20"
+						key="staticText-13"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="635"
+						y="28"
+						width="324"
+						height="20"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="28"
+						width="59"
+						height="20"
+						key="staticText-14"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Unit Name:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="60"
+						y="28"
+						width="542"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ORGUNITNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="959"
+						height="28"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{heading}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="18"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="77"
+						y="0"
+						width="55"
+						height="18"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[SL.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="39"
+						y="0"
+						width="38"
+						height="18"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Rct.Dt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1"
+						y="0"
+						width="38"
+						height="18"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top" rotation="None" isStyledText="true">
+						<font/>
+					</textElement>
+				<text><![CDATA[Rct.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="582"
+						y="0"
+						width="55"
+						height="18"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cheque no]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="259"
+						y="0"
+						width="80"
+						height="18"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[ SL Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="339"
+						y="0"
+						width="163"
+						height="18"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[SL Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="689"
+						y="0"
+						width="44"
+						height="18"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Pay.Vno]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="733"
+						y="0"
+						width="61"
+						height="18"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Pay.Vr.Dt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="794"
+						y="0"
+						width="61"
+						height="18"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Pay. Amt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="637"
+						y="0"
+						width="52"
+						height="18"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[ Chq.dt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="502"
+						y="0"
+						width="80"
+						height="18"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Rct.Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="132"
+						y="0"
+						width="127"
+						height="18"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<text><![CDATA[Account Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="855"
+						y="0"
+						width="104"
+						height="18"
+						key="staticText-22"/>
+					<box></box>
+					<textElement verticalAlignment="Top">
+						<font pdfFontName="Helvetica" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Balance to be paid]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="636"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEQUE_DD_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="697"
+						y="0"
+						width="36"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAY_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="733"
+						y="0"
+						width="61"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{PAYMENT_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="794"
+						y="0"
+						width="66"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAY_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="637"
+						y="0"
+						width="60"
+						height="15"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{CHEQUE_DD_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="718"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="719"
+						y="0"
+						width="240"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="18"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="1"
+						y="0"
+						width="506"
+						height="18"
+						key="staticText-20"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Receipt Amount :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="507"
+						y="0"
+						width="116"
+						height="18"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_rpt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="791"
+						y="1"
+						width="168"
+						height="17"
+						key="textField-8"/>
+					<box></box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_pay}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="623"
+						y="0"
+						width="168"
+						height="18"
+						key="staticText-21"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Payment Amount :]]></text>
+				</staticText>
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BRS_NonUpdated_List"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT a.brs_update,a.ACCOUNTING_UNIT_ID,
+
+(select u.ACCOUNTING_UNIT_NAME from fas_mst_acct_units u where a.ACCOUNTING_UNIT_ID=u.ACCOUNTING_UNIT_ID) unit_name,
+a.BANK_AC_NO,
+  b.bank_bal_count
+ 
+FROM
+  (SELECT COUNT(*)AS brs_update,BANK_AC_NO,
+    ACCOUNTING_UNIT_ID
+  FROM brs_bank_balance_update
+  WHERE
+  --ACCOUNTING_UNIT_ID= 63
+ -- AND
+  PS_YEAR             = 2014
+  AND PS_MONTH           <= 8
+  GROUP BY BANK_AC_NO, ACCOUNTING_UNIT_ID
+  )a
+INNER JOIN
+  (SELECT COUNT(*)AS bank_bal_count,BANK_AC_NO,
+    accounting_unit_id
+  FROM FAS_MST_BANK_BALANCE
+  WHERE 
+  --ACCOUNTING_UNIT_ID= 63
+  --AND
+  STATUS              ='Y'
+  GROUP BY BANK_AC_NO, accounting_unit_id
+  )b
+ON a.ACCOUNTING_UNIT_ID=b.ACCOUNTING_UNIT_ID
+and a.BANK_AC_NO=b.BANK_AC_NO
+
+and a.brs_update<>8
+order by a.ACCOUNTING_UNIT_id
+--select ]]></queryString>
+
+	<field name="BRS_UPDATE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="BANK_AC_NO" class="java.lang.String"/>
+	<field name="BANK_BAL_COUNT" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="100"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

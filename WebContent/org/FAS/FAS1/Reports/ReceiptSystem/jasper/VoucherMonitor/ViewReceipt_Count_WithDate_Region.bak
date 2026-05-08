@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ViewReceipt_Count_WithDate_Region"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="txtfrom" isForPrompting="true" class="java.util.Date"/>
+	<parameter name="txtto" isForPrompting="true" class="java.util.Date"/>
+	<parameter name="accountingunitName" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="accountofficeName" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="txtRegionId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="CR_ENTRIES" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="DR_ENTRIES" isForPrompting="false" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT t.ACCOUNTING_UNIT_NAME,
+  s.ACCOUNTING_UNIT_ID,
+  s.ACCOUNTING_FOR_OFFICE_ID,
+  s.doctype,
+  s.total_count,
+  peritem,
+  s.totAmt
+FROM
+  (SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Cash Receipt' AS doctype,
+    total_count,
+    totAmt                                                                 AS peritem,
+    CAST(CAST(2 AS numeric)*(CAST(totAmt AS numeric(10,2))) AS numeric(10,2)) AS Totamt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(RECEIPT_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_RECEIPT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+   )
+    AND CREATED_BY_MODULE='CR'
+    AND RECEIPT_STATUS  !='C'
+    AND RECEIPT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Bank Receipt' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(RECEIPT_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_RECEIPT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND CREATED_BY_MODULE='BR'
+    AND RECEIPT_STATUS  !='C'
+    AND RECEIPT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Pending Bill payment' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_PAYMENT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND CREATED_BY_MODULE='BPP'
+    AND PAYMENT_STATUS  !='C'
+    AND PAYMENT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Final Heads' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_PAYMENT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND CREATED_BY_MODULE='BPF'
+    AND PAYMENT_STATUS  !='C'
+    AND PAYMENT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Nil Payment' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_PAYMENT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND CREATED_BY_MODULE='NL'
+    AND PAYMENT_STATUS  !='C'
+    AND PAYMENT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'General Journal' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(voucher_no) AS total_count,
+      SUM(total)        AS totAmt
+    FROM
+      (SELECT ACCOUNTING_UNIT_ID,
+        ACCOUNTING_FOR_OFFICE_ID,
+        VOUCHER_NO,
+        total
+      FROM
+        (SELECT ACCOUNTING_UNIT_ID,
+          ACCOUNTING_FOR_OFFICE_ID,
+          b.VOUCHER_NO,
+          (SELECT coalesce(SUM(a.amount),0)
+          FROM FAS_JOURNAL_TRANSACTION a
+          WHERE a.ACCOUNTING_UNIT_ID    =b.ACCOUNTING_UNIT_ID
+          AND a.ACCOUNTING_FOR_OFFICE_ID=b.ACCOUNTING_FOR_OFFICE_ID
+          AND a.CASHBOOK_YEAR           =b.CASHBOOK_YEAR
+          AND a.CASHBOOK_MONTH          =b.CASHBOOK_MONTH
+          AND a.VOUCHER_NO              =b.VOUCHER_NO
+          AND a.cr_dr_indicator         ='DR'
+          ) AS total
+        FROM FAS_JOURNAL_MASTER b
+        WHERE b.ACCOUNTING_FOR_OFFICE_ID IN
+          (SELECT office_id
+          FROM COM_MST_ALL_OFFICES_VIEW
+          WHERE region_office_id=$P{txtRegionId}::int
+          )
+        AND (b.VOUCHER_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date )
+        AND b.CREATED_BY_MODULE='GJV'
+        AND b.JOURNAL_STATUS  !='C'
+        )ab
+      )ab
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Liabilty Journal' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(voucher_no) AS total_count,
+      SUM(total)        AS totAmt
+    FROM
+      (SELECT ACCOUNTING_UNIT_ID,
+        ACCOUNTING_FOR_OFFICE_ID,
+        VOUCHER_NO,
+        total
+      FROM
+        (SELECT ACCOUNTING_UNIT_ID,
+          ACCOUNTING_FOR_OFFICE_ID,
+          b.VOUCHER_NO,
+          (SELECT coalesce(SUM(a.amount),0)
+          FROM FAS_JOURNAL_TRANSACTION a
+          WHERE a.ACCOUNTING_UNIT_ID    =b.ACCOUNTING_UNIT_ID
+          AND a.ACCOUNTING_FOR_OFFICE_ID=b.ACCOUNTING_FOR_OFFICE_ID
+          AND a.CASHBOOK_YEAR           =b.CASHBOOK_YEAR
+          AND a.CASHBOOK_MONTH          =b.CASHBOOK_MONTH
+          AND a.VOUCHER_NO              =b.VOUCHER_NO
+          AND a.cr_dr_indicator         ='DR'
+          ) AS total
+        FROM FAS_JOURNAL_MASTER b
+        WHERE b.ACCOUNTING_FOR_OFFICE_ID IN
+          (SELECT office_id
+          FROM COM_MST_ALL_OFFICES_VIEW
+          WHERE region_office_id=$P{txtRegionId}::int
+          )
+        AND (b.VOUCHER_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date )
+        AND b.CREATED_BY_MODULE='LJV'
+        AND b.JOURNAL_STATUS  !='C'
+        )ab
+      )ab
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Fund Transfer Banking' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count ,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_FUND_TRF_FROM_HO_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND TRANSFER_STATUS!='C'
+    AND DATE_OF_TRANSFER BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Fund Transfer' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_FUND_TRF_FROM_OFFICE
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND TRANSFER_STATUS!='C'
+    AND DATE_OF_TRANSFER BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Fund Receipt Banking' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(RECEIPT_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_FUND_RECEIPT_BY_HO
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND RECEIPT_STATUS!='C'
+    AND RECEIPT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Fund Receipt' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(RECEIPT_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_FUND_RECEIPT_BY_OFFICE
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND RECEIPT_STATUS!='C'
+    AND RECEIPT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Self-Cheque' AS doctype,
+    total_count,
+    totAmt                                                                 AS peritem,
+    CAST(CAST(2 AS numeric)*(CAST(totAmt AS numeric(10,2))) AS numeric(10,2)) AS Totamt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(RECEIPT_NO) AS total_count,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_RECEIPT_MASTER
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND CREATED_BY_MODULE='SC'
+    AND RECEIPT_STATUS  !='C'
+    AND RECEIPT_DATE BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  UNION ALL
+  SELECT ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    'Inter-Bank-Transfer' AS doctype,
+    total_count,
+    totAmt AS peritem,
+    totAmt
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      COUNT(VOUCHER_NO) AS total_count ,
+      SUM(TOTAL_AMOUNT) AS totAmt
+    FROM FAS_INTER_BANK_TRF_AT_HO
+    WHERE ACCOUNTING_FOR_OFFICE_ID IN
+      (SELECT office_id
+      FROM COM_MST_ALL_OFFICES_VIEW
+      WHERE region_office_id=$P{txtRegionId}::int
+      )
+    AND TRANSFER_STATUS!='C'
+    AND DATE_OF_TRANSFER BETWEEN $P{txtfrom}::date AND $P{txtto}::date
+    GROUP BY ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID
+    )ab
+  ) s,
+  FAS_MST_ACCT_UNITS t
+WHERE s.ACCOUNTING_UNIT_ID=t.ACCOUNTING_UNIT_ID
+ORDER BY t.ACCOUNTING_UNIT_NAME]]></queryString>
+
+	<field name="accounting_unit_name" class="java.lang.String"/>
+	<field name="accounting_unit_id" class="java.math.BigDecimal"/>
+	<field name="accounting_for_office_id" class="java.math.BigDecimal"/>
+	<field name="doctype" class="java.lang.String"/>
+	<field name="total_count" class="java.lang.Long"/>
+	<field name="peritem" class="java.lang.Double"/>
+	<field name="totamt" class="java.lang.Double"/>
+
+	<variable name="SUM_PERITEM_1" class="java.lang.Double" resetType="Group" resetGroup="AccUnit" calculation="Sum">
+		<variableExpression><![CDATA[$F{peritem}]]></variableExpression>
+	</variable>
+	<variable name="SUM_TOTAMT_1" class="java.lang.Double" resetType="Group" resetGroup="AccUnit" calculation="Sum">
+		<variableExpression><![CDATA[$F{totamt}]]></variableExpression>
+	</variable>
+	<variable name="CashonHand" class="java.lang.Double" resetType="Group" resetGroup="AccUnit" calculation="Nothing">
+		<variableExpression><![CDATA[new Double($V{SUM_PERITEM_1}.doubleValue() == 0 ? 0 : ($V{SUM_TOTAMT_1}.doubleValue()-$V{SUM_PERITEM_1}.doubleValue()))]]></variableExpression>
+	</variable>
+	<variable name="SUM_TOTAMT_2" class="java.math.BigDecimal" resetType="Group" resetGroup="AccUnit" calculation="Nothing">
+		<variableExpression><![CDATA[new BigDecimal($V{SUM_PERITEM_1}.doubleValue() + $V{CashonHand}.doubleValue() + $P{CR_ENTRIES}.doubleValue() + $P{DR_ENTRIES}.doubleValue())]]></variableExpression>
+	</variable>
+
+		<group  name="AccUnit" >
+			<groupExpression><![CDATA[$F{accounting_unit_name}]]></groupExpression>
+			<groupHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="6"
+						y="1"
+						width="257"
+						height="18"
+						forecolor="#0033FF"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{accounting_unit_name}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="105"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="8"
+						y="5"
+						width="205"
+						height="18"
+						key="staticText-19"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Total Debit/Credit for the Month ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="5"
+						width="119"
+						height="18"
+						key="textField-6"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$V{SUM_PERITEM_1}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="8"
+						y="26"
+						width="202"
+						height="17"
+						key="staticText-20"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Cash on Hand]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="8"
+						y="48"
+						width="205"
+						height="14"
+						key="staticText-21"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Credit Entries in Payment]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="8"
+						y="64"
+						width="205"
+						height="16"
+						key="staticText-22"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Debit Entries in Receipt]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="8"
+						y="87"
+						width="203"
+						height="15"
+						key="staticText-23"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Trial Balance Figure ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="85"
+						width="119"
+						height="18"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$V{SUM_TOTAMT_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="67"
+						width="119"
+						height="16"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{DR_ENTRIES}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="48"
+						width="119"
+						height="15"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{CR_ENTRIES}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="25"
+						width="119"
+						height="18"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$V{CashonHand}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="93"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="2"
+						y="6"
+						width="515"
+						height="25"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-3"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" size="17" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Transaction Count]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="136"
+						y="33"
+						width="87"
+						height="14"
+						key="staticText-12"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[From date :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="299"
+						y="33"
+						width="52"
+						height="16"
+						key="staticText-13"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[To date :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="229"
+						y="33"
+						width="58"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$P{txtfrom}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="359"
+						y="35"
+						width="64"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$P{txtto}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="156"
+						y="68"
+						width="86"
+						height="18"
+						forecolor="#CC00CC"
+						key="staticText-8"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Voucher Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="271"
+						y="68"
+						width="75"
+						height="18"
+						forecolor="#CC00CC"
+						key="staticText-9"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[No.of Voucher]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="351"
+						y="68"
+						width="97"
+						height="15"
+						forecolor="#CC00CC"
+						key="staticText-11"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font isBold="false"/>
+					</textElement>
+				<text><![CDATA[Total Amount]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="2"
+						y="58"
+						width="532"
+						height="2"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="2"
+						y="91"
+						width="532"
+						height="2"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="156"
+						y="2"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{doctype}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="268"
+						y="2"
+						width="67"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Long"><![CDATA[$F{total_count}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="353"
+						y="2"
+						width="98"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{peritem}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="330"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="430"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="110"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="2"
+						y="5"
+						width="532"
+						height="2"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</summary>
+</jasperReport>

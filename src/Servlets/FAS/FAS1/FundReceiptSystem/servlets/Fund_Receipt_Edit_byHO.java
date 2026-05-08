@@ -1,0 +1,778 @@
+package Servlets.FAS.FAS1.FundReceiptSystem.servlets;
+
+import Servlets.FAS.FAS1.CommonControls.servlets.Com_CashBook1;
+
+import Servlets.Security.classes.UserProfile;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.ResourceBundle;
+
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class Fund_Receipt_Edit_byHO extends HttpServlet {
+    private static final String CONTENT_TYPE =
+        "text/html; charset=windows-1252";
+
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    public void doPost(HttpServletRequest request,
+                       HttpServletResponse response) throws ServletException,
+                                                            IOException {
+
+        /**
+      * Session Checking
+      */
+        HttpSession session = request.getSession(false);
+        try {
+
+            if (session == null) {
+                System.out.println(request.getContextPath() + "/index.jsp");
+                response.sendRedirect(request.getContextPath() + "/index.jsp");
+                return;
+            }
+            System.out.println(session);
+
+        } catch (Exception e) {
+            System.out.println("Redirect Error :" + e);
+        }
+
+
+        /**
+         * Variables Declaration
+         */
+        Connection con = null;
+        ResultSet rs = null;
+        CallableStatement cs = null, cs1 = null;
+        PreparedStatement ps = null;
+        String xml = "";
+        String strCommand = "";
+        try {
+            ResourceBundle rs1 =
+                ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString = "";
+
+            String strDriver = rs1.getString("Config.DATA_BASE_DRIVER");
+            String strdsn = rs1.getString("Config.DSN");
+            String strhostname = rs1.getString("Config.HOST_NAME");
+            String strportno = rs1.getString("Config.PORT_NUMBER");
+            String strsid = rs1.getString("Config.SID");
+            String strdbusername = rs1.getString("Config.USER_NAME");
+            String strdbpassword = rs1.getString("Config.PASSWORD");
+            ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+            Class.forName(strDriver.trim());
+            con =
+ DriverManager.getConnection(ConnectionString, strdbusername.trim(),
+                             strdbpassword.trim());
+        } catch (Exception e) {
+            System.out.println("Exception in opening connection :" + e);
+
+        }
+
+
+        /**
+         * Get Command Parameter
+         */
+        try {
+
+            strCommand = request.getParameter("Command");
+            System.out.println("assign..here command..." + strCommand);
+        } catch (Exception e) {
+            System.out.println("Exception in assigning..." + e);
+        }
+
+
+        /**
+         * Add Command
+         */
+        if (strCommand.equalsIgnoreCase("Add")) {
+
+            /** Set Content Type */
+            String CONTENT_TYPE = "text/html; charset=windows-1252";
+            response.setContentType(CONTENT_TYPE);
+
+            /** XML Declaration */
+            xml = "<response><command>Add</command>";
+
+
+            /** Variables Declaration */
+            Calendar c;
+            int cmb_HO_acc_unitid = 0;
+            int cmbAcc_UnitCode = 0, cmbOffice_code = 0, txtCash_Month_hid =
+                0, txtCash_year = 0, txtVoucher_No = 0;
+            int txtCash_Acc_code = 0, txtBankId = 0, txtBranchId = 0;
+            long txtBankAccountNo = 0;
+            double txtAmount = 0;
+            String txtRemarks = "";
+            Date txtCrea_date = null, txtReferenceDate = null;
+            String txtReferenceNo = "", radRecType = "";
+            int txtCreditAccCode = 0, txtSubBankId = 0, txtSubBranchId =
+                0, txtSub_Office_code = 0;
+            long txtSubBankAccountNo = 0;
+            String txtCheque_DD = "", txtCheque_DD_NO = "";
+            Date txtCheque_DD_date = null;
+            String Remittance_Type = "";
+
+            /** Get Employee ID */
+            String update_user = (String)session.getAttribute("UserId");
+
+            /** Get Current Time */
+            long l = System.currentTimeMillis();
+            Timestamp ts = new Timestamp(l);
+
+            try {
+                txtCash_Acc_code =
+                        Integer.parseInt(request.getParameter("txtCash_Acc_code"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtCash_Acc_code " + txtCash_Acc_code);
+
+            try {
+                txtBankId =
+                        Integer.parseInt(request.getParameter("txtBankId"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtBankId " + txtBankId);
+
+            try {
+                txtBranchId =
+                        Integer.parseInt(request.getParameter("txtBranchId"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtBranchId " + txtBranchId);
+
+            try {
+                txtBankAccountNo =
+                        Long.parseLong(request.getParameter("txtBankAccountNo"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtBankAccountNo " + txtBankAccountNo);
+
+            try {
+                txtSub_Office_code =
+                        Integer.parseInt(request.getParameter("txtSub_Office_code"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtSub_Office_code " + txtSub_Office_code);
+
+
+            try {
+                cmb_HO_acc_unitid =
+                        Integer.parseInt(request.getParameter("cmb_HO_acc_unitid"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("cmb_HO_acc_unitid... " + cmb_HO_acc_unitid);
+
+
+            try {
+                txtCreditAccCode =
+                        Integer.parseInt(request.getParameter("txtCreditAccCode"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtCreditAccCode " + txtCreditAccCode);
+
+            try {
+                txtSubBankId =
+                        Integer.parseInt(request.getParameter("txtSubBankId"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtSubBankId " + txtSubBankId);
+
+            try {
+                txtSubBranchId =
+                        Integer.parseInt(request.getParameter("txtSubBranchId"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtSubBranchId " + txtSubBranchId);
+
+            try {
+                txtSubBankAccountNo =
+                        Long.parseLong(request.getParameter("txtSubBankAccountNo"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtSubBankAccountNo " + txtSubBankAccountNo);
+
+            try {
+                cmbAcc_UnitCode =
+                        Integer.parseInt(request.getParameter("cmbAcc_UnitCode"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("cmbAcc_UnitCode " + cmbAcc_UnitCode);
+
+            try {
+                cmbOffice_code =
+                        Integer.parseInt(request.getParameter("cmbOffice_code"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("cmbOffice_code " + cmbOffice_code);
+
+
+            String[] sd = request.getParameter("txtCrea_date").split("/");
+            c =
+   new GregorianCalendar(Integer.parseInt(sd[2]), Integer.parseInt(sd[1]) - 1,
+                         Integer.parseInt(sd[0]));
+            java.util.Date d = c.getTime();
+            txtCrea_date = new Date(d.getTime());
+            System.out.println("txtCrea_date " + txtCrea_date);
+
+            try {
+                txtVoucher_No =
+                        Integer.parseInt(request.getParameter("txtVoucher_No"));
+            } catch (Exception e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtVoucher_No " + txtVoucher_No);
+
+            try {
+                txtAmount =
+                        Double.parseDouble(request.getParameter("txtAmount"));
+            } catch (Exception e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtAmount " + txtAmount);
+
+            txtRemarks = request.getParameter("txtRemarks");
+            System.out.println("txtRemarks " + txtRemarks + "uu");
+
+
+            radRecType = request.getParameter("radRecType");
+            System.out.println("radRecType " + radRecType);
+
+
+            txtReferenceNo = request.getParameter("txtReferenceNo");
+            System.out.println("txtReferenceNo " + txtReferenceNo);
+
+            if (!request.getParameter("txtReferenceDate").equalsIgnoreCase("")) {
+                sd = request.getParameter("txtReferenceDate").split("/");
+                c =
+   new GregorianCalendar(Integer.parseInt(sd[2]), Integer.parseInt(sd[1]) - 1,
+                         Integer.parseInt(sd[0]));
+                d = c.getTime();
+                txtReferenceDate = new Date(d.getTime());
+            }
+            System.out.println("txtReferenceDate " + txtReferenceDate);
+
+            try {
+                txtCheque_DD = request.getParameter("txtCheque_DD");
+                Remittance_Type = txtCheque_DD;
+            } catch (Exception e) {
+                System.out.println("Failed to get Cheque or DD option");
+            }
+
+
+            try {
+                txtCheque_DD_NO = request.getParameter("txtCheque_DD_NO");
+            } catch (Exception e) {
+                System.out.println("Failed to get Cheque or DD Number ");
+            }
+
+
+            try {
+                sd = request.getParameter("txtCheque_DD_date").split("/");
+                c =
+   new GregorianCalendar(Integer.parseInt(sd[2]), Integer.parseInt(sd[1]) - 1,
+                         Integer.parseInt(sd[0]));
+                d = c.getTime();
+                txtCheque_DD_date = new Date(d.getTime());
+                System.out.println("txtCheque_DD_date " + txtCheque_DD_date);
+            } catch (Exception e) {
+                System.out.println("Failed to get Cheque or DD Date ");
+            }
+
+
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            /** Get Receipt Creation Date */
+            String Receipt_Creation_Date =
+                request.getParameter("txtCrea_date");
+
+            /** Call Com_CashBook Servlet for Calculating Cash Book Month and Year */
+            Com_CashBook1 cb = new Com_CashBook1();
+
+            /** Assign Cashbook Year and Month to year_month Variable */
+            String year_month = cb.cb_date(Receipt_Creation_Date).toString();
+
+            /** Split Cash Book Year and Month */
+            String[] ym = year_month.split("/");
+
+            /** Assign Year and Month */
+            txtCash_year = Integer.parseInt(ym[0]);
+            txtCash_Month_hid = Integer.parseInt(ym[1]);
+
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+            try {
+                con.clearWarnings();
+                con.setAutoCommit(false);
+
+                cs =
+  //con.prepareCall("call FAS_FUND_REC_BYHO_PROC(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+  con.prepareCall("call FAS_FUND_REC_BYHO_PROC(?::numeric,?::numeric,?,?::numeric,?::numeric,?::numeric,?,?::numeric,?::numeric,?::numeric,?::numeric,?,?::numeric,?,?,?::numeric,?::numeric,?::numeric,?::numeric,?,?,?,?,?::numeric,?,?,?::numeric,?::numeric)");
+
+                cs.setInt(1, cmbAcc_UnitCode);
+                cs.setInt(2, cmbOffice_code);
+                cs.setDate(3, txtCrea_date);
+                cs.setInt(4, txtCash_year);
+                cs.setInt(5, txtCash_Month_hid);
+                cs.setInt(6, txtVoucher_No);
+                cs.setString(7, radRecType);
+                cs.setInt(8, txtCash_Acc_code);
+                cs.setInt(9, txtBankId);
+                cs.setInt(10, txtBranchId);
+                cs.setLong(11, txtBankAccountNo);
+                cs.setString(12, txtRemarks);
+                cs.setDouble(13, txtAmount);
+                cs.setString(14, txtReferenceNo);
+                cs.setDate(15, txtReferenceDate);
+                cs.setInt(16, txtCreditAccCode);
+                cs.setInt(17, txtSubBankId);
+                cs.setInt(18, txtSubBranchId);
+                cs.setLong(19, txtSubBankAccountNo);
+                cs.setString(20, txtCheque_DD);
+                cs.setString(21, txtCheque_DD_NO);
+                cs.setDate(22, txtCheque_DD_date);
+                cs.setString(23, "update");
+                cs.registerOutParameter(24, java.sql.Types.NUMERIC);
+                cs.registerOutParameter(6, java.sql.Types.NUMERIC);
+                cs.setNull(24, java.sql.Types.NUMERIC);
+                cs.setNull(6, java.sql.Types.NUMERIC);
+                cs.setString(25, update_user);
+                cs.setTimestamp(26, ts);
+                cs.setInt(27, txtSub_Office_code);
+                cs.setInt(28, cmb_HO_acc_unitid);
+                cs.execute();
+//                txtVoucher_No = cs.getInt(6);
+//                int errcode = cs.getInt(24);
+                txtVoucher_No = cs.getBigDecimal(6).intValue();
+                int errcode = cs.getBigDecimal(24).intValue();
+                System.out.println("SQLCODE:::" + errcode);
+                if (errcode != 0) {
+                    System.out.println("redirect");
+                    sendMessage(response,
+                                "The Fund Receipt Transaction failed ", "ok");
+                    return;
+                } else {
+                    String txtReferNO_edit = "", txtRemak_edit = "";
+                    Date txtReferDate_edit = null;
+                    String radAuth_MC = "";
+                    int txtAuth_By = 0;
+
+                    System.out.println("txtReferDate_edit " +
+                                       txtReferDate_edit);
+                    cs1 =
+ con.prepareCall("call FAS_CROSS_REFERENCE_PROC(?::NUMERIC,?,?,?,?,?,?,?,?,?,?::VARCHAR,?,?,?,?,?)");
+                    cs1.setInt(1, cmbAcc_UnitCode);
+                    cs1.setInt(2, txtCash_year);
+                    cs1.setInt(3, txtCash_Month_hid);
+                    cs1.setInt(4, txtVoucher_No);
+                    cs1.setInt(5,
+                               cmbOffice_code); // This operation is only related with ?Head Office so here it's '5000'
+                    cs1.setDate(6, txtCrea_date);
+                    cs1.setString(7, "FRH"); // Fund Receipt from head office
+                    cs1.setString(8, txtReferNO_edit);
+                    cs1.setDate(9, txtReferDate_edit);
+                    cs1.setString(10, txtRemak_edit);
+                    cs1.setInt(11, txtAuth_By);
+                    cs1.setString(12, "insert");
+                    cs1.registerOutParameter(13, java.sql.Types.NUMERIC);
+                    cs1.setNull(13,java.sql.Types.NUMERIC);
+                    cs1.setString(14, update_user);
+                    cs1.setTimestamp(15, ts);
+                    cs1.setString(16, radAuth_MC);
+                    cs1.execute(); // insertion into cross reference table
+                    errcode = cs1.getInt(13);
+                    System.out.println("cmbAcc_UnitCode " + cmbAcc_UnitCode);
+                    System.out.println("txtCrea_date " + txtCrea_date);
+                    System.out.println("txtCash_year " + txtCash_year);
+                    System.out.println("txtCash_Month_hid " +
+                                       txtCash_Month_hid);
+                    System.out.println("SQLCODE:::" + errcode);
+                    if (errcode != 0) {
+                        con.rollback();
+                        sendMessage(response,
+                                    "The Fund Receipt Transaction Failed ",
+                                    "ok");
+                        xml = xml + "<flag>failure</flag>";
+                    } else {
+
+                        /**
+                             * Auto Generation of Bank Remittance for ECS Transaction
+                             */
+
+                        System.out.println("Remittance_Type----><--" +
+                                           Remittance_Type);
+                        int Verified_Authority = 0;
+
+
+                        if (Remittance_Type.equalsIgnoreCase("E")) {
+
+                            UserProfile empProfile =
+                                (UserProfile)session.getAttribute("UserProfile");
+                            Verified_Authority = empProfile.getEmployeeId();
+                            System.out.println("Verified_Authority::" +
+                                               Verified_Authority);
+
+                            System.out.println("inside E ");
+                            cs1 =
+// con.prepareCall("{call FAS_ECS_REMITTANCE_PROC(?,?,?,?,?,?,?,?,?,?)}");
+//                            cs1.setInt(1, cmbAcc_UnitCode);
+//                            cs1.setInt(2, cmbOffice_code);
+//                            cs1.setInt(3, txtCash_year);
+//                            cs1.setInt(4, txtCash_Month_hid);
+//                            cs1.setDate(5, txtCrea_date);
+//                            cs1.setString(6, "F-HO");
+//                            cs1.setDouble(7, txtAmount);
+//                            cs1.setInt(8, Verified_Authority);
+//                            cs1.setString(9, update_user);
+//                            cs1.registerOutParameter(10,
+//                                                     java.sql.Types.NUMERIC);
+//                            cs1.execute();
+//                            int err_code = cs1.getInt(10);
+                            		con.prepareCall("call FAS_ECS_REMITTANCE_PROC(?::numeric,?::numeric,?::numeric,?::numeric,?,?,?::numeric,?::numeric,?,?)");
+                            cs1.setInt(1, cmbAcc_UnitCode);
+                            cs1.setInt(2, cmbOffice_code);
+                            cs1.setInt(3, txtCash_year);
+                            cs1.setInt(4, txtCash_Month_hid);
+                            cs1.setDate(5, txtCrea_date);
+                            cs1.setString(6, "B");
+                            cs1.setDouble(7, txtAmount);
+                            cs1.setInt(8, Verified_Authority);
+                            cs1.setString(9, update_user);
+                            cs1.registerOutParameter(10, java.sql.Types.VARCHAR);
+                            cs1.setNull(10, java.sql.Types.VARCHAR);
+                            cs1.execute();
+                            //int err_code = cs1.getInt(10);
+                            String err_code = cs1.getString(10);
+                            if (err_code.equals("0")) {
+                                con.commit();
+                                sendMessage(response,
+                                            "The Fund Receipt Transaction Voucher Number '" +
+                                            txtVoucher_No +
+                                            "' has been Modified Successfully ",
+                                            "ok");
+                            } else {
+                                con.rollback();
+                                sendMessage(response,
+                                            "The Fund Receipt Creation Failed ",
+                                            "ok");
+                            }
+
+                        } else {
+                            con.commit();
+                            sendMessage(response,
+                                        "The Fund Receipt Transaction Voucher Number '" +
+                                        txtVoucher_No +
+                                        "' has been Modified Successfully ",
+                                        "ok");
+                        }
+
+                    }
+                }
+            } catch (Exception e) {
+                try {
+                    con.rollback();
+                } catch (SQLException sqle) {
+                    System.out.println("excepton in rollback");
+                }
+                sendMessage(response, "The Fund Receipt TransactionFailed ",
+                            "ok");
+                System.out.println("Exception occur due to " + e);
+            } finally {
+                System.out.println("done");
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException sqle) {
+                    System.out.println("exception in autocommit");
+                }
+            }
+        }
+
+    }
+
+
+    public void doGet(HttpServletRequest request,
+                      HttpServletResponse response) throws ServletException,
+                                                           IOException {
+        try {
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                System.out.println(request.getContextPath() + "/index.jsp");
+                response.sendRedirect(request.getContextPath() + "/index.jsp");
+                return;
+            }
+            System.out.println(session);
+
+        } catch (Exception e) {
+            System.out.println("Redirect Error :" + e);
+        }
+        Connection con = null;
+        ResultSet rs = null, rs2 = null, rs3 = null;
+        //CallableStatement cs=null,cs1=null;
+        PreparedStatement ps = null, ps3 = null, ps2 = null;
+        String xml = "";
+        String strCommand = "";
+        try {
+            ResourceBundle rs1 =
+                ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString = "";
+
+            String strDriver = rs1.getString("Config.DATA_BASE_DRIVER");
+            String strdsn = rs1.getString("Config.DSN");
+            String strhostname = rs1.getString("Config.HOST_NAME");
+            String strportno = rs1.getString("Config.PORT_NUMBER");
+            String strsid = rs1.getString("Config.SID");
+            String strdbusername = rs1.getString("Config.USER_NAME");
+            String strdbpassword = rs1.getString("Config.PASSWORD");
+            ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+            Class.forName(strDriver.trim());
+            con =
+ DriverManager.getConnection(ConnectionString, strdbusername.trim(),
+                             strdbpassword.trim());
+        } catch (Exception e) {
+            System.out.println("Exception in opening connection :" + e);
+            //sendMessage(response,"probably Failed to Establish connection to the database server.. due to "+e,"ok");
+
+        }
+
+        response.setContentType(CONTENT_TYPE);
+        response.setHeader("Cache-Control", "no-cache");
+        PrintWriter out = response.getWriter();
+
+        try {
+            strCommand = request.getParameter("Command");
+            System.out.println("assign..here command..." + strCommand);
+        }
+
+        catch (Exception e) {
+            System.out.println("Exception in assigning..." + e);
+        }
+        int cmbAcc_UnitCode = 0, cmbOffice_code = 0;
+        Date txtCrea_date = null;
+        try {
+            cmbAcc_UnitCode =
+                    Integer.parseInt(request.getParameter("cmbAcc_UnitCode"));
+        } catch (NumberFormatException e) {
+            System.out.println("exception" + e);
+        }
+        System.out.println("cmbAcc_UnitCode " + cmbAcc_UnitCode);
+
+        try {
+            cmbOffice_code =
+                    Integer.parseInt(request.getParameter("cmbOffice_code"));
+        } catch (NumberFormatException e) {
+            System.out.println("exception" + e);
+        }
+        System.out.println("cmbOffice_code " + cmbOffice_code);
+
+        if (strCommand.equalsIgnoreCase("load_Voucher_No")) {
+            String CONTENT_TYPE = "text/xml; charset=windows-1252";
+            response.setContentType(CONTENT_TYPE);
+            Calendar c;
+            xml = "<response><command>load_Voucher_No</command>";
+
+            try {
+                String[] sd = request.getParameter("txtCrea_date").split("/");
+                c =
+   new GregorianCalendar(Integer.parseInt(sd[2]), Integer.parseInt(sd[1]) - 1,
+                         Integer.parseInt(sd[0]));
+                java.util.Date d = c.getTime();
+                txtCrea_date = new Date(d.getTime());
+                System.out.println("txtCrea_date " + txtCrea_date);
+
+                //ps=con.prepareStatement("select RECEIPT_NO from FAS_FUND_RECEIPT_BY_HO where ACCOUNTING_UNIT_ID=?  and ACCOUNTING_FOR_OFFICE_ID=? and RECEIPT_DATE=? and RECEIPT_STATUS!='C'");
+                ps =
+  con.prepareStatement("select i.RECEIPT_NO from FAS_FUND_RECEIPT_BY_HO i,FAS_CROSS_REFERENCE c where " +
+                       " i.ACCOUNTING_UNIT_ID=?  and i.ACCOUNTING_FOR_OFFICE_ID=? and i.RECEIPT_DATE=? and i.RECEIPT_STATUS!='C' " +
+                       " and i.ACCOUNTING_UNIT_ID=c.ACCOUNTING_UNIT_ID and i.ACCOUNTING_FOR_OFFICE_ID=c.ACCOUNTING_FOR_OFFICE_ID " +
+                       " and i.CASHBOOK_YEAR=c.CASHBOOK_YEAR and i.CASHBOOK_MONTH=c.CASHBOOK_MONTH and i.RECEIPT_NO=c.VOUCHER_NO " +
+                       " and c.CHANGE_NO=0 and c.AUTHORIZED_TO='M' and DOC_TYPE='FRH'");
+                ps.setInt(1, cmbAcc_UnitCode);
+                ps.setInt(2, cmbOffice_code);
+                ps.setDate(3, txtCrea_date);
+                rs = ps.executeQuery();
+
+                int count = 0;
+                while (rs.next()) {
+
+                    xml =
+ xml + "<Rec_No>" + rs.getInt("RECEIPT_NO") + "</Rec_No>";
+                    count++;
+                }
+                if (count == 0)
+                    xml = xml + "<flag>failure</flag>";
+                else
+                    xml = xml + "<flag>success</flag>";
+                System.out.println("count  " + count);
+                ps.close();
+                rs.close();
+            } catch (Exception e) {
+                System.out.println("catch..HERE.in load VOUCHER." + e);
+                xml = xml + "<flag>failure</flag>";
+            }
+            xml = xml + "</response>";
+            System.out.println(xml);
+            out.println(xml);
+
+        }
+
+        else if (strCommand.equalsIgnoreCase("load_Voucher_Details")) {
+            String CONTENT_TYPE = "text/xml; charset=windows-1252";
+            response.setContentType(CONTENT_TYPE);
+            Calendar c;
+            xml = "<response><command>load_Voucher_Details</command>";
+            int txtVoucher_No = 0;
+            // Date txtCrea_date;
+
+            try {
+                txtVoucher_No =
+                        Integer.parseInt(request.getParameter("txtVoucher_No"));
+            } catch (NumberFormatException e) {
+                System.out.println("exception" + e);
+            }
+            System.out.println("txtVoucher_No " + txtVoucher_No);
+
+
+            try {
+                String[] sd = request.getParameter("txtCrea_date").split("/");
+                c =
+   new GregorianCalendar(Integer.parseInt(sd[2]), Integer.parseInt(sd[1]) - 1,
+                         Integer.parseInt(sd[0]));
+                java.util.Date d = c.getTime();
+                txtCrea_date = new Date(d.getTime());
+                System.out.println("txtCrea_date " + txtCrea_date);
+
+                ps =
+  con.prepareStatement("select RECEIPT_TYPE,DR_ACCOUNT_HEAD_CODE,HO_BANK_ID,HO_BRANCH_ID,HO_ACCOUNT_NO," +
+                       "trim(to_char(TOTAL_AMOUNT,'99999999999999.99')) as TOTAL_AMOUNT ,CHEQUE_OR_DD,CHEQUE_DD_NO,to_char(CHEQUE_DD_DATE,'DD/MM/YYYY') as cheq_dd_date,CR_ACCOUNT_HEAD_CODE," +
+                       "OFFICE_BANK_ID,OFFICE_BRANCH_ID,OFFICE_ACCOUNT_NO,RECEIVED_FROM_OFFICE_ID,RECEIVED_FROM_HO_UNIT_ID," +
+                       "REF_NO,to_char(REF_DATE,'DD/MM/YYYY') as referDate,PARTICULARS from " +
+                       "FAS_FUND_RECEIPT_BY_HO where ACCOUNTING_UNIT_ID=? and ACCOUNTING_FOR_OFFICE_ID=? " +
+                       " and RECEIPT_DATE=? and RECEIPT_NO=?");
+                ps.setInt(1, cmbAcc_UnitCode);
+                ps.setInt(2, cmbOffice_code);
+                ps.setDate(3, txtCrea_date);
+                ps.setInt(4, txtVoucher_No);
+                rs = ps.executeQuery();
+                System.out.println("outside if loop");
+                if (rs.next()) {
+                    System.out.println("indide if loop");
+                    xml = xml + "<flag>success</flag>";
+                    xml =
+ xml + "<R_type>" + rs.getString("RECEIPT_TYPE").trim() + "</R_type>";
+                    xml =
+ xml + "<MasHeadCode>" + rs.getString("DR_ACCOUNT_HEAD_CODE").trim() +
+   "</MasHeadCode>";
+                    xml =
+ xml + "<accNo>" + rs.getString("HO_ACCOUNT_NO").trim() + "</accNo>";
+                    ps3 =
+ con.prepareStatement("select bk.BANK_NAME ||'-' ||br.BRANCH_NAME || '-' ||br.CITY_TOWN_NAME as bankNAME" +
+                      " from FAS_MST_BANKS bk,FAS_MST_BANK_BRANCHES br where br.BANK_ID=? and br.BRANCH_ID=? and br.BANK_ID=bk.BANK_ID");
+                    ps3.setInt(1, rs.getInt("HO_BANK_ID"));
+                    ps3.setInt(2, rs.getInt("HO_BRANCH_ID"));
+                    rs3 = ps3.executeQuery();
+                    if (rs3.next()) {
+                        xml =
+ xml + "<bk_name>" + rs3.getString("bankNAME") + "</bk_name>";
+                        rs3.close();
+                        ps3.close();
+                    }
+                    xml =
+ xml + "<bk_id>" + rs.getInt("HO_BANK_ID") + "</bk_id><br_id>" +
+   rs.getInt("HO_BRANCH_ID") + "</br_id><Total_amt>" +
+   rs.getString("TOTAL_AMOUNT") + "</Total_amt><Remak>" +
+   rs.getString("PARTICULARS") + "</Remak><REF_NO>" + rs.getString("REF_NO") +
+   "</REF_NO><referDate>" + rs.getString("referDate") + "</referDate>";
+
+                    ps2 =
+ con.prepareStatement("select OFFICE_NAME from COM_MST_OFFICES where OFFICE_ID=?");
+                    ps2.setInt(1, rs.getInt("RECEIVED_FROM_OFFICE_ID"));
+                    rs2 = ps2.executeQuery();
+                    if (rs2.next()) {
+                        xml =
+ xml + "<Received_offid>" + rs.getInt("RECEIVED_FROM_OFFICE_ID") +
+   "</Received_offid>";
+                        xml =
+ xml + "<Received_offName>" + rs2.getString("OFFICE_NAME") +
+   "</Received_offName>";
+                    }
+                    xml =
+ xml + "<received_frm_HO_unitID>" + rs.getInt("RECEIVED_FROM_HO_UNIT_ID") +
+   "</received_frm_HO_unitID>"; // Added later on 31stjan2007
+
+                    xml =
+ xml + "<subAHcode>" + rs.getInt("CR_ACCOUNT_HEAD_CODE") + "</subAHcode>";
+                    xml =
+ xml + "<sub_bank_id>" + rs.getInt("OFFICE_BANK_ID") + "</sub_bank_id><sub_branch_id>" +
+   rs.getInt("OFFICE_BRANCH_ID") + "</sub_branch_id>" + "<subbankAccNo>" +
+   rs.getString("OFFICE_ACCOUNT_NO").trim() + "</subbankAccNo>";
+                    xml =
+ xml + "<che_or_DD>" + rs.getString("CHEQUE_OR_DD") + "</che_or_DD>" +
+   "<che_DD_no>" + rs.getString("CHEQUE_DD_NO") + "</che_DD_no>" +
+   "<che_DD_date>" + rs.getString("cheq_dd_date") + "</che_DD_date>";
+                    System.out.println("here ending..1");
+                    ps3 =
+ con.prepareStatement("select bk.BANK_NAME ||'-' ||br.BRANCH_NAME || '-' ||br.CITY_TOWN_NAME as bankNAME" +
+                      " from FAS_MST_BANKS bk,FAS_MST_BANK_BRANCHES br where br.BANK_ID=? and br.BRANCH_ID=? and br.BANK_ID=bk.BANK_ID");
+                    ps3.setInt(1, rs.getInt("OFFICE_BANK_ID"));
+                    ps3.setInt(2, rs.getInt("OFFICE_BRANCH_ID"));
+                    rs3 = ps3.executeQuery();
+                    if (rs3.next()) {
+                        xml =
+ xml + "<sub_bank_name>" + rs3.getString("bankNAME") + "</sub_bank_name>";
+                        rs3.close();
+                        ps3.close();
+                    }
+
+                }
+
+            } catch (Exception e) {
+                System.out.println("catch..HERE.in failure to retrieve." + e);
+                xml = xml + "<flag>failure</flag>";
+            }
+            xml = xml + "</response>";
+            System.out.println(xml);
+            out.println(xml);
+        }
+    }
+
+    private void sendMessage(HttpServletResponse response, String msg,
+                             String bType) {
+        try {
+            String url =
+                "org/Library/jsps/MessengerOkBack.jsp?message=" + msg +
+                "&button=" + bType;
+            response.sendRedirect(url);
+        } catch (IOException e) {
+            System.out.println("error in send message");
+        }
+    }
+
+}

@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Listof_self_check_withoutDate"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="850"
+		 pageHeight="595"
+		 columnWidth="790"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT accounting_unit_id,
+  accounting_for_office_id,
+  payment_date as "PAYMENT_DATE",
+  voucher_no as "VOUCHER_NO",
+  paid_to as "PAID_TO",
+  acc_head_code as "ACC_HEAD_CODE",
+  account_head_desc as "ACCOUNT_HEAD_DESC",
+  office_name as "OFFICE_NAME",
+  accounting_unit_name as "ACCOUNTING_UNIT_NAME",
+  amt as "AMT",
+  coalesce(sub_ledger_code,0) as "SUBLEDCODE",
+  --DECODE(subtycode,1,'Supplier',2,'Firms',3,'Assets',4,'Cheque Books',5,'Offices',6,'Bank',7,'Employees',8,'-',9,'Other Departments',10,'Project',11,'Contractors',12,'Scheme Owner',13,'Beneficiary',14,'TWAD','-')AS sub_ledger_type_code,
+---DECODE(A.SUB_LEDGER_TYPE_CODE,1,'Supplier',2,'Firms',3,'Assets',4,'ChequeBooks',5,'Offices',6,'Bank',7,'Employees',8,'-',9,'OtherDepartments',10,'Project', 11,'Contractors',12,'Scheme Owner',13,'Beneficiary',14,'DCB-Beneficiary',15,'Accounting Units',16,'Scheme Type',	
+----	17,'Miscellaneous',18,'Pensioners',19,'Family Pensioner',20,'IMIS-SA-CCDU',21,'IMIS-SA-MIS',22,'IMIS-SA-GIS',23,'IMIS-SA-R and D',24,'IMIS-SA-M and I',25,'Special PF Payments',26,'Work In Progress',27,'IMIS-SA-WQMS',28,'One Day Salary Contribution','-') as sub_ledger_type_code_desc,
+CASE WHEN A.SUB_LEDGER_TYPE_CODE= 1 THEN 'Supplier'
+	 WHEN A.SUB_LEDGER_TYPE_CODE= 2 THEN 'Firms'
+     WHEN A.SUB_LEDGER_TYPE_CODE= 3 THEN 'Assets'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 4 THEN 'ChequeBooks'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 5 THEN 'Offices'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 6 THEN 'Bank'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 7 THEN 'Employees'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 8 THEN '-'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 9 THEN 'OtherDepartments'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 10 THEN 'Project' 
+    WHEN A.SUB_LEDGER_TYPE_CODE= 11 THEN 'Contractors'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 12 THEN 'Scheme Owner'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 13 THEN 'Beneficiary'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 14 THEN 'DCB-Beneficiary'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 15 THEN 'Accounting Units'
+    WHEN A.SUB_LEDGER_TYPE_CODE= 16 THEN 'Scheme Type'
+
+WHEN A.SUB_LEDGER_TYPE_CODE= 17 THEN 'Miscellaneous'
+WHEN A.SUB_LEDGER_TYPE_CODE= 18 THEN 'Pensioners'
+
+WHEN A.SUB_LEDGER_TYPE_CODE= 19 THEN 'Family Pensioner'
+WHEN A.SUB_LEDGER_TYPE_CODE= 20 THEN 'IMIS-SA-CCDU'
+WHEN A.SUB_LEDGER_TYPE_CODE= 21 THEN 'IMIS-SA-MIS'
+WHEN A.SUB_LEDGER_TYPE_CODE= 22 THEN 'IMIS-SA-GIS'
+WHEN A.SUB_LEDGER_TYPE_CODE= 23 THEN 'IMIS-SA-R and D'
+WHEN A.SUB_LEDGER_TYPE_CODE= 24 THEN 'IMIS-SA-M and I'
+WHEN A.SUB_LEDGER_TYPE_CODE= 25 THEN 'Special PF Payments'
+WHEN A.SUB_LEDGER_TYPE_CODE= 26 THEN 'Work In Progress'
+WHEN A.SUB_LEDGER_TYPE_CODE= 27 THEN 'IMIS-SA-WQMS'
+WHEN A.SUB_LEDGER_TYPE_CODE= 28 THEN 'One Day Salary Contribution'
+ ELSE '-' END as "SUB_LEDGER_TYPE_CODE_DESC",
+
+  CR_DR_INDICATOR as "CR_DR_INDICATOR",
+  PARTICULARS as "PARTICULARS",
+CASE
+      WHEN CR_DR_INDICATOR ='DR'
+      THEN total_amount
+      ELSE 0
+    END AS "DEBIT_AMT",
+    CASE
+      WHEN CR_DR_INDICATOR ='CR'
+      THEN total_amount
+      ELSE 0
+    END AS "CREDIT_AMT"
+FROM
+  (SELECT accounting_unit_id,
+    accounting_for_office_id,
+    payment_date,
+    cashbook_year,
+    cashbook_month,
+    voucher_no,
+    account_head_code,
+    sub_ledger_type_code,
+    sub_ledger_code,
+    paid_to,
+    total_amount as amt,
+    created_by_module,
+    payment_status,
+    remarks
+  FROM fas_payment_master
+  WHERE created_by_module='SC'
+  AND payment_status     ='L'
+  ) a
+LEFT OUTER JOIN
+  (SELECT ACCOUNTING_UNIT_ID AS accunit,
+    ACCOUNTING_FOR_OFFICE_ID AS officeid,
+    CASHBOOK_YEAR            AS cayr,
+    CASHBOOK_MONTH           AS camt,
+    ACCOUNT_HEAD_CODE        AS ahc,
+    VOUCHER_NO               AS voucherno,
+    SUB_LEDGER_TYPE_CODE     AS subtycode,
+    AMOUNT                   AS total_amount,
+    SUB_LEDGER_CODE          AS subledcode,
+    CR_DR_INDICATOR,
+    PARTICULARS
+  FROM fas_payment_transaction
+  )b
+ON a.accounting_unit_id       =b.accunit
+AND a.accounting_for_office_id=b.officeid
+AND a.cashbook_year           =b.cayr
+AND a.cashbook_month          =b.camt
+AND a.voucher_no       =b.voucherno
+LEFT OUTER JOIN
+  (SELECT account_head_code AS acc_head_code,
+    account_head_desc
+  FROM com_mst_account_heads
+  )c
+ON  b.ahc=c.acc_head_code
+LEFT OUTER JOIN
+  ( SELECT office_id,office_name FROM com_mst_offices
+  )d
+ON a.accounting_for_office_id=d.office_id
+LEFT OUTER JOIN
+  (SELECT accounting_unit_id AS acc_unit_id,
+    accounting_unit_name
+  FROM FAS_MST_ACCT_UNITS
+  )e
+ON a.accounting_unit_id       =e.acc_unit_id
+WHERE a.accounting_unit_id    =$P{accountingunitid}::int
+AND a.accounting_for_office_id=$P{accountofficeid}::int
+AND a.cashbook_year           =$P{txtCB_Year}::int
+AND a.cashbook_month          =$P{txtCB_Month}::int]]></queryString>
+
+	<field name="accounting_unit_id" class="java.math.BigDecimal"/>
+	<field name="accounting_for_office_id" class="java.math.BigDecimal"/>
+	<field name="PAYMENT_DATE" class="java.sql.Date"/>
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="PAID_TO" class="java.lang.String"/>
+	<field name="ACC_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="AMT" class="java.math.BigDecimal"/>
+	<field name="SUBLEDCODE" class="java.math.BigDecimal"/>
+	<field name="SUB_LEDGER_TYPE_CODE_DESC" class="java.lang.String"/>
+	<field name="CR_DR_INDICATOR" class="java.lang.String"/>
+	<field name="PARTICULARS" class="java.lang.String"/>
+	<field name="DEBIT_AMT" class="java.math.BigDecimal"/>
+	<field name="CREDIT_AMT" class="java.math.BigDecimal"/>
+
+	<variable name="SUM_TOTAL_AMOUNT_1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_AMT_1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMT}]]></variableExpression>
+	</variable>
+	<variable name="CR_AMT" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT_AMT}]]></variableExpression>
+	</variable>
+	<variable name="DR_AMT" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT_AMT}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="140"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="4"
+						y="33"
+						width="772"
+						height="25"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-1"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" size="17" isBold="true"/>
+					</textElement>
+				<text><![CDATA[List Of Self Cheque]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="584"
+						y="7"
+						width="67"
+						height="21"
+						key="staticText-2"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Report Date: ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="651"
+						y="7"
+						width="100"
+						height="21"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="238"
+						y="63"
+						width="140"
+						height="18"
+						key="staticText-3"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica" isBold="false"/>
+					</textElement>
+				<text><![CDATA[For the month and year]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="89"
+						width="97"
+						height="19"
+						key="staticText-4"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Name of the Office : ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="113"
+						width="115"
+						height="21"
+						key="staticText-5"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Accounting Unit Name : ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="132"
+						y="89"
+						width="264"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="132"
+						y="113"
+						width="264"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="379"
+						y="63"
+						width="88"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthInWords}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="467"
+						y="63"
+						width="45"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{txtCB_Year}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="56"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="1"
+						y="9"
+						width="29"
+						height="22"
+						key="staticText-6"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl.No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="31"
+						y="9"
+						width="90"
+						height="22"
+						key="staticText-7"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Payment Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="122"
+						y="9"
+						width="75"
+						height="22"
+						key="staticText-8"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Voucher No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="198"
+						y="9"
+						width="74"
+						height="22"
+						key="staticText-9"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Paid To]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="273"
+						y="9"
+						width="165"
+						height="22"
+						key="staticText-10"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Account Head ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="438"
+						y="9"
+						width="85"
+						height="22"
+						key="staticText-11"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sub Ledger Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="523"
+						y="9"
+						width="94"
+						height="22"
+						key="staticText-12"
+						isPrintWhenDetailOverflows="true"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sub Ledger Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="714"
+						y="9"
+						width="75"
+						height="22"
+						key="staticText-13"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Particulars]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="47"
+						width="790"
+						height="1"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="5"
+						width="790"
+						height="1"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="608"
+						y="5"
+						width="15"
+						height="0"
+						key="staticText-15"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Static Text]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="618"
+						y="9"
+						width="60"
+						height="22"
+						key="staticText-16"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="679"
+						y="9"
+						width="34"
+						height="22"
+						key="staticText-17"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr/Dr Ind]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="36"  isSplitAllowed="false" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="31"
+						y="6"
+						width="90"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{PAYMENT_DATE}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="327"
+						y="6"
+						width="9"
+						height="18"
+						key="staticText-14"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[-]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="198"
+						y="6"
+						width="74"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PAID_TO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="337"
+						y="5"
+						width="101"
+						height="30"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="273"
+						y="6"
+						width="53"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACC_HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="714"
+						y="6"
+						width="75"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PARTICULARS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="679"
+						y="6"
+						width="34"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_DR_INDICATOR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="523"
+						y="6"
+						width="94"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SUBLEDCODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="122"
+						y="6"
+						width="75"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VOUCHER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="618"
+						y="6"
+						width="60"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="6"
+						width="23"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="438"
+						y="6"
+						width="85"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SUB_LEDGER_TYPE_CODE_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="46"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="551"
+						y="22"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="651"
+						y="22"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="70"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="790"
+						height="6"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="480"
+						y="46"
+						width="112"
+						height="20"
+						key="staticText-18"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Grand Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="595"
+						y="46"
+						width="87"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{SUM_AMT_1}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="68"
+						width="790"
+						height="1"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="480"
+						y="4"
+						width="112"
+						height="20"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Credit Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="595"
+						y="4"
+						width="87"
+						height="18"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{CR_AMT}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="481"
+						y="25"
+						width="112"
+						height="20"
+						key="staticText-20"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Debit Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="595"
+						y="25"
+						width="87"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{DR_AMT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

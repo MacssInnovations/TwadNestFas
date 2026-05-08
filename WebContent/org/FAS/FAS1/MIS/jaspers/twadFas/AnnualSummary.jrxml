@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="AnnualSummary"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT bb.categry_id,
+  (SELECT CATEGORYNAME FROM CATEGORY WHERE CATEGORYID='0'||bb.categry_id
+  )AS category_name,
+  aa.ACCOUNTING_UNIT_ID,
+  aa.ACCOUNTING_FOR_OFFICE_ID,
+  aa.head_code,AA.Debit,AA.Credit,
+  aa. NET,
+  bb.*
+FROM
+  (SELECT a.ACCOUNTING_UNIT_ID,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM FAS_JOURNAL_TRANSACTION
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY a.accounting_unit_id,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code union all
+    SELECT a.ACCOUNTING_UNIT_ID,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM fas_payment_transaction
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY a.accounting_unit_id,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code
+    union all
+    SELECT a.ACCOUNTING_UNIT_ID,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM fas_receipt_transaction
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY a.accounting_unit_id,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code
+  )aa
+LEFT JOIN
+  (SELECT head.ACCOUNTCODE,
+    head.HEADOFACCOUNT,
+    head.annualgroupingid,
+    (SELECT ANNUALGROUPINGNAME
+    FROM ANNUALGROUPING
+    WHERE ANNUALGROUPINGID=head.annualgroupingid
+    )AS annualgrp_name,
+    (SELECT CATEGORYID
+    FROM ANNUALGROUPING
+    WHERE ANNUALGROUPINGID=head.annualgroupingid
+    )AS categry_id,
+    head.MONTHLYGROUPINGID,
+    (SELECT monthlygroupingname
+    FROM MONTHLYGROUPING
+    WHERE monthlygroupingid=head.MONTHLYGROUPINGID
+    )AS mnthlyGid_name,
+    head.SCHEMEID,
+    (SELECT schemename FROM SCHEMES WHERE schemeid=head.SCHEMEID
+    )AS scheme_Name,
+    head.PROJECTID,
+    (SELECT PROJECTNAME FROM PROJECT WHERE PROJECTID=head.PROJECTID
+    )AS project_name,
+    head.PROGRAMID,
+    (SELECT PROGRAMNAME FROM PROGRAM WHERE PROGRAMID=head.programid
+    )AS progarm_name
+  FROM headofaccountcp head
+  )bb
+ON aa.head_code=bb.ACCOUNTCODE
+ORDER BY aa.accounting_unit_id,
+  aa.ACCOUNTING_FOR_OFFICE_ID,
+  aa.head_code]]></queryString>
+
+	<field name="CATEGRY_ID" class="java.lang.String"/>
+	<field name="CATEGORY_NAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="DEBIT" class="java.math.BigDecimal"/>
+	<field name="CREDIT" class="java.math.BigDecimal"/>
+	<field name="NET" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTCODE" class="java.lang.String"/>
+	<field name="HEADOFACCOUNT" class="java.lang.String"/>
+	<field name="ANNUALGROUPINGID" class="java.lang.String"/>
+	<field name="ANNUALGRP_NAME" class="java.lang.String"/>
+	<field name="MONTHLYGROUPINGID" class="java.lang.String"/>
+	<field name="MNTHLYGID_NAME" class="java.lang.String"/>
+	<field name="SCHEMEID" class="java.lang.String"/>
+	<field name="SCHEME_NAME" class="java.lang.String"/>
+	<field name="PROJECTID" class="java.lang.String"/>
+	<field name="PROJECT_NAME" class="java.lang.String"/>
+	<field name="PROGRAMID" class="java.lang.String"/>
+	<field name="PROGARM_NAME" class="java.lang.String"/>
+
+
+		<group  name="catgory" >
+			<groupExpression><![CDATA[$F{CATEGRY_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CATEGRY_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="111"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CATEGORY_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="42"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="25"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="53"
+						y="3"
+						width="466"
+						height="18"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Trial Balance]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="48"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="138"
+						y="9"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="255"
+						y="9"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="10"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

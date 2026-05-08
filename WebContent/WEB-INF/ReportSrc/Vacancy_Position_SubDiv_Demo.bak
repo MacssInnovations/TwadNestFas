@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Vacancy_Position_SubDiv_Demo"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="pos_id" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="off_id" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select * from
+(
+select region_office_id, circle_office_id, division_office_id, subdivision_office_id, 
+       office_id , office_level_id , office_name, off_order, 
+       post_rank_id,sanctioned_no_of_posts, diversion_to_other, diversion_from_other,
+       decode(filled,NULL,0,filled) as filled,
+       (decode(sanctioned_no_of_posts,null,0,sanctioned_no_of_posts)+decode(diversion_from_other,null,0,diversion_from_other)-decode(diversion_to_other,null,0,diversion_to_other)) as total,
+       ((decode(sanctioned_no_of_posts,null,0,sanctioned_no_of_posts)+decode(diversion_from_other,null,0,diversion_from_other)-decode(diversion_to_other,null,0,diversion_to_other))-decode(filled,null,0,filled)) as vacant
+       from 
+(
+select  region_office_id, circle_office_id, 
+       division_office_id, subdivision_office_id, office_id, office_level_id, office_name, off_order, 
+       post_rank_id,sanctioned_no_of_posts, diversion_to_other, diversion_from_other
+from 
+(
+select office_id as offid, post_rank_id, sanctioned_no_of_posts,
+diversion_to_other, diversion_from_other
+from HRM_SS_SANCTION_DETAILS
+where  fin_year='2006-2007'
+) a
+inner join
+( 
+select * from com_mst_all_offices_view
+) b
+on a.offid=b.office_id
+) aa
+left outer join
+(
+select office_id as offid,post_rank_id as postid ,count(*) as filled from
+(
+select office_id,post_rank_id,employee_id from
+(
+select office_id, designation_id,employee_id
+from hrm_emp_current_posting
+where department_id='TWAD'
+) a1
+left outer join
+(
+select designation_id as desig_id,post_rank_id from hrm_mst_designations
+) b1
+on a1.designation_id=b1.desig_id
+)
+group by office_id,post_rank_id
+order by office_id,post_rank_id
+) bb
+on aa.office_id = bb.offid and aa.post_rank_id = bb.postid
+where aa.office_id in ($P!{off_id}) and post_rank_id=$P{pos_id}
+order by off_order
+) x
+left outer join
+(
+select post_rank_id,post_rank_name from hrm_mst_post_ranks
+) y
+on x.post_rank_id=y.post_rank_id]]></queryString>
+
+	<field name="REGION_OFFICE_ID" class="java.lang.String"/>
+	<field name="CIRCLE_OFFICE_ID" class="java.lang.String"/>
+	<field name="DIVISION_OFFICE_ID" class="java.lang.String"/>
+	<field name="SUBDIVISION_OFFICE_ID" class="java.lang.String"/>
+	<field name="OFFICE_ID" class="java.lang.String"/>
+	<field name="OFFICE_LEVEL_ID" class="java.lang.String"/>
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="OFF_ORDER" class="java.lang.String"/>
+	<field name="POST_RANK_ID" class="java.lang.Integer"/>
+	<field name="SANCTIONED_NO_OF_POSTS" class="java.lang.Integer"/>
+	<field name="DIVERSION_TO_OTHER" class="java.lang.Integer"/>
+	<field name="DIVERSION_FROM_OTHER" class="java.lang.Integer"/>
+	<field name="FILLED" class="java.lang.Integer"/>
+	<field name="TOTAL" class="java.lang.Integer"/>
+	<field name="VACANT" class="java.lang.Integer"/>
+	<field name="POST_RANK_NAME" class="java.lang.String"/>
+
+	<variable name="SUM_SANCTIONED_NO_OF_POSTS_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{SANCTIONED_NO_OF_POSTS}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DIVERSION_TO_OTHER_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{DIVERSION_TO_OTHER}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DIVERSION_FROM_OTHER_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{DIVERSION_FROM_OTHER}]]></variableExpression>
+	</variable>
+	<variable name="SUM_TOTAL_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
+	</variable>
+	<variable name="SUM_FILLED_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{FILLED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_VACANT_1" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{VACANT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_SANCTIONED_NO_OF_POSTS_2" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{SANCTIONED_NO_OF_POSTS}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DIVERSION_TO_OTHER_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DIVERSION_TO_OTHER}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DIVERSION_FROM_OTHER_2" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{DIVERSION_FROM_OTHER}]]></variableExpression>
+	</variable>
+	<variable name="SUM_TOTAL_2" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
+	</variable>
+	<variable name="SUM_FILLED_2" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{FILLED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_VACANT_2" class="java.lang.Integer" resetType="Group" resetGroup="des_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{VACANT}]]></variableExpression>
+	</variable>
+
+		<group  name="des_id" isStartNewPage="true" >
+			<groupExpression><![CDATA[null]]></groupExpression>
+			<groupHeader>
+			<band height="28"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="17"
+						y="6"
+						width="86"
+						height="18"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Post Rank Name :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="103"
+						y="6"
+						width="233"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{POST_RANK_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="40"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="147"
+						y="12"
+						width="35"
+						height="19"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total :]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="7"
+						width="766"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="36"
+						width="766"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="223"
+						y="12"
+						width="32"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_SANCTIONED_NO_OF_POSTS_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="328"
+						y="12"
+						width="30"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_DIVERSION_TO_OTHER_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="420"
+						y="12"
+						width="28"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_DIVERSION_FROM_OTHER_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="495"
+						y="12"
+						width="35"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_TOTAL_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="588"
+						y="12"
+						width="36"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_FILLED_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="681"
+						y="12"
+						width="34"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_VACANT_2}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="72"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="8"
+						y="8"
+						width="766"
+						height="32"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font size="18"/>
+					</textElement>
+				<text><![CDATA[Tamil Nadu Water Supply and Drainage Board]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="8"
+						y="40"
+						width="766"
+						height="32"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font size="18"/>
+					</textElement>
+				<text><![CDATA[Vacancy Position Summary Report]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="101"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="5"
+						width="766"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="8"
+						y="9"
+						width="766"
+						height="32"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[   Sl.No.             Office                                                       Sanctioned Strength                                             No. of Posts             No.of Posts
+                                                                                                                                                                                Filled up                   Vacant]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="8"
+						y="41"
+						width="766"
+						height="52"
+						forecolor="#FFFFFF"
+						backcolor="#3366FF"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[                                                             Sanctioned No.        Diversion          Diversion         Total
+                                                                   of Posts                      to                      from
+                                                                                                  others  (-)         others  (+)]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="97"
+						width="766"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="28"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="23"
+						y="6"
+						width="28"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{des_id_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="55"
+						y="6"
+						width="143"
+						height="18"
+						key="textField"
+						stretchType="RelativeToBandHeight"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="223"
+						y="6"
+						width="32"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{SANCTIONED_NO_OF_POSTS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="328"
+						y="6"
+						width="29"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{DIVERSION_TO_OTHER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="413"
+						y="6"
+						width="35"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{DIVERSION_FROM_OTHER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="495"
+						y="6"
+						width="35"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{TOTAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="588"
+						y="6"
+						width="37"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{FILLED}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="680"
+						y="6"
+						width="36"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{VACANT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="4"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

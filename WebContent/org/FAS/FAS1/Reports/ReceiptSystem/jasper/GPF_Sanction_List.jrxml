@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="GPF_Sanction_List"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="765"
+		 pageHeight="842"
+		 columnWidth="705"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="office_id" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="year" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="month" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="monthinWords" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT master_san.HRMS_SANCTION_ID,
+  master_san.BILL_MAJOR_TYPE_CODE,
+  (SELECT BILL_MAJOR_TYPE_DESC
+  FROM FAS_BILL_MAJOR_TYPES
+  WHERE BILL_MAJOR_TYPE_CODE=master_san.BILL_MAJOR_TYPE_CODE
+  )AS major_desc,
+  master_san.BILL_MINOR_TYPE_CODE,
+  (SELECT BILL_MINOR_TYPE_DESC
+  FROM FAS_BILL_MINOR_TYPES_MST
+  WHERE BILL_MAJOR_TYPE_CODE=master_san.BILL_MAJOR_TYPE_CODE
+  AND BILL_MINOR_TYPE_CODE  =master_san.BILL_MINOR_TYPE_CODE
+  )AS minor_desc,
+  master_san.BILL_SUB_TYPE_CODE,
+   (SELECT BILL_SUB_TYPE_DESC
+  FROM FAS_BILL_SUB_TYPES
+  WHERE BILL_MAJOR_TYPE_CODE=master_san.BILL_MAJOR_TYPE_CODE
+  AND BILL_MINOR_TYPE_CODE  =master_san.BILL_MINOR_TYPE_CODE
+  and BILL_SUB_TYPE_CODE=master_san.BILL_SUB_TYPE_CODE
+  )AS sub_desc,
+  master_san.EMPLOYEE_ID,
+  (select EMPLOYEE_INITIAL||'.'||EMPLOYEE_NAME from HRM_MST_EMPLOYEES where EMPLOYEE_ID= master_san.EMPLOYEE_ID)as emp_name,
+  master_san.GPF_NO,
+  master_san.DESIGNATION_ID,
+  (select DESIGNATION from HRM_MST_DESIGNATIONS where DESIGNATION_ID= master_san.DESIGNATION_ID)as desig,
+  master_san.OFFICE_ID,
+  (select OFFICE_NAME from COM_MST_OFFICES where OFFICE_ID=master_san.OFFICE_ID)as office_desc,
+  master_san.SANCTION_PROC_NO,
+  master_san.SANCTION_PROC_DATE,
+  master_san.SANCTIONED_AMOUNT,
+  master_tran.PAYMENT_HEAD_OF_AC,
+  master_tran.PAYMENT_AMOUNT,
+  master_tran.REMARKS
+  
+FROM
+  (SELECT HRMS_SANCTION_ID,
+    BILL_MAJOR_TYPE_CODE,
+    BILL_MINOR_TYPE_CODE,
+    BILL_SUB_TYPE_CODE,
+    EMPLOYEE_ID,
+    GPF_NO,
+    DESIGNATION_ID,
+    OFFICE_ID,
+    SANCTION_PROC_NO,
+    SANCTION_PROC_DATE,
+    SANCTIONED_AMOUNT
+  FROM HRM_SANCTIONS_BILLS_LINK_MST
+  WHERE OFFICE_ID=$P{office_id}
+  ) master_san
+JOIN
+  (SELECT HRMS_SANCTION_ID,
+    BILL_MAJOR_TYPE_CODE,
+    BILL_MINOR_TYPE_CODE,
+    BILL_SUB_TYPE_CODE,
+    EMPLOYEE_ID,
+    GPF_NO,
+    DESIGNATION_ID,
+    REMARKS,
+    PAYMENT_HEAD_OF_AC,
+    PAYMENT_AMOUNT,
+    OFFICE_ID
+  FROM HRM_SANCTIONS_BILLS_LINK_TRN
+  WHERE OFFICE_ID=$P{office_id}
+  ) master_tran
+ON master_san.HRMS_SANCTION_ID       = master_san.HRMS_SANCTION_ID
+AND master_san.BILL_MAJOR_TYPE_CODE  = master_san.BILL_MAJOR_TYPE_CODE
+AND master_tran.BILL_MINOR_TYPE_CODE = master_san.BILL_MINOR_TYPE_CODE
+AND master_tran.BILL_SUB_TYPE_CODE   = master_san.BILL_SUB_TYPE_CODE
+AND master_tran.EMPLOYEE_ID          = master_san.EMPLOYEE_ID
+AND master_tran.GPF_NO               = master_san.GPF_NO
+AND master_tran.designation_id       = master_san.designation_id
+AND master_tran.office_id            = master_san.office_id]]></queryString>
+
+	<field name="HRMS_SANCTION_ID" class="java.math.BigDecimal"/>
+	<field name="BILL_MAJOR_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="MAJOR_DESC" class="java.lang.String"/>
+	<field name="BILL_MINOR_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="MINOR_DESC" class="java.lang.String"/>
+	<field name="BILL_SUB_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="SUB_DESC" class="java.lang.String"/>
+	<field name="EMPLOYEE_ID" class="java.math.BigDecimal"/>
+	<field name="EMP_NAME" class="java.lang.String"/>
+	<field name="GPF_NO" class="java.math.BigDecimal"/>
+	<field name="DESIGNATION_ID" class="java.math.BigDecimal"/>
+	<field name="DESIG" class="java.lang.String"/>
+	<field name="OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="OFFICE_DESC" class="java.lang.String"/>
+	<field name="SANCTION_PROC_NO" class="java.lang.String"/>
+	<field name="SANCTION_PROC_DATE" class="java.sql.Timestamp"/>
+	<field name="SANCTIONED_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="PAYMENT_HEAD_OF_AC" class="java.math.BigDecimal"/>
+	<field name="PAYMENT_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="REMARKS" class="java.lang.String"/>
+
+	<variable name="tot_pay_amt" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{PAYMENT_AMOUNT}]]></variableExpression>
+	</variable>
+
+		<group  name="tot_amt" >
+			<groupExpression><![CDATA[]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="28"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="1"
+						width="705"
+						height="1"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="452"
+						y="2"
+						width="131"
+						height="21"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Payment Amount: ]]></text>
+				</staticText>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="25"
+						width="705"
+						height="1"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="223"
+						y="2"
+						width="102"
+						height="21"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Sanctioned Amount: ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="327"
+						y="2"
+						width="58"
+						height="21"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SANCTIONED_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="585"
+						y="2"
+						width="58"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_pay_amt}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="42"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="705"
+						height="26"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[List of GPF Sanction Proceeding]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="639"
+						y="26"
+						width="64"
+						height="12"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="601"
+						y="26"
+						width="38"
+						height="12"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[Date : ]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="1"
+						width="355"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Office Name : "+$F{OFFICE_DESC}]]></textFieldExpression>
+				</textField>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="18"
+						width="705"
+						height="1"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="26"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="2"
+						width="16"
+						height="21"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="104"
+						y="2"
+						width="81"
+						height="21"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Bill Minor Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="16"
+						y="2"
+						width="88"
+						height="21"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Bill Major Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="182"
+						y="2"
+						width="77"
+						height="21"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Bill Sub Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="261"
+						y="2"
+						width="73"
+						height="21"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Employee Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="402"
+						y="2"
+						width="72"
+						height="21"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Name Sanction Proc No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="476"
+						y="2"
+						width="51"
+						height="21"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Sanc Proc Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="528"
+						y="2"
+						width="55"
+						height="21"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[A/c Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="590"
+						y="2"
+						width="53"
+						height="21"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="646"
+						y="2"
+						width="58"
+						height="21"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Remarks]]></text>
+				</staticText>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="24"
+						width="705"
+						height="1"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="336"
+						y="2"
+						width="66"
+						height="21"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Designation]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="-1"
+						width="16"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="16"
+						y="-1"
+						width="88"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MAJOR_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="104"
+						y="-1"
+						width="81"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MINOR_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="185"
+						y="-1"
+						width="74"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SUB_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="401"
+						y="-1"
+						width="73"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SANCTION_PROC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="646"
+						y="-1"
+						width="58"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REMARKS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="476"
+						y="-1"
+						width="51"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{SANCTION_PROC_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="528"
+						y="-1"
+						width="55"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAYMENT_HEAD_OF_AC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="585"
+						y="-1"
+						width="58"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAYMENT_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="260"
+						y="-1"
+						width="74"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{EMP_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="334"
+						y="-1"
+						width="68"
+						height="21"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DESIG}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="3"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="0"
+						width="705"
+						height="1"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

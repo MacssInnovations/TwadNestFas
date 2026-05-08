@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ViewReceipt_Count_WithoutDate_Office_Subrpt"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="129"
+		 pageHeight="159"
+		 columnWidth="129"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="txtfrom" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="txtto" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="accountingunitName" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="accountofficeName" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["/home1/twadonline/public_html/org/FAS/FAS1/Reports/ReceiptSystem/jasper/VoucherMonitor/"]]></defaultValueExpression>
+	</parameter>
+	<queryString><![CDATA[SELECT DECODE(SUM(A.TOTAMT),NULL,0,SUM(A.TOTAMT))       AS TOTAMT,
+DECODE(SUM(B.TOTAMT1),NULL,0,SUM(B.TOTAMT1))       AS totAmt1
+    
+    FROM
+      (
+      SELECT ACCOUNTING_UNIT_ID,ACCOUNTING_FOR_OFFICE_ID,CASHBOOK_YEAR,CASHBOOK_MONTH,        
+      COUNT(RECEIPT_NO) AS total_count,
+        SUM(TOTAL_AMOUNT)       AS totAmt
+      FROM FAS_RECEIPT_MASTER
+      WHERE ACCOUNTING_UNIT_ID     =$P{accountingunitid}
+      AND ACCOUNTING_FOR_OFFICE_ID =$P{accountofficeid}
+      AND CASHBOOK_YEAR            =$P{txtCB_Year}
+      AND CASHBOOK_MONTH           =$P{txtCB_Month}
+      AND CREATED_BY_MODULE        ='CR'
+      AND RECEIPT_STATUS!          ='C'
+      GROUP BY ACCOUNTING_UNIT_ID, ACCOUNTING_FOR_OFFICE_ID, CASHBOOK_YEAR, CASHBOOK_MONTH
+      )A
+    FULL JOIN
+      ( SELECT ACCOUNTING_UNIT_ID,ACCOUNTING_FOR_OFFICE_ID,CASHBOOK_YEAR,CASHBOOK_MONTH,        
+      COUNT(RECEIPT_NO) AS TOTAL_COUNT,
+        SUM(TOTAL_AMOUNT)       AS totAmt1
+      FROM FAS_RECEIPT_MASTER
+      WHERE ACCOUNTING_UNIT_ID     =$P{accountingunitid}
+      AND ACCOUNTING_FOR_OFFICE_ID =$P{accountofficeid}
+      AND CASHBOOK_YEAR            =$P{txtCB_Year}
+      AND CASHBOOK_MONTH           =$P{txtCB_Month}
+      AND CREATED_BY_MODULE        ='CR'
+      AND RECEIPT_STATUS!          ='C'
+      AND REMITTANCE_STATUS        ='Y'
+      AND REMITTANCE_IN_CURR_MONTH ='Y' GROUP BY ACCOUNTING_UNIT_ID, ACCOUNTING_FOR_OFFICE_ID, CASHBOOK_YEAR, CASHBOOK_MONTH
+      )b
+    ON A.ACCOUNTING_UNIT_ID =B.ACCOUNTING_UNIT_ID
+      AND A.ACCOUNTING_UNIT_ID     =$P{accountingunitid}
+      AND A.ACCOUNTING_FOR_OFFICE_ID =$P{accountofficeid}
+      AND A.CASHBOOK_YEAR            =$P{txtCB_Year}
+      AND a.CASHBOOK_MONTH           =$P{txtCB_Month}]]></queryString>
+
+	<field name="TOTAMT" class="java.math.BigDecimal"/>
+	<field name="TOTAMT1" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="18"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="2"
+						width="117"
+						height="13"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TOTAMT}.subtract($F{TOTAMT1} )]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

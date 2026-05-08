@@ -1,0 +1,1092 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TrialBalance_Summary_SJV" pageWidth="927" pageHeight="595" orientation="Landscape" whenNoDataType="NoPages" columnWidth="867" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="bd89d4da-001a-4f18-ab0d-fb94fde6c7a3">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="accountingunitid" class="java.lang.Integer"/>
+	<parameter name="from_cashbookmonth" class="java.lang.Integer"/>
+	<parameter name="from_cashbookyear" class="java.lang.Integer"/>
+	<parameter name="from_monthvalue" class="java.lang.String"/>
+	<parameter name="to_cashbookmonth" class="java.lang.Integer"/>
+	<parameter name="to_cashbookyear" class="java.lang.Integer"/>
+	<parameter name="to_monthvalue" class="java.lang.String"/>
+	<parameter name="supplementno" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT accounting_unit_id,
+  accounting_unit_name,
+  acchead1,
+  account_head_desc ,
+  cashbook_month,
+  debit_opening_balance,
+  credit_opening_balance,
+  current_month_debit,
+  current_month_credit,
+  ( debit_opening_balance  + current_month_debit )  AS debit_cb ,
+  ( credit_opening_balance + current_month_credit ) AS credit_cb ,
+  x1,
+  y1
+FROM
+  (SELECT *
+  FROM
+    (
+    -- Find staring Cashbook Month and Year for each and every Account Head code
+    SELECT accounting_unit_id,
+      account_head_code,
+      TO_CHAR(mon_year_date,'MM')     AS cashbook_month1,
+      TO_CHAR(mon_year_date, 'YYYY' ) AS cashbook_year1
+    FROM
+      (SELECT accounting_unit_id,
+        account_head_code,
+        MIN(mon_year_date) AS mon_year_date
+      FROM
+        (SELECT accounting_unit_id,
+          account_head_code,
+          ( to_date(cashbook_month
+          ||'-'
+          || cashbook_year, 'mm-yyyy')) AS mon_year_date
+        FROM fas_trial_balance
+        WHERE accounting_unit_id= ($P{accountingunitid})
+        AND to_date(cashbook_month
+          ||'-'
+          || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+          || '-'
+          || ($P{from_cashbookyear}) , 'mm-yyyy')
+        AND to_date( ($P{to_cashbookmonth})
+          ||'-'
+          || ($P{to_cashbookyear}) , 'mm-yyyy')
+        UNION ALL
+        SELECT accounting_unit_id,
+          account_head_code,
+          ( to_date(cashbook_month
+          ||'-'
+          || cashbook_year, 'mm-yyyy')) AS mon_year_date
+        FROM fas_trial_balance_supplement
+        WHERE accounting_unit_id= ($P{accountingunitid})
+        AND to_date(cashbook_month
+          ||'-'
+          || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+          || '-'
+          || ($P{from_cashbookyear}) , 'mm-yyyy')
+        AND to_date( ($P{to_cashbookmonth})
+          ||'-'
+          || ($P{to_cashbookyear}) , 'mm-yyyy')
+        AND supplement_no = 1
+        UNION ALL
+        SELECT accounting_unit_id,
+          account_head_code,
+          ( to_date(cashbook_month
+          ||'-'
+          || cashbook_year, 'mm-yyyy')) AS mon_year_date
+        FROM fas_trial_balance_supplement
+        WHERE accounting_unit_id= ($P{accountingunitid})
+        AND to_date(cashbook_month
+          ||'-'
+          || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+          || '-'
+          || ($P{from_cashbookyear}) , 'mm-yyyy')
+        AND to_date( ($P{to_cashbookmonth})
+          ||'-'
+          || ($P{to_cashbookyear}) , 'mm-yyyy')
+        AND supplement_no = $P{supplementno}
+        AND supplement_no = 2
+        )
+      GROUP BY accounting_unit_id,
+        account_head_code
+      )
+    ORDER BY accounting_unit_id,
+      account_head_code
+    ) a
+  LEFT OUTER JOIN
+    (
+    -- Find Opening Balance in Regular TB
+    SELECT accounting_unit_id AS accunitid1,
+      account_head_code       AS acchead1,
+      cashbook_month,
+      cashbook_year,
+      debit_opening_balance,
+      credit_opening_balance
+    FROM fas_trial_balance
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    UNION ALL
+    -- Find Opening Balance in supplement TB ( supplement no = 1 )
+    SELECT accounting_unit_id AS accunitid1,
+      account_head_code       AS acchead1,
+      cashbook_month,
+      cashbook_year,
+      debit_opening_balance,
+      credit_opening_balance
+    FROM fas_trial_balance_supplement
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    AND supplement_no          = 1
+    AND account_head_code NOT IN
+      (SELECT account_head_code
+      FROM fas_trial_balance
+      WHERE accounting_unit_id=($P{accountingunitid})
+      AND to_date(cashbook_month
+        ||'-'
+        || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+        || '-'
+        || ($P{from_cashbookyear}) , 'mm-yyyy')
+      AND to_date( ($P{to_cashbookmonth})
+        ||'-'
+        || ($P{to_cashbookyear}) , 'mm-yyyy')
+      )
+    AND account_head_code NOT IN
+      (SELECT account_head_code
+      FROM fas_trial_balance_supplement
+      WHERE accounting_unit_id=($P{accountingunitid})
+      AND to_date(cashbook_month
+        ||'-'
+        || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+        || '-'
+        || ($P{from_cashbookyear}) , 'mm-yyyy')
+      AND to_date( ($P{to_cashbookmonth})
+        ||'-'
+        || ($P{to_cashbookyear}) , 'mm-yyyy')
+      AND supplement_no = 2
+      )
+    UNION ALL
+    -- Find Opening Balance in supplement TB ( supplement_no = 2)
+    SELECT accounting_unit_id AS accunitid1,
+      account_head_code       AS acchead1,
+      cashbook_month,
+      cashbook_year,
+      debit_opening_balance,
+      credit_opening_balance
+    FROM fas_trial_balance_supplement
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    AND supplement_no          = $P{supplementno}
+    AND supplement_no          = 2
+    AND account_head_code NOT IN
+      (SELECT account_head_code
+      FROM fas_trial_balance
+      WHERE accounting_unit_id=($P{accountingunitid})
+      AND to_date(cashbook_month
+        ||'-'
+        || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+        || '-'
+        || ($P{from_cashbookyear}) , 'mm-yyyy')
+      AND to_date( ($P{to_cashbookmonth})
+        ||'-'
+        || ($P{to_cashbookyear}) , 'mm-yyyy')
+      )
+    ) b
+  ON a.accounting_unit_id = b.accunitid1
+  AND a.account_head_code = b.acchead1
+  AND a.cashbook_month1   = b.cashbook_month
+  AND a.cashbook_year1    = b.cashbook_year
+  LEFT OUTER JOIN
+    (
+    -- Find Sum of Current Month Debit and Current Month Credit
+    SELECT account_head_code,
+      SUM(current_month_debit)  AS current_month_debit,
+      SUM(current_month_credit) AS current_month_credit
+    FROM
+      (SELECT account_head_code,
+        current_month_debit,
+        current_month_credit
+      FROM fas_trial_balance
+      WHERE accounting_unit_id=($P{accountingunitid})
+      AND to_date(cashbook_month
+        ||'-'
+        || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+        || '-'
+        || ($P{from_cashbookyear}) , 'mm-yyyy')
+      AND to_date( ($P{to_cashbookmonth})
+        ||'-'
+        || ($P{to_cashbookyear}) , 'mm-yyyy')
+      UNION ALL
+      SELECT account_head_code,
+        current_month_debit,
+        current_month_credit
+      FROM fas_trial_balance_supplement
+      WHERE accounting_unit_id = ($P{accountingunitid})
+      AND cashbook_month       = $P{to_cashbookmonth}
+      AND cashbook_year        = $P{to_cashbookyear}
+      AND supplement_no        = 1
+      UNION ALL
+      SELECT account_head_code,
+        current_month_debit,
+        current_month_credit
+      FROM fas_trial_balance_supplement
+      WHERE accounting_unit_id = ($P{accountingunitid})
+      AND cashbook_month       = $P{to_cashbookmonth}
+      AND cashbook_year        = $P{to_cashbookyear}
+      AND supplement_no        = $P{supplementno}
+      AND supplement_no        = 2
+      )
+    GROUP BY account_head_code
+    ORDER BY account_head_code
+    )c
+  ON b.acchead1=c.account_head_code
+  LEFT OUTER JOIN
+    (SELECT account_head_desc,
+      account_head_code AS achcode
+    FROM com_mst_account_heads
+    )d
+  ON d.achcode=c.account_head_code
+  LEFT OUTER JOIN
+    (SELECT accounting_unit_id AS aunitid,
+      accounting_unit_name
+    FROM fas_mst_acct_units
+    )e
+  ON e.aunitid=a.accounting_unit_id
+  ),
+  (SELECT SUM(CURRENT_MONTH_DEBIT) AS x1 ,
+    SUM(CURRENT_MONTH_CREDIT)      AS y1
+  FROM
+    (SELECT current_month_debit,
+      current_month_credit
+    FROM fas_trial_balance
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    UNION ALL
+    SELECT current_month_debit,
+      current_month_credit
+    FROM fas_trial_balance_supplement
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    AND supplement_no = 1
+    UNION ALL
+    SELECT current_month_debit,
+      current_month_credit
+    FROM fas_trial_balance_supplement
+    WHERE accounting_unit_id= ($P{accountingunitid})
+    AND to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN to_date( ($P{from_cashbookmonth})
+      || '-'
+      || ($P{from_cashbookyear}) , 'mm-yyyy')
+    AND to_date( ($P{to_cashbookmonth})
+      ||'-'
+      || ($P{to_cashbookyear}) , 'mm-yyyy')
+    AND supplement_no = $P{supplementno}
+    AND supplement_no = 2
+    )
+  )
+ORDER BY acchead1]]>
+	</queryString>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="ACCHEAD1" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="DEBIT_OPENING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="CREDIT_OPENING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="CURRENT_MONTH_DEBIT" class="java.math.BigDecimal"/>
+	<field name="CURRENT_MONTH_CREDIT" class="java.math.BigDecimal"/>
+	<field name="DEBIT_CB" class="java.math.BigDecimal"/>
+	<field name="CREDIT_CB" class="java.math.BigDecimal"/>
+	<field name="X1" class="java.lang.String"/>
+	<field name="Y1" class="java.lang.String"/>
+	<variable name="SUM_DEBIT_OPENING_BALANCE_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT_OPENING_BALANCE}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CREDIT_OPENING_BALANCE_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT_OPENING_BALANCE}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CURRENT_MONTH_DEBIT_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_MONTH_DEBIT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CURRENT_MONTH_CREDIT_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_MONTH_CREDIT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DEBIT_CB_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT_CB}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CREDIT_CB_1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT_CB}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DEBIT_OPENING_BALANCE_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT_OPENING_BALANCE}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CREDIT_OPENING_BALANCE_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT_OPENING_BALANCE}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CURRENT_MONTH_DEBIT_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_MONTH_DEBIT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CURRENT_MONTH_CREDIT_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_MONTH_CREDIT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_DEBIT_CB_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT_CB}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CREDIT_CB_2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT_CB}]]></variableExpression>
+	</variable>
+	<variable name="net" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_MONTH_DEBIT}.subtract($F{CURRENT_MONTH_CREDIT})]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="5" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="138" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-12" x="4" y="63" width="160" height="21" uuid="f2da8fcd-e7df-47a2-8e51-a604a6430a0b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Accounting Unit Name:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="218" y="64" width="274" height="18" uuid="c412626b-f8e0-4f36-888d-bc187eb80403"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-18" x="4" y="10" width="413" height="27" forecolor="#0B0492" uuid="d3b52351-aa3e-4cff-a2c6-1571adbb5007"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SUPPLEMENT TRIAL BALANCE FOR THE PERIOD FROM ]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-3" x="422" y="11" width="101" height="25" uuid="a29c812e-4acf-4327-b1a8-f3f5893b1f1c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{from_monthvalue}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-4" x="524" y="11" width="47" height="25" uuid="038610d4-e4e7-49f7-be58-455272b262a2"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{from_cashbookyear}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField" x="600" y="9" width="87" height="26" uuid="08ce60b8-d891-47c7-84e8-1dfaa2210684"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{to_monthvalue}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField" x="688" y="9" width="44" height="26" uuid="d6b71e6f-f829-4174-a35d-10d32445b2d6"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{to_cashbookyear}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-19" x="572" y="13" width="27" height="24" forecolor="#0A1993" uuid="5dabda01-b8f2-437e-80fa-5e8ecd0887eb"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[To]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-6" x="195" y="115" width="75" height="20" forecolor="#140A0A" uuid="b97eeaf3-ac1b-4c08-bb5f-2a419b25c7cb"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Debit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-7" x="283" y="114" width="75" height="20" forecolor="#140A0A" uuid="f1020c40-3e6a-4490-830b-9207d71aaf89"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Credit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-8" x="388" y="114" width="75" height="21" forecolor="#140A0A" uuid="1b65e755-bc48-4a86-adb6-697ec6f320b2"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Debit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" x="488" y="115" width="75" height="22" forecolor="#140A0A" uuid="81545c38-5512-4732-b9e0-6ba62c8c37fd"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Credit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-10" x="685" y="115" width="75" height="21" forecolor="#140A0A" uuid="c0afe6ce-532b-4fe5-b4ce-d662c944241b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Debit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" x="787" y="115" width="75" height="21" forecolor="#140A0A" uuid="8abcd294-b683-4910-80fc-d63ccdf02e41"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Credit]]></text>
+			</staticText>
+			<line>
+				<reportElement key="line-1" x="0" y="137" width="867" height="1" uuid="d4ab7ff1-4f14-41b6-86c7-3f03a8ae3137"/>
+			</line>
+			<line>
+				<reportElement key="line-9" x="0" y="86" width="867" height="1" uuid="5b84b701-a125-4f37-bd11-8180ae208030"/>
+			</line>
+			<line>
+				<reportElement key="line-10" x="0" y="113" width="867" height="1" uuid="9080dc93-a2cb-439c-a20b-b08da21c631c"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-14" mode="Transparent" x="2" y="89" width="187" height="21" forecolor="#120808" backcolor="#F7EDF9" uuid="964ee74f-3d54-46a8-b975-45842993ff38"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Account Head and Description]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement key="rectangle-2" x="70" y="13" width="0" height="0" uuid="dac62470-939b-4129-ae6f-8783ef0ddb6d"/>
+			</rectangle>
+			<staticText>
+				<reportElement key="staticText-15" x="200" y="89" width="148" height="21" forecolor="#120808" uuid="9ca6765c-f0c2-426e-9765-30856a0b57ac"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Opening Balance]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-16" x="398" y="89" width="263" height="20" forecolor="#120808" uuid="e50f615a-35ce-4ddd-b916-afe367c0f909"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[For The Period]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-17" x="700" y="89" width="140" height="21" forecolor="#120808" uuid="fc7e4a31-609f-4fdd-8bd8-5ff42a8bb45b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Closing Balance]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" pattern="###0" isBlankWhenNull="true">
+				<reportElement key="textField" x="171" y="66" width="37" height="18" uuid="5a7a99e5-b031-494a-b319-8be2fa4be1ef"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-27" x="164" y="66" width="10" height="17" uuid="9050d88f-ddef-4e21-ab0c-3a25d8504c50"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<text><![CDATA[(]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-28" x="208" y="66" width="10" height="17" uuid="2e4d3080-b02a-4734-8d17-f7333903692f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<text><![CDATA[)]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="537" y="63" width="230" height="18" uuid="e33eac0c-e336-4372-a022-cd3307fc5895"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="18"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{X1}).equalsIgnoreCase($F{Y1}) ? "Tally Successfully":"Does not Tally"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-29" x="6" y="40" width="160" height="21" uuid="636a4e4f-b979-4dc5-8512-93b1f1281b8c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Supplement Number :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="169" y="43" width="100" height="18" uuid="2f9a37b4-f8d8-489e-b430-fbea11161c5b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA[$P{supplementno}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-30" x="567" y="42" width="49" height="19" uuid="52f3a0c5-22c6-4319-aa6f-41e03650f732"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<text><![CDATA[Date :]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" pattern="dd/MM/yyyy h.mm a" isBlankWhenNull="true">
+				<reportElement key="textField-9" x="621" y="42" width="146" height="20" uuid="04472126-2bef-4eee-a010-e7f0495b7d30"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-31" x="573" y="115" width="88" height="22" forecolor="#140A0A" uuid="a022fa20-0177-4537-a90b-b01be06cb5a7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Net (DR-CR)]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField" x="62" y="1" width="132" height="18" uuid="ec97f970-5e31-4777-9412-0fcca94f6cb6"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="196" y="1" width="73" height="18" uuid="f5347cae-27d1-4e4a-8521-177d944acb75"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{DEBIT_OPENING_BALANCE}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="274" y="1" width="85" height="18" uuid="78d2973c-2e04-4a74-8071-d7d10d3cea81"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CREDIT_OPENING_BALANCE}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="388" y="1" width="74" height="18" uuid="d9262fa3-50b6-415f-83e1-1ca7294fa366"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CURRENT_MONTH_DEBIT}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="488" y="1" width="75" height="18" uuid="ccdbd59e-56ec-4e5c-a023-6b7b65c598fe"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CURRENT_MONTH_CREDIT}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="683" y="1" width="75" height="18" uuid="034b80b1-fb81-4b8e-aa3b-ecb6c1236485"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{DEBIT_CB}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="787" y="1" width="75" height="18" uuid="9f773f8f-d5d0-4437-b899-1510f77dcbb8"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CREDIT_CB}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="###0" isBlankWhenNull="true">
+				<reportElement key="textField" x="4" y="1" width="55" height="18" uuid="954186e9-5bde-4bdf-b6ba-099ac30bf04b"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{ACCHEAD1}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField-10" x="586" y="1" width="75" height="18" uuid="8c640a5b-a88b-4e81-97c4-55fde7eb4272"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CURRENT_MONTH_DEBIT}.subtract($F{CURRENT_MONTH_CREDIT})]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="23" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="293" y="3" width="100" height="18" uuid="3a5e29a6-45aa-4920-8a7f-291e8e7c9c63"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement key="textField" x="393" y="3" width="100" height="18" uuid="565df616-660d-4fd5-abcc-d8c9675e6f83"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="3" splitType="Stretch"/>
+	</lastPageFooter>
+	<summary>
+		<band height="176" splitType="Stretch">
+			<line>
+				<reportElement key="line-20" x="0" y="25" width="867" height="1" uuid="3b4e2816-f53d-4f03-a916-6332ce2d8adf"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-20" x="11" y="72" width="677" height="25" uuid="6c38f60e-dc54-4219-938d-ea57c7f21ab1"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[1. CERTIFIED THAT I HAVE PERSONALLY CHECKED THE CODE NUMBER, HEAD OF ACCOUNT AND   THE AMOUNT GIVEN IN THE TRIAL BALANCE AND THAT THEY ARE CORRECT.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-21" x="11" y="108" width="215" height="17" uuid="f7e31c67-6af8-4d47-ba87-9a23692f4644"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[2. CERTIFIED THAT THE TRIAL BALANCE FOR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-22" x="537" y="107" width="176" height="17" uuid="22d3febc-3c7e-4a7c-84be-e01a3dfdbc93"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[HAS BEEN FREEZED   IN ON-LINE FAS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-23" x="11" y="125" width="677" height="27" uuid="57c2686d-b669-48d8-9521-6a962308913f"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[3. CERTIFIED THAT THE TRIAL BALANCE HAS BEEN PRINTED OUT FROM THE ON-LINE FAS  ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-24" x="11" y="152" width="200" height="24" uuid="f67ca048-fdd1-4cee-ac36-016d4343b01e"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<text><![CDATA[Assistant Accounts Officer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-25" x="535" y="152" width="239" height="20" uuid="c355fc7b-2efc-4e0c-af25-3ee7cc979d03"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<text><![CDATA[Executive Engineer]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-5" x="226" y="103" width="101" height="20" uuid="3fbe71e1-ad83-4d0c-97ee-a196e737f3c1"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{from_monthvalue}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-6" x="328" y="104" width="47" height="20" uuid="17ee01cd-1576-44f0-bf96-d9e5357a4332"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{from_cashbookyear}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-26" x="377" y="106" width="27" height="19" forecolor="#0A1993" uuid="e9dee405-9d98-4558-a03d-15e50223817e"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[To]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-7" x="404" y="107" width="87" height="21" uuid="c7092193-7ee4-4322-bd46-e25bbb4e5b66"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{to_monthvalue}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="false">
+				<reportElement key="textField-8" x="492" y="107" width="44" height="21" uuid="7b49bc3a-1d2f-479a-8ca5-6557418608d3"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{to_cashbookyear}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line-21" x="0" y="3" width="867" height="1" uuid="81c15313-9d16-451f-b9b0-47bd23b546bd"/>
+			</line>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="182" y="5" width="86" height="18" uuid="a78bd8ab-1eb2-4d66-9dc6-4dc190bc881d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_DEBIT_OPENING_BALANCE_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="272" y="5" width="88" height="18" uuid="a28e6294-3f6d-4c61-8a6d-f49513f23367"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_CREDIT_OPENING_BALANCE_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="367" y="5" width="97" height="18" uuid="1f30e297-5688-4524-8762-2379ecd82913"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_CURRENT_MONTH_DEBIT_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="475" y="5" width="91" height="18" uuid="2bbe06d7-19c1-439b-ad0b-3514526061ee"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_CURRENT_MONTH_CREDIT_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="667" y="5" width="90" height="18" uuid="9392042c-1266-4453-9158-eb539597557c"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_DEBIT_CB_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="770" y="5" width="92" height="18" uuid="f187cc6a-ad1b-4801-9f3c-b8c464e931e4"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SUM_CREDIT_CB_2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField-11" x="573" y="5" width="91" height="18" uuid="bffdad2f-d885-4723-bd47-6571c74a256e"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{net}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

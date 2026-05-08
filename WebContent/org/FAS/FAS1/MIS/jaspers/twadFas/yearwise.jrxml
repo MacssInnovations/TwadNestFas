@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="yearwise"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="425"
+		 pageHeight="842"
+		 columnWidth="365"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT 'Quantity Supplied' AS qtyname,
+  'Demand'                 AS dmdname,
+  'Collection'             AS col,
+  FIN_YEAR                 AS YEAR,
+  SUM(Qty)       /100000         AS Qty,
+  SUM(DMD)       /100000         AS DMD ,
+  SUM(Collection)/100000         AS Collection
+FROM
+  (SELECT BILL.FIN_YEAR,
+    BILL.QTY,
+    COLL.DMD,
+    COLL.COLLECTION
+  FROM
+    (SELECT BENEFICIARY_SNO,
+      BENEFICIARY_NAME ,
+      OFFICE_ID,
+      BENEFICIARY_TYPE_ID_SUB
+    FROM PMS_DCB_MST_BENEFICIARY
+    )ben
+  LEFT JOIN
+    (SELECT YEAR,
+      MONTH,
+      FIN_YEAR,
+      BENEFICIARY_SNO,
+      SUM( QTY_CONSUMED ) AS QTY
+    FROM Pms_Dcb_Wc_Billing_fin
+    WHERE FIN_YEAR = 2020
+    GROUP BY YEAR,
+      MONTH,
+      FIN_YEAR,
+      BENEFICIARY_SNO
+    )BILL
+  ON BILL.BENEFICIARY_SNO=BEN.BENEFICIARY_SNO
+  LEFT JOIN
+    (SELECT BENEFICIARY_SNO,
+      BILL_MONTH,
+      BILL_YEAR,
+      FIN_YEAR,
+      SUM(MONTH_BILL_AMT)                                                                                                                                                     AS DMD,
+      ((SUM(COLN_CUR_YR_WC) +SUM(COLN_MAINT) + SUM(COLN_YESTER_YR_WC) +SUM(MINUS_CHARGES_WC) + SUM(MINUS_CHARGES_MAINT) ) - (SUM(ADD_CHARGES_WC) + SUM(ADD_CHARGES_MAINT) ) ) AS COLLECTION -- add maintanence Journal
+    FROM PMS_DCB_TRN_BILL_DMD_FIN
+    WHERE FIN_YEAR = 2020
+    GROUP BY BENEFICIARY_SNO,
+      BILL_MONTH,
+      BILL_YEAR,
+      FIN_YEAR
+    )Coll
+  ON Ben.Beneficiary_Sno=Coll.Beneficiary_Sno
+  AND BILL.month        =COLL.BILL_MONTH
+  AND BILL.YEAR         =COLL.BILL_YEAR
+  )
+WHERE FIN_YEAR IS NOT NULL
+GROUP BY 'Quantity Supplied',
+  'Demand',
+  'Collection',
+  FIN_YEAR
+ORDER BY FIN_YEAR]]></queryString>
+
+	<field name="QTYNAME" class="java.lang.String"/>
+	<field name="DMDNAME" class="java.lang.String"/>
+	<field name="COL" class="java.lang.String"/>
+	<field name="YEAR" class="java.math.BigDecimal"/>
+	<field name="QTY" class="java.math.BigDecimal"/>
+	<field name="DMD" class="java.math.BigDecimal"/>
+	<field name="COLLECTION" class="java.math.BigDecimal"/>
+
+	<variable name="sum1" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{QTY}]]></variableExpression>
+	</variable>
+	<variable name="sum2" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DMD}]]></variableExpression>
+	</variable>
+	<variable name="sum3" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{COLLECTION}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="307"
+						height="20"
+						key="textField-10"/>
+					<box leftPadding="72">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Financial Year  2020-21"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="289"
+						y="-16"
+						width="71"
+						height="13"
+						key="textField-12"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="239"
+						y="-16"
+						width="47"
+						height="13"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Date :]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="120"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="1"
+						y="0"
+						width="249"
+						height="23"
+						key="staticText-12"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[DCB DATA]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1"
+						y="77"
+						width="249"
+						height="14"
+						key="staticText-13"/>
+					<box>					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Expenditure]]></text>
+				</staticText>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="6"
+						y="96"
+						width="238"
+						height="20"
+						key="subreport-1"/>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA["/home/nic/New_Onlineworkspace_2017/NIC/twadFas/WebContent/org/FAS/FAS1/MIS/jaspers/twadFas/EXPND_REPORT.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="8"
+						y="26"
+						width="100"
+						height="13"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{QTYNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="8"
+						y="43"
+						width="100"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DMDNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="8"
+						y="58"
+						width="100"
+						height="13"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{COL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="136"
+						y="25"
+						width="113"
+						height="14"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{QTY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="136"
+						y="42"
+						width="113"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DMD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="136"
+						y="58"
+						width="113"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{COLLECTION}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="20"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

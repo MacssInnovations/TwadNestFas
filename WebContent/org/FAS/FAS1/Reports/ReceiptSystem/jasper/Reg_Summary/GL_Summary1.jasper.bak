@@ -1,0 +1,1145 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="GL_Summary1.jasper"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="623"
+		 pageHeight="842"
+		 columnWidth="563"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="unitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="officeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="year_from" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="year_to" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month_from" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month_to" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="headcode" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="supplementno" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthvalue_to" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="monthvalue" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select 
+ current_month_debit as "CURRENT_MONTH_DEBIT",
+  current_month_credit as "CURRENT_MONTH_CREDIT",
+  cb_month as "CB_MONTH",
+  cb_year as "CB_YEAR",
+  cum_cr as "CUM_CR",
+  cum_dr as "CUM_DR",
+  month_ob_dr,
+  month_ob_cr,
+  month_opening_balance as "MONTH_OPENING_BALANCE",
+  month_opening_bal_dr_cr_ind as "MONTH_OPENING_BAL_DR_CR_IND",
+  month_closing_balance as "MONTH_CLOSING_BALANCE",
+  month_closing_bal_dr_cr_ind as "MONTH_CLOSING_BAL_DR_CR_IND", 
+  net_dr as "NET_DR",
+  net_cr as "NET_CR",
+  case when (net_dr-net_cr)<=0 then
+  (net_dr-net_cr)
+  else
+  (net_dr-net_cr) end as "NET_CB",
+  account_head_desc as "ACCOUNT_HEAD_DESC",
+  acc_head as "ACC_HEAD",
+  suppl_no as "SUPPL_NO" from(
+select 
+  current_month_debit, 
+  current_month_credit, 
+  cb_month, 
+  cb_year, 
+  cum_cr,
+  cum_dr, 
+  month_ob_dr,
+  month_ob_cr,
+  month_opening_balance,
+  month_opening_bal_dr_cr_ind,
+  month_closing_balance, 
+  month_closing_bal_dr_cr_ind,     
+  case when cb_month=4 then
+  (month_ob_dr + current_month_debit )
+  else
+  (cum_dr+month_ob_dr)
+  end as net_dr,
+  case when cb_month=4 then
+  (month_ob_cr + current_month_credit )
+  else
+  (cum_cr+month_ob_cr )
+end  as net_cr, 
+
+  ( select account_head_desc from com_mst_account_heads where account_head_code = acc_head ) as account_head_desc, 
+  acc_head,
+  case when suppl_no = 0 then 
+  '' 
+  else 
+  'S-' || suppl_no
+  end as suppl_no 
+  
+from 
+(                
+               
+       
+               
+                select 
+                 * 
+                from 
+                (
+                
+                                    ------ calculate Cummulative Credit and Debit -----
+                        select 
+                         current_month_debit,
+                         current_month_credit,
+                         cb_month, 
+                         cb_year,                          
+                         cum_cr + coalesce(sjv_cum_cr, null,0, sjv_cum_cr ) as cum_cr ,
+                         cum_dr + coalesce(sjv_cum_dr, null,0, sjv_cum_dr ) as cum_dr ,                         
+                         acc_head, 
+                         suppl_no
+                        from 
+                        (
+                           
+                           
+                           select 
+                            current_month_debit,
+                            current_month_credit,
+                            cb_month, 
+                            cb_year,
+                           ( 
+                              select 
+                                   sum(current_month_credit) 
+                              from 
+                                 fas_trial_balance
+                              where 
+                                  accounting_unit_id=$P{unitid}::int
+                              and to_date(cashbook_month ||'-'|| + cashbook_year,   'mm-yyyy') BETWEEN to_date(  ( $P{month_from} )  || '-' || ( $P{year_from} ) ,   'mm-yyyy')  AND to_date( (cb_month) ||'-' || (cb_year) , 'mm-yyyy')
+                              and account_head_code=acc_head             
+                            ) as cum_cr,
+                           
+                           ( select 
+                                   sum(current_month_debit) 
+                              from 
+                                 fas_trial_balance
+                              where 
+                                 accounting_unit_id=$P{unitid}::int
+                              and to_date(cashbook_month ||'-'|| + cashbook_year,   'mm-yyyy') BETWEEN to_date(  (  $P{month_from}  )  || '-' || ( $P{year_from} ) ,   'mm-yyyy')  AND to_date( (cb_month) ||'-' || (cb_year) , 'mm-yyyy')
+                              and account_head_code=acc_head 
+                            ) as cum_dr,                             
+                             
+                            ( select 
+                                   sum(current_month_debit) 
+                              from 
+                                 fas_trial_balance_supplement
+                              where 
+                                 accounting_unit_id=$P{unitid}::int
+                              and cashbook_month= 3   -- it is fixed 
+                              and cashbook_year = cb_year 
+                              and account_head_code=acc_head
+                              and supplement_no <= suppl_no
+                            ) as sjv_cum_dr,  
+                            
+                             ( select 
+                                   sum(current_month_credit) 
+                              from 
+                                 fas_trial_balance_supplement
+                              where 
+                                 accounting_unit_id=$P{unitid}::int
+                              and cashbook_month= 3 -- it is fixed 
+                              and cashbook_year = cb_year 
+                              and account_head_code=acc_head
+                              and supplement_no <= suppl_no
+                            ) as sjv_cum_cr,   
+                            
+                            acc_head , 
+                            suppl_no
+                            
+                          from 
+                          (
+                                    select 
+                                    * from 
+                                    (             
+                                          --- Regular TB ---
+                                          select 
+                                            current_month_debit,
+                                            current_month_credit,
+                                            cashbook_month as cb_month, 
+                                            cashbook_year as cb_year,  
+                                  ---          to_date( to_date(cashbook_month ||'-'|| + cashbook_year,   'mm-yyyy')) as mon_yr_cancat , 
+                                             to_date( to_date((cashbook_month ||'-'|| + cashbook_year)::varchar,   'mm-yyyy')::varchar,'mm-yyyy') as mon_yr_cancat , 
+                                        
+                                            account_head_code as acc_head,  
+                                            'P' as rep_type, 
+                                            0 as suppl_no
+                                          from 
+                                              fas_trial_balance 
+                                          where  
+                                              accounting_unit_id=$P{unitid}::int                 
+                                         and account_head_code =  $P!{headcode}
+					   
+                                          and to_date(cashbook_month ||'-'|| + cashbook_year,   'mm-yyyy') BETWEEN to_date(  ( $P{month_from} )  || '-' || ( $P{year_from} ) ,   'mm-yyyy')  AND to_date( ( $P{month_to} ) ||'-' || ( $P{year_to} ) , 'mm-yyyy')
+                                        
+                                       
+                                         union all 
+                                          
+                                           --- Supplement TB --- 
+                                           select 
+                                            current_month_debit,
+                                            current_month_credit,
+                                            cashbook_month as cb_month, 
+                                            cashbook_year as cb_year,  
+                                     --       to_date( to_date(cashbook_month ||'-'|| + cashbook_year,   'mm-yyyy')) as mon_yr_cancat ,
+  					  to_date( to_date((cashbook_month ||'-'|| + cashbook_year)::varchar,   'mm-yyyy')::varchar,'mm-yyyy') as mon_yr_cancat , 
+                                         
+                                            account_head_code as acc_head ,         
+                                            'S' as rep_type, 
+                                            supplement_no as suppl_no
+                                           from                     
+                                              fas_trial_balance_supplement 
+                                          where 
+                                              accounting_unit_id=$P{unitid}::int                 
+                                       and account_head_code =  $P!{headcode} 
+                                          and cashbook_month= $P{month_to}::int  -- to month 
+                                          and cashbook_year = $P{year_to}::int -- to year 
+                                          and supplement_no <= $P{supplementno}::int                 
+                                     ) as opt1  
+                                        
+                                         order by  acc_head, mon_yr_cancat, suppl_no          
+                             ) as opt2
+                         ) as opt3   
+                             
+                      
+  --------------------------------------------------------------------------------------                    
+                   )X 
+                            
+                   left outer join 
+                   
+                   ---- Calculate Opening Balance for each and every account head code --- 
+                   (
+                   
+                   
+                   
+                     select 
+                        month_ob_cr, 
+                        month_ob_dr,
+                        month_opening_balance,
+                        month_opening_bal_dr_cr_ind, 
+                        ob_account_head_code 
+                      from 
+                      (
+                               select 
+                               * 
+                               from 
+                               (
+                                 select 
+                                   min( to_date(month ||'-'|| + year,   'mm-yyyy')) as dat1,   
+                                   account_head_code as ob_acc_code 
+                                  from
+                                     fas_general_ledger 
+                                  where 
+                                      accounting_unit_id=$P{unitid}::int
+                                  and accounting_for_office_id = $P{officeid}::int
+                                  and to_date(month ||'-'|| + year,   'mm-yyyy') BETWEEN to_date(  ( $P{month_from} )  || '-' || ( $P{year_from} ) ,   'mm-yyyy')  AND to_date( ( $P{month_to} ) ||'-' || ( $P{year_to} ) , 'mm-yyyy')
+                             and account_head_code =  $P!{headcode}
+                                  group by account_head_code
+                                ) M
+                                 
+                                left outer join 
+                                
+                                (
+                                   select
+                                    case when month_opening_bal_dr_cr_ind ='CR' then 
+                                       month_opening_balance
+                                    else
+                                       0 
+                                    end as month_ob_cr, 
+                                    case when month_opening_bal_dr_cr_ind ='DR' then 
+                                       month_opening_balance
+                                    else
+                                       0 
+                                    end as month_ob_dr, 
+                                    month_opening_balance,
+                                    month_opening_bal_dr_cr_ind, 
+                                    account_head_code as ob_account_head_code, 
+                                    ( to_date(month ||'-'|| + year,   'mm-yyyy')) as dat2   
+                                     
+                                  from
+                                     fas_general_ledger 
+                                  where 
+                                      accounting_unit_id=$P{unitid}::int
+                                  and accounting_for_office_id = $P{officeid}::int
+                                  --and month=4 -- from month
+                                  --and year=2008   -- from year 
+                and account_head_code =  $P!{headcode}
+                               ) N
+                               
+                               on M.dat1 = N.dat2 
+                               and M.ob_acc_code = N.ob_account_head_code
+                         ) as opt41         
+                    
+                    ) Y 
+                    on X.acc_head = Y.ob_account_head_code 
+              
+              
+                   left outer join 
+                          
+                   ---- Calculate Closing balacing for each and every account Head code  -----         
+                    (       
+                      select 
+                       * 
+                      from 
+                      (
+                        select     
+                          cb_account_head_code,  
+                          max(supplement_no) as suppl_no_cb 
+                        from 
+                        (
+                           select      
+                              account_head_code as cb_account_head_code,  
+                              0 as supplement_no
+                             from
+                               fas_general_ledger
+                             where 
+                                accounting_unit_id = $P{unitid}::int
+                             and accounting_for_office_id = $P{officeid}::int
+                             and month = $P{month_to}::int  -- to month
+                             and year = $P{year_to}::int  -- to year   
+                         and account_head_code =  $P!{headcode}
+                           union all   
+                      
+                           select
+                              account_head_code as cb_account_head_code,          
+                              supplement_no
+                             from
+                               fas_general_ledger_sjv  
+                             where 
+                                accounting_unit_id = $P{unitid}::int
+                             and accounting_for_office_id = $P{officeid}::int
+                             and month = $P{month_to}::int  -- to month
+                             and year = $P{year_to}::int  -- to year   
+                         and account_head_code =  $P!{headcode}					 
+                             and supplement_no <= $P{supplementno}::int 
+                         ) as opt51 group by cb_account_head_code
+                       )P      
+                   
+                       left outer join 
+                 
+                    
+                         (
+                             select      
+                                month_closing_balance,
+                                month_closing_bal_dr_cr_ind , 
+                                account_head_code as cb_acc_head_code,
+                                0 as supplement_no
+                             from
+                               fas_general_ledger
+                             where 
+                                accounting_unit_id = $P{unitid}::int
+                             and accounting_for_office_id = $P{officeid}::int
+                             and month = $P{month_to}::int  -- to month
+                             and year = $P{year_to}::int  -- to year   
+                          and account_head_code =  $P!{headcode}    
+                                    
+                           union all   
+                      
+                           select
+                              month_closing_balance,
+                              month_closing_bal_dr_cr_ind , 
+                              account_head_code as cb_acc_head_code, 
+                              supplement_no
+                             from
+                               fas_general_ledger_sjv  
+                             where 
+                                accounting_unit_id = $P{unitid}::int
+                             and accounting_for_office_id = $P{officeid}::int
+                             and month = $P{month_to}::int  -- to month
+                             and year = $P{year_to}::int  -- to year   
+                         and account_head_code =  $P!{headcode}
+                         
+                         ) Q
+                         
+                         on P.cb_account_head_code = Q.cb_acc_head_code
+                         and P.suppl_no_cb = Q.supplement_no
+                             
+                     
+                ) Z      
+                on X.acc_head = Z.cb_account_head_code  
+                    
+ ) as opt61
+) as opt71]]></queryString>
+
+	<field name="CURRENT_MONTH_DEBIT" class="java.math.BigDecimal"/>
+	<field name="CURRENT_MONTH_CREDIT" class="java.math.BigDecimal"/>
+	<field name="CB_MONTH" class="java.math.BigDecimal"/>
+	<field name="CB_YEAR" class="java.math.BigDecimal"/>
+	<field name="CUM_CR" class="java.math.BigDecimal"/>
+	<field name="CUM_DR" class="java.math.BigDecimal"/>
+	<field name="month_ob_dr" class="java.math.BigDecimal"/>
+	<field name="month_ob_cr" class="java.math.BigDecimal"/>
+	<field name="MONTH_OPENING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="MONTH_OPENING_BAL_DR_CR_IND" class="java.lang.String"/>
+	<field name="MONTH_CLOSING_BALANCE" class="java.math.BigDecimal"/>
+	<field name="MONTH_CLOSING_BAL_DR_CR_IND" class="java.lang.String"/>
+	<field name="NET_DR" class="java.math.BigDecimal"/>
+	<field name="NET_CR" class="java.math.BigDecimal"/>
+	<field name="NET_CB" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="ACC_HEAD" class="java.math.BigDecimal"/>
+	<field name="SUPPL_NO" class="java.lang.String"/>
+
+
+		<group  name="acc_head" >
+			<groupExpression><![CDATA[$F{ACC_HEAD}]]></groupExpression>
+			<groupHeader>
+			<band height="41"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="2"
+						width="116"
+						height="18"
+						key="staticText-12"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Account Head Code : ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="4"
+						y="22"
+						width="106"
+						height="18"
+						key="staticText-13"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Opening Balance : ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="121"
+						y="3"
+						width="66"
+						height="17"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACC_HEAD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="112"
+						y="22"
+						width="79"
+						height="17"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MONTH_OPENING_BALANCE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="206"
+						y="22"
+						width="22"
+						height="17"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MONTH_OPENING_BAL_DR_CR_IND}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="191"
+						y="22"
+						width="14"
+						height="16"
+						key="staticText-14"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[(]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="229"
+						y="22"
+						width="14"
+						height="16"
+						key="staticText-15"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[)]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="190"
+						y="3"
+						width="322"
+						height="13"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="39"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="11"
+						width="98"
+						height="14"
+						key="staticText-18"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Closing Balance :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="112"
+						y="9"
+						width="79"
+						height="17"
+						key="textField-2"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MONTH_CLOSING_BALANCE}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="191"
+						y="9"
+						width="14"
+						height="16"
+						key="staticText-19"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[(]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="206"
+						y="9"
+						width="22"
+						height="17"
+						key="textField-3"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MONTH_CLOSING_BAL_DR_CR_IND}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="229"
+						y="9"
+						width="14"
+						height="16"
+						key="staticText-20"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[)]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="3"
+						y="32"
+						width="558"
+						height="1"
+						forecolor="#B1B2B2"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="24"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="1"
+						width="224"
+						height="22"
+						key="staticText-1"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[General Ledger Abstract for the Year ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="329"
+						y="1"
+						width="66"
+						height="22"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{year_from}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="407"
+						y="1"
+						width="66"
+						height="22"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{year_to}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="395"
+						y="1"
+						width="12"
+						height="22"
+						key="staticText-3"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[-]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="473"
+						y="1"
+						width="89"
+						height="22"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthvalue_to}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="228"
+						y="1"
+						width="100"
+						height="22"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthvalue}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="29"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="32"
+						y="5"
+						width="68"
+						height="18"
+						key="staticText-4"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="106"
+						y="5"
+						width="68"
+						height="18"
+						key="staticText-6"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Month Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="177"
+						y="5"
+						width="68"
+						height="18"
+						key="staticText-7"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Month Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="247"
+						y="5"
+						width="80"
+						height="18"
+						key="staticText-8"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Cumulative Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="329"
+						y="5"
+						width="79"
+						height="18"
+						key="staticText-9"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Cumulative Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="414"
+						y="5"
+						width="68"
+						height="18"
+						key="staticText-10"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Net Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="485"
+						y="5"
+						width="68"
+						height="18"
+						key="staticText-11"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Net Cr]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="2"
+						width="560"
+						height="1"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="22"
+						width="559"
+						height="4"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="286"
+						y="0"
+						width="1"
+						height="1"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="31"
+						y="2"
+						width="25"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CB_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="68"
+						y="3"
+						width="35"
+						height="17"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CB_YEAR}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="57"
+						y="3"
+						width="10"
+						height="18"
+						key="staticText-16"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[/]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="106"
+						y="3"
+						width="66"
+						height="19"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CURRENT_MONTH_DEBIT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="174"
+						y="2"
+						width="72"
+						height="19"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CURRENT_MONTH_CREDIT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="252"
+						y="2"
+						width="73"
+						height="19"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CUM_DR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="327"
+						y="2"
+						width="85"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CUM_CR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="412"
+						y="2"
+						width="76"
+						height="16"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_CB}.compareTo(new BigDecimal("0"))>0?$F{NET_CB}:new BigDecimal("0")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="489"
+						y="2"
+						width="73"
+						height="17"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_CB}.compareTo(new BigDecimal("0"))<0?(new BigDecimal(-1).multiply$F{NET_CB}):new BigDecimal("0")]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="2"
+						width="27"
+						height="18"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SUPPL_NO}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="20"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="2"
+						width="33"
+						height="14"
+						key="staticText-2"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Date : ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="2"
+						width="64"
+						height="15"
+						key="textField-1"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="350"
+						y="24"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="458"
+						y="2"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

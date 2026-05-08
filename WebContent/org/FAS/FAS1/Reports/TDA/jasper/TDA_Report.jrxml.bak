@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="TDA_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1019"
+		 pageHeight="842"
+		 columnWidth="959"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="vou_no" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT DISTINCT b.*,
+  a.ac,
+  a.deb,
+  a.crd,
+  a.stype,
+  a.scode,
+  a.sl_no,
+  (select ACCOUNTING_UNIT_NAME from FAS_MST_ACCT_UNITS where ACCOUNTING_UNIT_ID=b.ACCOUNTING_UNIT_ID)as unit_name,
+    (select sub_ledger_type_desc from com_mst_sl_types where sub_ledger_type_code=a.stype ) as sl_desc,
+    (select ACCOUNT_HEAD_DESC from COM_MST_ACCOUNT_HEADS where ACCOUNT_HEAD_CODE=a.ac)as ac_desc
+
+FROM (
+  (SELECT
+    CASE
+      WHEN deb='DR'
+      THEN da
+    END AS deb,
+    CASE
+      WHEN crd='CR'
+      THEN ca
+    END AS crd,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN ac
+    END ac,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN stype
+    END stype,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN scode
+    END scode,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN unit
+    END unit,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN office
+    END office,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN cyear
+    END cyear,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN num
+    END num,
+    CASE
+      WHEN deb='DR'
+      OR crd  ='CR'
+      THEN cmonth
+    END cmonth,sl_no
+  FROM
+    (SELECT VOUCHER_NO         AS num,
+      SL_NO	               AS sl_no,
+      AMOUNT                   AS da,
+      amount                   AS ca,
+      ACCOUNTING_UNIT_ID       AS unit,
+      ACCOUNTING_FOR_OFFICE_ID AS office,
+      CASHBOOK_YEAR            AS cyear,
+      CASHBOOK_MONTH           AS cmonth,
+      CR_DR_INDICATOR          AS deb,
+      CR_DR_INDICATOR          AS crd,
+      account_head_code        AS ac,
+      SUB_LEDGER_TYPE_CODE     AS stype,
+      SUB_LEDGER_CODE          AS scode
+    FROM FAS_TDA_TCA_RAISED_TRN where ACCOUNTING_UNIT_ID=$P{accountingunitid} and ACCOUNTING_FOR_OFFICE_ID=$P{accountofficeid} and CASHBOOK_YEAR=$P{txtCB_Year} and CASHBOOK_MONTH=$P{txtCB_Month}
+	order by sl_no
+    )
+  )a
+LEFT OUTER JOIN
+  (SELECT VOUCHER_NO,
+    TRF_ACCOUNTING_UNIT_ID,
+    --(select ACCOUNTING_UNIT_NAME,ACCOUNTING_UNIT_ID as uni from FAS_MST_ACCT_UNITS where uni=ACCOUNTING_UNIT_ID)as ACCOUNTING_UNIT_ID,
+    VOUCHER_NO
+    ||'-'
+    ||TO_CHAR(VOUCHER_DATE,'dd/mm/yy') AS tda_no,
+    TOTAL_AMOUNT                       AS amt,REASON_FOR_TRANSFER,
+    (select REASON_DESC from FAS_MST_TDA_TCA_REASON where REASON_CODE=REASON_FOR_TRANSFER)as reason,
+    ORGINATING_JVR_NO
+    ||'-'
+    ||TO_CHAR(ORGINATING_JVR_DATE,'dd/mm/yy') AS org_jvr_slno,
+    TOTAL_AMOUNT,
+    ACCEPTING_SLNO
+    ||'-'
+    ||TO_CHAR(ACCEPTING_DATE,'dd/mm/yy') AS accept_sl,
+    ACCEPTING_JVR_NO
+    ||'-'
+    ||TO_CHAR(ACCEPTING_JVR_DATE,'dd/mm/yy') AS accept_jvr,
+    ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    CASHBOOK_YEAR,
+    CASHBOOK_MONTH
+  FROM FAS_TDA_TCA_RAISED_MST where ACCOUNTING_UNIT_ID=$P{accountingunitid} and ACCOUNTING_FOR_OFFICE_ID=$P{accountofficeid} and CASHBOOK_YEAR=$P{txtCB_Year} and CASHBOOK_MONTH=$P{txtCB_Month}
+  )b
+ON a.unit   =b.ACCOUNTING_UNIT_ID
+AND a.office=b.ACCOUNTING_FOR_OFFICE_ID
+AND a.cyear =b.CASHBOOK_YEAR
+AND a.cmonth=b.CASHBOOK_MONTH
+AND a.num   =b.VOUCHER_NO)
+ORDER BY a.sl_no]]></queryString>
+
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="TRF_ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="TDA_NO" class="java.lang.String"/>
+	<field name="AMT" class="java.math.BigDecimal"/>
+	<field name="REASON_FOR_TRANSFER" class="java.lang.String"/>
+	<field name="REASON" class="java.lang.String"/>
+	<field name="ORG_JVR_SLNO" class="java.lang.String"/>
+	<field name="TOTAL_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="ACCEPT_SL" class="java.lang.String"/>
+	<field name="ACCEPT_JVR" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="AC" class="java.math.BigDecimal"/>
+	<field name="DEB" class="java.math.BigDecimal"/>
+	<field name="CRD" class="java.math.BigDecimal"/>
+	<field name="STYPE" class="java.math.BigDecimal"/>
+	<field name="SCODE" class="java.math.BigDecimal"/>
+	<field name="SL_NO" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="SL_DESC" class="java.lang.String"/>
+	<field name="AC_DESC" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="211"
+						y="22"
+						width="279"
+						height="23"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[TDA (Originating) for the Month of]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="233"
+						y="0"
+						width="278"
+						height="23"
+						key="staticText-17"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[TWAD A36 (TDA)]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="475"
+						y="22"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthInWords}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="557"
+						y="23"
+						width="100"
+						height="18"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{txtCB_Year}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="545"
+						y="20"
+						width="13"
+						height="22"
+						key="staticText-19"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[-]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="117"
+						y="12"
+						width="169"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNIT_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="98"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="8"
+						y="7"
+						width="33"
+						height="65"
+						key="staticText-1"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[SI.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="41"
+						y="7"
+						width="68"
+						height="65"
+						key="staticText-2"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Originated      Against                      which        Division]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="118"
+						y="7"
+						width="63"
+						height="65"
+						key="staticText-3"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[TDA No.          & Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="190"
+						y="7"
+						width="51"
+						height="65"
+						key="staticText-4"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[TDA Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="246"
+						y="7"
+						width="57"
+						height="65"
+						key="staticText-5"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Reason      for TDA]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="15"
+						y="-18"
+						width="102"
+						height="20"
+						key="staticText-6"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Accounting Unit:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="308"
+						y="7"
+						width="66"
+						height="65"
+						key="staticText-7"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Originating Journal Vr.   No &Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="384"
+						y="7"
+						width="50"
+						height="65"
+						key="staticText-8"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Amount which accepted and adjusted]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="445"
+						y="7"
+						width="68"
+						height="65"
+						key="staticText-9"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Accepting      Vr.No               & Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="524"
+						y="7"
+						width="66"
+						height="65"
+						key="staticText-10"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[Accepting Journal.No     & Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="744"
+						y="7"
+						width="51"
+						height="65"
+						key="staticText-12"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[CR Amount]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="600"
+						y="79"
+						width="42"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="744"
+						y="79"
+						width="50"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CRD}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="799"
+						y="7"
+						width="53"
+						height="65"
+						key="staticText-13"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[DR Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="859"
+						y="7"
+						width="41"
+						height="65"
+						key="staticText-14"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[SL   Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="904"
+						y="7"
+						width="43"
+						height="65"
+						key="staticText-15"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[SL   Code]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="79"
+						width="64"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TRF_ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="119"
+						y="79"
+						width="68"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TDA_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="193"
+						y="79"
+						width="51"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="384"
+						y="79"
+						width="50"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TOTAL_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="445"
+						y="79"
+						width="68"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCEPT_SL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="524"
+						y="79"
+						width="66"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCEPT_JVR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="799"
+						y="79"
+						width="52"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="904"
+						y="79"
+						width="43"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SCODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="8"
+						y="79"
+						width="33"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{COLUMN_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="246"
+						y="79"
+						width="57"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REASON}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="642"
+						y="79"
+						width="94"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{AC_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="859"
+						y="79"
+						width="41"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SL_DESC}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="614"
+						y="7"
+						width="111"
+						height="64"
+						key="staticText-18"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[A/C                    Head                 Code &              Desc.]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="2"
+						width="944"
+						height="0"
+						key="line-17"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="70"
+						width="944"
+						height="0"
+						key="line-18"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="308"
+						y="79"
+						width="69"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ORG_JVR_SLNO}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

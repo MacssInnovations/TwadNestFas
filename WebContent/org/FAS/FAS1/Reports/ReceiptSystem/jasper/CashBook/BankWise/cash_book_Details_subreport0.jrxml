@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="cash_book_Details_subreport0"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="460"
+		 pageHeight="802"
+		 columnWidth="460"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="main_param" isForPrompting="true" class="java.sql.Timestamp"/>
+	<parameter name="accountingunitid" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="bank_id" isForPrompting="false" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[--receipt
+  SELECT b.OFFICE_NAME,
+
+    a.ACCOUNTING_UNIT_ID,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.CASHBOOK_YEAR,
+    a.CASHBOOK_MONTH,
+    a.vouDate,
+    a.recNo,
+    DECODE(a.recpart,NULL,'-',a.recpart)AS recpart,
+    a.recAcchead,
+    a.recamt,
+    DECODE(a.reccheqdd_no,NULL,'-',a.reccheqdd_no)                              AS reccheqdd_no,
+   -- DECODE(TO_CHAR(a.recchequedd_date,'DD/MM/YYYY'),NULL,'-',a.recchequedd_date)AS recchequedd_date,
+   
+a.recchequedd_date as  recchequedd_date, DECODE(a.recRecFrom,NULL,'-',a.recRecFrom)                                  AS recRecFrom,
+   
+    a.payrefno,
+  
+    a.bid,
+    (SELECT k.bank_name FROM fas_mst_banks k WHERE k.bank_id=a.bid
+    )AS bank_name
+  From
+    (SELECT t.ACCOUNTING_UNIT_ID,
+      t.ACCOUNTING_FOR_OFFICE_ID,
+      t.CASHBOOK_YEAR,
+      t.CASHBOOK_MONTH,
+      m.receipt_date                                    AS vouDate,
+      t.receipt_no                                      AS recNo,
+      t.particulars                                     AS recPart,
+      t.account_head_code                               AS recAcchead,
+      DECODE(t.cr_dr_indicator,'CR',t.amount,-t.amount) AS recAmt,
+      DECODE(t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no,'-',NULL,t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no) AS recCheqDD_no,
+      t.cheque_dd_date  AS recChequeDD_date,
+      m.received_from   AS recRecFrom,
+     
+      To_Char(Null)     As Payrefno,
+    
+      m.bank_id         AS bid,
+      m.ACCOUNT_NO      AS acno
+    FROM FAS_RECEIPT_MASTER m,
+      FAS_RECEIPT_TRANSACTION t
+    WHERE t.accounting_unit_id     = m.accounting_unit_id
+    AND t.accounting_for_office_id = m.accounting_for_office_id
+    AND t.cashbook_year            = m.cashbook_year
+    AND t.cashbook_month           = m.cashbook_month
+    AND t.receipt_no               = m.receipt_no
+    AND m.receipt_status!          ='C'
+    AND m.created_by_module       IN('CR','SC')
+    UNION ALL
+    SELECT t.ACCOUNTING_UNIT_ID,
+      t.ACCOUNTING_FOR_OFFICE_ID,
+      t.CASHBOOK_YEAR,
+      t.CASHBOOK_MONTH,
+      m.receipt_date                                    AS vouDate,
+      t.receipt_no                                      AS recNo,
+      t.particulars                                     AS recPart,
+      t.account_head_code                               AS recAcchead,
+      DECODE(t.cr_dr_indicator,'CR',t.amount,-t.amount) AS recAmt,
+      DECODE(t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no,'-',NULL,t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no) AS recCheqDD_no,
+      t.cheque_dd_date  AS recChequeDD_date,
+      m.received_from   AS recRecFrom,
+    
+      TO_CHAR(NULL)     AS payrefno,
+    
+      m.bank_id         AS bid,
+      m.ACCOUNT_NO      AS acno
+    FROM FAS_RECEIPT_MASTER m,
+      FAS_RECEIPT_TRANSACTION t
+    WHERE t.accounting_unit_id     = m.accounting_unit_id
+    AND t.accounting_for_office_id = m.accounting_for_office_id
+    AND t.cashbook_year            = m.cashbook_year
+    AND t.cashbook_month           = m.cashbook_month
+    AND t.receipt_no               = m.receipt_no
+    AND m.receipt_status!          ='C'
+      -- AND m.bank_id                  =2
+    And M.Created_By_Module ='BR'
+    union all
+     SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      CASHBOOK_YEAR,
+      CASHBOOK_MONTH,
+      DATE_OF_TRANSFER     AS vouDate,
+      VOUCHER_NO           AS recNo,
+      particulars          AS recPart,
+      DR_ACCOUNT_HEAD_CODE AS recAcchead,
+      TOTAL_AMOUNT         AS recAmt,
+      DECODE(cheque_or_dd
+      || '-'
+      ||cheque_dd_no,'-',NULL,cheque_or_dd
+      || '-'
+      ||cheque_dd_no)              AS recCheqDD_no,
+      cheque_dd_date               AS recChequeDD_date,
+      TO_CHAR('Interbank Receipt') AS recRecFrom,
+    
+      TO_CHAR(NULL)                AS payrefno,
+    
+      TO_BANK_ID                   AS bid,
+      TO_ACCOUNT_NO                AS acno
+    FROM FAS_INTER_BANK_TRF_AT_HO
+    Where Transfer_Status!='C'
+    UNION ALL
+    SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      CASHBOOK_YEAR,
+      CASHBOOK_MONTH,
+      receipt_date         AS vouDate,
+      receipt_no           AS recNo,
+      particulars          AS recPart,
+      DR_ACCOUNT_HEAD_CODE AS recAcchead,
+      TOTAL_AMOUNT         AS recAmt,
+      DECODE(cheque_or_dd
+      || '-'
+      ||cheque_dd_no,'-',NULL,cheque_or_dd
+      || '-'
+      ||cheque_dd_no) AS recCheqDD_no,
+      cheque_dd_date  AS recChequeDD_date,
+      --to_char('Fund Receipt') as recRecFrom,
+      (
+      SELECT u.OFFICE_NAME
+      FROM COM_MST_OFFICES u
+      WHERE u.OFFICE_ID=Received_From_Office_Id
+      )               AS Recrecfrom,
+    
+      TO_CHAR(NULL)   AS payrefno,
+    
+      HO_BANK_ID      AS bid,
+      HO_ACCOUNT_NO   AS acno
+    From Fas_Fund_Receipt_By_Ho
+    WHERE RECEIPT_STATUS!='C' ) a ,
+    COM_MST_OFFICES b,
+    FAS_MST_BANK_BALANCE c
+  Where A.Accounting_Unit_Id    =$P{accountingunitid}
+   -- AND A.Cashbook_Year           =2012
+  --AND A.Cashbook_Year           between to_char(now(),'yyyy')-5  AND to_char(now(),'yyyy') 
+and  a.bid=$P{bank_id} 
+ and a.voudate=$P{main_param}
+  AND a.accounting_for_office_id=b.office_id
+  AND a.bid                     = c.bank_id
+  AND a.acno                    = c.bank_ac_no
+and c.status='Y'
+  ORDER BY a.bid,
+    b.OFFICE_NAME,
+    a.vouDate,
+    A.Recno]]></queryString>
+
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="VOUDATE" class="java.sql.Timestamp"/>
+	<field name="RECNO" class="java.math.BigDecimal"/>
+	<field name="RECPART" class="java.lang.String"/>
+	<field name="RECACCHEAD" class="java.math.BigDecimal"/>
+	<field name="RECAMT" class="java.math.BigDecimal"/>
+	<field name="RECCHEQDD_NO" class="java.lang.String"/>
+	<field name="RECCHEQUEDD_DATE" class="java.sql.Timestamp"/>
+	<field name="RECRECFROM" class="java.lang.String"/>
+	<field name="PAYREFNO" class="java.lang.String"/>
+	<field name="BID" class="java.math.BigDecimal"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="18"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="0"
+						width="30"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{RECNO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="0"
+						width="162"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Recd from : "+$F{RECRECFROM}+" towards "+$F{RECPART}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="198"
+						y="0"
+						width="46"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{RECACCHEAD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="245"
+						y="0"
+						width="80"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{RECAMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="329"
+						y="0"
+						width="59"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{RECCHEQDD_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="389"
+						y="0"
+						width="64"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{RECCHEQUEDD_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

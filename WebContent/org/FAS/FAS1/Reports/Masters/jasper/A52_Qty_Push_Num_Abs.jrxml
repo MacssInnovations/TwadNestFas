@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="A52_Qty_Push_Num_Abs"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="1672"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="financialyear" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="accunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[
+select 
+asset_major_class_code,accounting_unit_id,unitname,asset_major_class_desc,
+(open_bal_qty+reciepts_year_qty-issues_year_qty) as aval_qty,
+(n_open_bal_qty+n_reciepts_year_qty-n_issues_year_qty) as aval_crt_qty,
+(opening_bal_value+reciepts_yr_value-issues_yr_value) as aval_value,
+(n_opening_bal_value+n_reciepts_yr_value-n_issues_yr_value) as aval_crt_value
+from 
+(SELECT asset_major_class_code,ACCOUNTING_UNIT_ID,
+ (SELECT cc.Accounting_Unit_Name
+  FROM fas_mst_acct_units cc
+  WHERE CC.ACCOUNTING_UNIT_ID=A.ACCOUNTING_UNIT_ID
+  )AS unitname,
+ (SELECT bb.ASSET_MAJOR_CLASS_DESC
+  FROM FAS_MST_ASSETS_CLASS bb
+  WHERE BB.ASSET_MAJOR_CLASS_CODE=A.ASSET_MAJOR_CLASS_CODE
+  )AS asset_MAJOR_CLASS_DESC,
+decode(SUM(OPEN_BAL_QTY),null,0,SUM(OPEN_BAL_QTY))AS OPEN_BAL_QTY,
+decode(SUM(OPENING_BAL_VALUE),null,0,SUM(OPENING_BAL_VALUE))AS OPENING_BAL_VALUE,
+decode(SUM(RECIEPTS_YEAR_QTY),null,0,SUM(RECIEPTS_YEAR_QTY))AS RECIEPTS_YEAR_QTY,
+decode(SUM(RECIEPTS_YR_VALUE),null,0,SUM(RECIEPTS_YR_VALUE))AS RECIEPTS_YR_VALUE,
+decode(SUM(ISSUES_YEAR_QTY),null,0,SUM(ISSUES_YEAR_QTY))AS ISSUES_YEAR_QTY,
+decode(sum(issues_yr_value),null,0,sum(issues_yr_value)) as issues_yr_value,
+
+decode(sum(n_open_bal_qty),null,0,sum(n_open_bal_qty))as n_open_bal_qty,
+decode(sum(n_opening_bal_value),null,0,sum(n_opening_bal_value))as n_opening_bal_value,
+decode(sum(n_reciepts_year_qty),null,0,sum(n_reciepts_year_qty))as n_reciepts_year_qty,
+decode(sum(n_reciepts_yr_value),null,0,sum(n_reciepts_yr_value))as n_reciepts_yr_value,
+decode(sum(n_issues_year_qty),null,0,sum(n_issues_year_qty))as n_issues_year_qty,
+decode(SUM(N_ISSUES_YR_VALUE),null,0,SUM(N_ISSUES_YR_VALUE)) AS N_ISSUES_YR_VALUE
+
+--decode(SUM(DEP_PREV_YEAR),null,0,SUM(DEP_PREV_YEAR))AS DEP_PREV_YEAR,
+--decode(SUM(DEPRE_REC_AC),null,0,SUM(DEPRE_REC_AC))AS DEPRE_REC_AC,
+--decode(SUM(DEPRE_ALLOWED_YR),null,0,SUM(DEPRE_ALLOWED_YR))AS DEPRE_ALLOWED_YR,
+--decode(SUM(DEPRE_TR_AC),null,0,SUM(DEPRE_TR_AC))AS DEPRE_TR_AC,
+--decode(SUM(DEPRE_UPTO_DATE),null,0,SUM(DEPRE_UPTO_DATE))AS DEPRE_UPTO_DATE,
+--DECODE(SUM(NET_DEPRE_COST),NULL,0,SUM(NET_DEPRE_COST))AS NET_DEPRE_COST,
+--DECODE(SUM(APP_PRE_YR),NULL,0,SUM(APP_PRE_YR))AS APP_PRE_YR,
+--DECODE(SUM(APP_GRANT_RECIEVED),NULL,0,SUM(APP_GRANT_RECIEVED))AS APP_GRANT_RECIEVED,
+--DECODE(SUM(APPRO_DURING_YR),NULL,0,SUM(APPRO_DURING_YR))AS APPRO_DURING_YR,
+--DECODE(SUM(APP_GRANT_TR),NULL,0,SUM(APP_GRANT_TR))AS APP_GRANT_TR,
+--decode(SUM(APP_GRANT_UPTODATE),null,0,SUM(APP_GRANT_UPTODATE))AS APP_GRANT_UPTODATE
+FROM FAS_A52_REGISTER a
+WHERE ACCOUNTING_UNIT_ID = $P{accunitid}
+AND FINANCIAL_YEAR = $P{financialyear}
+group by asset_major_class_code, ACCOUNTING_UNIT_ID
+order by ASSET_MAJOR_CLASS_CODE)]]></queryString>
+
+	<field name="ASSET_MAJOR_CLASS_CODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNITNAME" class="java.lang.String"/>
+	<field name="ASSET_MAJOR_CLASS_DESC" class="java.lang.String"/>
+	<field name="AVAL_QTY" class="java.math.BigDecimal"/>
+	<field name="AVAL_CRT_QTY" class="java.math.BigDecimal"/>
+	<field name="AVAL_VALUE" class="java.math.BigDecimal"/>
+	<field name="AVAL_CRT_VALUE" class="java.math.BigDecimal"/>
+
+	<variable name="tot_aval_value" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AVAL_VALUE}]]></variableExpression>
+	</variable>
+	<variable name="tot_aval_crt_value" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AVAL_CRT_VALUE}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="171"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="6"
+						y="22"
+						width="262"
+						height="21"
+						forecolor="#0C0505"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font fontName="Times New Roman" pdfFontName="Helvetica" size="18" isBold="false"/>
+					</textElement>
+				<text><![CDATA[A52 Qty Push To Num For the year  ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1"
+						y="71"
+						width="159"
+						height="99"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Description of Articles]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="161"
+						y="72"
+						width="107"
+						height="35"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Avaliable ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="270"
+						y="71"
+						width="90"
+						height="36"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Corrected]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="71"
+						width="379"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="170"
+						width="1"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="9"
+						y="43"
+						width="160"
+						height="19"
+						key="staticText-16"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Accounting Unit id & Name :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="392"
+						y="18"
+						width="60"
+						height="13"
+						key="staticText-17"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Print Date :]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="71"
+						width="0"
+						height="99"
+						key="line-24"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="268"
+						y="71"
+						width="0"
+						height="99"
+						key="line-26"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="380"
+						y="70"
+						width="0"
+						height="99"
+						key="line-33"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="160"
+						y="107"
+						width="38"
+						height="63"
+						key="staticText-18"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Qty]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="205"
+						y="107"
+						width="63"
+						height="63"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Value]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="270"
+						y="107"
+						width="46"
+						height="63"
+						key="staticText-20"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Qty]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="319"
+						y="109"
+						width="60"
+						height="61"
+						key="staticText-21"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Value]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="160"
+						y="71"
+						width="0"
+						height="100"
+						key="line-48"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="161"
+						y="107"
+						width="219"
+						height="2"
+						key="line-49"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="268"
+						y="22"
+						width="107"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica" size="18" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{financialyear}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="173"
+						y="43"
+						width="30"
+						height="19"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="452"
+						y="18"
+						width="73"
+						height="12"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="206"
+						y="43"
+						width="228"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNITNAME}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="202"
+						y="107"
+						width="1"
+						height="62"
+						key="line-83"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="316"
+						y="107"
+						width="0"
+						height="62"
+						key="line-92"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="168"
+						width="379"
+						height="2"
+						key="line-122"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="18"
+						width="1"
+						height="0"
+						key="line-50"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="160"
+						y="0"
+						width="0"
+						height="18"
+						key="line-63"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="316"
+						y="0"
+						width="0"
+						height="18"
+						key="line-64"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="202"
+						y="1"
+						width="0"
+						height="18"
+						key="line-66"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="380"
+						y="1"
+						width="0"
+						height="18"
+						key="line-70"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" pattern="###0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="-1"
+						width="159"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ASSET_MAJOR_CLASS_DESC}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="0"
+						height="18"
+						key="line-117"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="267"
+						y="1"
+						width="0"
+						height="18"
+						key="line-118"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="18"
+						width="379"
+						height="0"
+						key="line-124"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="160"
+						y="-1"
+						width="38"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AVAL_QTY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="271"
+						y="0"
+						width="43"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AVAL_CRT_QTY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="205"
+						y="-1"
+						width="51"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AVAL_VALUE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="319"
+						y="1"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AVAL_CRT_VALUE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="22"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="7"
+						y="5"
+						width="82"
+						height="15"
+						key="staticText-28"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="205"
+						y="3"
+						width="51"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_aval_value}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="319"
+						y="-1"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_aval_crt_value}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

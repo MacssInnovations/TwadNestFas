@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Ob"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="800"
+		 pageHeight="842"
+		 columnWidth="740"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="FIN_YEAR" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="BENEFICIARY_TYPE_ID" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="OFFICE_ID" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT 
+  off.OFFICE_NAME,
+  BEN.BENEFICIARY_NAME,
+  BEN.BENEFICIARY_TYPE_ID,
+  BEN.OFFICE_ADDRESS1,
+  BEN.OFFICE_ADDRESS2,
+  BEN.OFFICE_ADDRESS3,
+  BEN.OFFICE_PIN_CODE,
+  BEN.OFFICE_LANDLINE_NO,
+  BEN.OFFICE_MOBILE_NO,
+  BENTYPE.BEN_TYPE_DESC,
+  OB.ob,
+  OB.BENEFICIARY_OB_SNO,
+  OB.addifany,
+  OB.collection,
+  OB.yesteryear,
+  OB.currentyear,
+  OB.demandupto,
+  OB.main_int_up_to_prv_fyear,
+  OB.main_int_collected,
+  OB.water_int_up_to_prv_fyear,
+  OB.water_int_levied,
+  OB.water_int_collected_prv_month,
+  OB.coll_up_prv_wcharge,
+  OB.coll_up_yester_year,
+  OB.FIN_YEAR
+FROM (
+  (SELECT BENEFICIARY_SNO,
+    BENEFICIARY_NAME,
+    BENEFICIARY_TYPE_ID,
+    DISTRICT_CODE,
+    BLOCK_SNO,
+    OFFICE_ADDRESS1,
+    OFFICE_ADDRESS2,
+    OFFICE_ADDRESS3,
+    OFFICE_PIN_CODE,
+    OFFICE_LANDLINE_NO,
+    OFFICE_MOBILE_NO,
+    OFFICE_ID
+  FROM PMS_DCB_MST_BENEFICIARY
+  WHERE BENEFICIARY_TYPE_ID=$P{BENEFICIARY_TYPE_ID}
+  AND OFFICE_ID            =$P{OFFICE_ID} order BY BENEFICIARY_NAME
+  )BEN
+JOIN
+  ( SELECT BEN_TYPE_ID, BEN_TYPE_SDESC, BEN_TYPE_DESC FROM PMS_DCB_BEN_TYPE
+  ) BENTYPE
+ON BENTYPE.BEN_TYPE_ID=BEN.BENEFICIARY_TYPE_ID
+JOIN
+  (SELECT BENEFICIARY_SNO,
+    BENEFICIARY_OB_SNO,
+    OB_MAINTENANCE_CHARGES        AS ob,
+    ADDN_UPTO_PMTH_MCHARGES       AS addifany,
+    COLN_UPTO_PMTH_MAINT          AS collection,
+    OB_YESTER_YR_upto_2004        AS yesteryear,
+    OB_YESTER_YR_2004_CY          AS currentyear,
+    OB_WATER_CHARGES              AS demandupto,
+    OB_INTEREST_AMT_MAINT         AS main_int_up_to_prv_fyear,
+    COLN_UPTO_PMTH_INTEREST_MAINT AS main_int_collected,
+    OB_INTEREST_AMT_WC            AS water_int_up_to_prv_fyear,
+    INT_UPTO_CUR_MONTH_CALC       AS water_int_levied,
+    COLN_UPTO_PMTH_INTEREST_WC    AS water_int_collected_prv_month ,
+    COLN_UPTO_PMTH_YESTER_YR      AS coll_up_yester_year,
+    COLN_UPTO_PMTH_WCHARGES       AS coll_up_prv_wcharge,
+    FIN_YEAR
+  FROM PMS_DCB_OB_YEARLY
+  WHERE FIN_YEAR=$P{FIN_YEAR} 
+  ) OB
+ON OB.BENEFICIARY_SNO=BEN.BENEFICIARY_SNO 
+JOIN
+(
+    SELECT
+          OFFICE_ID,
+          OFFICE_NAME
+    FROM  
+        com_mst_all_offices_view
+)off
+
+ON off.OFFICE_ID=BEN.OFFICE_ID
+
+)]]></queryString>
+
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="BENEFICIARY_NAME" class="java.lang.String"/>
+	<field name="BENEFICIARY_TYPE_ID" class="java.math.BigDecimal"/>
+	<field name="OFFICE_ADDRESS1" class="java.lang.String"/>
+	<field name="OFFICE_ADDRESS2" class="java.lang.String"/>
+	<field name="OFFICE_ADDRESS3" class="java.lang.String"/>
+	<field name="OFFICE_PIN_CODE" class="java.lang.String"/>
+	<field name="OFFICE_LANDLINE_NO" class="java.lang.String"/>
+	<field name="OFFICE_MOBILE_NO" class="java.lang.String"/>
+	<field name="BEN_TYPE_DESC" class="java.lang.String"/>
+	<field name="OB" class="java.math.BigDecimal"/>
+	<field name="BENEFICIARY_OB_SNO" class="java.math.BigDecimal"/>
+	<field name="ADDIFANY" class="java.math.BigDecimal"/>
+	<field name="COLLECTION" class="java.math.BigDecimal"/>
+	<field name="YESTERYEAR" class="java.math.BigDecimal"/>
+	<field name="CURRENTYEAR" class="java.math.BigDecimal"/>
+	<field name="DEMANDUPTO" class="java.math.BigDecimal"/>
+	<field name="MAIN_INT_UP_TO_PRV_FYEAR" class="java.math.BigDecimal"/>
+	<field name="MAIN_INT_COLLECTED" class="java.math.BigDecimal"/>
+	<field name="WATER_INT_UP_TO_PRV_FYEAR" class="java.math.BigDecimal"/>
+	<field name="WATER_INT_LEVIED" class="java.math.BigDecimal"/>
+	<field name="WATER_INT_COLLECTED_PRV_MONTH" class="java.math.BigDecimal"/>
+	<field name="COLL_UP_PRV_WCHARGE" class="java.math.BigDecimal"/>
+	<field name="COLL_UP_YESTER_YEAR" class="java.math.BigDecimal"/>
+	<field name="FIN_YEAR" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="15"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="29"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="6"
+						width="534"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Beneficiary Opening Balance Report -"+$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="65"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="26"
+						width="81"
+						height="31"
+						key="staticText-1"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Beneficiary Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="81"
+						y="26"
+						width="49"
+						height="31"
+						key="staticText-2"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[OB]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="131"
+						y="26"
+						width="44"
+						height="31"
+						key="staticText-3"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Addns
+if any Text]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="173"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-4"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Collection uptoPrev Mth]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="236"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-5"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Int upto
+Prev Fin.Yr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="297"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-6"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Int Collected
+Current
+Fin.Yr.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="336"
+						y="4"
+						width="87"
+						height="20"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Maintenance ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="359"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-8"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[OB.Yester Yr.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="423"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-9"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[OB
+Current
+Yr.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="485"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-10"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Demand
+Upto
+Prev Mth]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="548"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-11"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Int
+upto Prev
+Fin.Yr.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="612"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-12"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Int
+levied
+upto Prev Mth]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="676"
+						y="26"
+						width="63"
+						height="31"
+						key="staticText-13"/>
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Arial" pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Int
+collected
+upto Prev Mth ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="423"
+						y="4"
+						width="315"
+						height="20"
+						key="staticText-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Water Charges ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="4"
+						width="179"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Beneficiary Type :" + $F{BEN_TYPE_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="12"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="-8"
+						width="81"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Bottom">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BENEFICIARY_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="81"
+						y="-8"
+						width="49"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{OB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="130"
+						y="-8"
+						width="45"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ADDIFANY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="175"
+						y="-8"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{COLLECTION}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="236"
+						y="-8"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MAIN_INT_UP_TO_PRV_FYEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="299"
+						y="-8"
+						width="61"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MAIN_INT_COLLECTED}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="360"
+						y="-8"
+						width="57"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{YESTERYEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="423"
+						y="-8"
+						width="57"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CURRENTYEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="486"
+						y="-8"
+						width="57"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEMANDUPTO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="548"
+						y="-8"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{WATER_INT_UP_TO_PRV_FYEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="611"
+						y="-8"
+						width="58"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{WATER_INT_LEVIED}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="675"
+						y="-8"
+						width="58"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" leftPadding="1" rightBorder="None" rightBorderColor="#000000" rightPadding="2" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{WATER_INT_COLLECTED_PRV_MONTH}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

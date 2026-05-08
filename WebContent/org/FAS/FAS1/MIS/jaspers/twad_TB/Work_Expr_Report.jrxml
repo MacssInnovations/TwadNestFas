@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Work_Expr_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="623"
+		 pageHeight="842"
+		 columnWidth="563"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[Select 
+a.Data_Tb,a.Projectid,
+A.Projectname,
+a.Programid,a.Programname,
+Sum(A.Dr_Amount)Dr_Amount,
+Sum(A.Cr_Amount) Cr_Amount,
+Sum(A.Net_Amt) Net_Amt,
+a.  Fin_Year from
+(Select 1 As Data_Tb,Fh.Projectid,
+Pr.Projectname,
+Case When Length(Fh.Programid)<2 Then '0'||Fh.Programid
+Else Fh.Programid End Programid,Pg.Programname,
+v.account_head_code,
+  SUM(dr_amt)DR_AMOUNT,
+  SUM(CR_AMT)CR_AMOUNT,
+  SUM(dr_amt)-SUM(cr_amt) AS net_amt ,
+  Fin_Year
+From View_Fas_Trial V Inner Join Fas_Headofaccounts Fh
+On V.Account_Head_Code=Fh.Accountcode
+Inner Join Project Pr
+on Fh.Projectid=Pr.Projectid
+Inner Join Program Pg
+on Fh.Programid=Pg.Programid
+and Cmonth Between '01-APR-2012' And '02-MAR-2013'
+And Fh.Minorgroupingid='1166'
+Group By Fh.Projectid,Pr.Projectname,
+Fh.Programid,Pg.Programname,V.Account_Head_Code, Fin_Year
+)A
+Group By a.Data_Tb,A.Projectid,A.Projectname,
+a.PROGRAMID,a.Programname,a.Fin_Year
+Order By  A.Projectid,
+a.Programid]]></queryString>
+
+	<field name="DATA_TB" class="java.math.BigDecimal"/>
+	<field name="PROJECTID" class="java.lang.String"/>
+	<field name="PROJECTNAME" class="java.lang.String"/>
+	<field name="PROGRAMID" class="java.lang.String"/>
+	<field name="PROGRAMNAME" class="java.lang.String"/>
+	<field name="DR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="NET_AMT" class="java.math.BigDecimal"/>
+	<field name="FIN_YEAR" class="java.lang.String"/>
+
+	<variable name="proj_dr" class="java.math.BigDecimal" resetType="Group" resetGroup="prj_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="proj_cr" class="java.math.BigDecimal" resetType="Group" resetGroup="prj_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="proj_net" class="java.math.BigDecimal" resetType="Group" resetGroup="prj_grp" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_dR" class="java.math.BigDecimal" resetType="Group" resetGroup="TOT_gRP" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CR" class="java.math.BigDecimal" resetType="Group" resetGroup="TOT_gRP" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_nET" class="java.math.BigDecimal" resetType="Group" resetGroup="TOT_gRP" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET_AMT}]]></variableExpression>
+	</variable>
+
+		<group  name="TOT_gRP" >
+			<groupExpression><![CDATA[$F{DATA_TB}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="468"
+						y="1"
+						width="95"
+						height="14"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{SUM_nET}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="prj_grp" >
+			<groupExpression><![CDATA[$F{PROJECTID}]]></groupExpression>
+			<groupHeader>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="563"
+						height="14"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROJECTNAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="468"
+						y="-1"
+						width="95"
+						height="15"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{proj_net}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="16"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="22"
+						y="0"
+						width="492"
+						height="16"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Works Expenditure]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="13"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="15"
+						height="13"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[ID]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="14"
+						y="0"
+						width="454"
+						height="13"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[NAME]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="468"
+						y="0"
+						width="95"
+						height="13"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[NET]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="15"
+						height="14"
+						key="textField-1"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROGRAMID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="14"
+						y="0"
+						width="454"
+						height="14"
+						key="textField-2"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROGRAMNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="468"
+						y="0"
+						width="95"
+						height="14"
+						key="textField-5"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_AMT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

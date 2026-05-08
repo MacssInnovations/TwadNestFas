@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Fund_receipt_payment"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="878"
+		 pageHeight="842"
+		 columnWidth="818"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT a.RECEIPT_DATE,
+  a.HO_REF_DATE,
+  a.fundReceived,
+  a.CASHBOOK_YEAR,
+  a.CASHBOOK_MONTH,
+  b.CHEQUE_DD_NO,
+  b.CHEQUE_DD_DATE,
+  b.AMOUNT,
+  b.PAYMENT_DATE,
+  b.VOUCHER_NO,
+  b.paid_to
+FROM
+  (
+  SELECT RECEIPT_DATE,
+  Ho_Ref_Date,
+  SUM(TOTAL_AMOUNT) AS fundReceived,
+  ACCOUNTING_UNIT_ID,
+  CASHBOOK_YEAR,
+  CASHBOOK_MONTH
+FROM fas_fund_receipt_by_office
+WHERE ACCOUNTING_UNIT_ID    =70
+AND ACCOUNTING_FOR_OFFICE_ID=6870
+AND CASHBOOK_YEAR           =2012
+AND Cashbook_Month          =11
+GROUP BY Receipt_Date,
+  Ho_Ref_Date,
+  ACCOUNTING_UNIT_ID,
+  Cashbook_Year,
+  Cashbook_Month
+  order by RECEIPT_DATE,Ho_Ref_Date
+  )a
+INNER JOIN
+  (
+  SELECT m.ACCOUNTING_UNIT_ID,
+    m.CASHBOOK_YEAR,
+    m.CASHBOOK_MONTH,
+    t.CHEQUE_DD_NO,
+    t.CHEQUE_DD_DATE,
+    SUM(t.AMOUNT)AS amount,
+    m.PAYMENT_DATE,
+    m.VOUCHER_NO,
+    m.paid_to
+  From Fas_Payment_Master M,
+    Fas_Payment_Transaction T  
+  WHERE m.accounting_unit_id    =t.accounting_unit_id
+  AND m.ACCOUNTING_FOR_OFFICE_ID=t.ACCOUNTING_FOR_OFFICE_ID
+  AND m.CASHBOOK_YEAR           =t.CASHBOOK_YEAR
+  AND m.CASHBOOK_MONTH          =t.CASHBOOK_MONTH
+  AND M.Voucher_No              =T.Voucher_No
+  AND m.ACCOUNTING_UNIT_ID      =70
+  AND M.Accounting_For_Office_Id=6870
+  AND m.CASHBOOK_YEAR           =2012
+  AND m.CASHBOOK_MONTH          =11
+  AND m.PAYMENT_STATUS          ='L'
+  AND M.CREATED_BY_MODULE      IN ('BPF','BPP') 
+  GROUP BY M.Accounting_Unit_Id,
+    M.Cashbook_Year,
+    M.Cashbook_Month,
+    t.CHEQUE_DD_NO,
+    t.CHEQUE_DD_DATE,
+    m.PAYMENT_DATE,
+    M.Voucher_No,
+    M.Paid_To
+    order by M.Accounting_Unit_Id,
+    M.Cashbook_Year,
+    M.Cashbook_Month,
+    t.CHEQUE_DD_NO,
+    t.CHEQUE_DD_DATE,
+    M.Payment_Date,
+    M.Voucher_No
+  )b
+ON a.ACCOUNTING_UNIT_ID=b.ACCOUNTING_UNIT_ID
+AND a.CASHBOOK_YEAR    =b.CASHBOOK_YEAR
+And A.Cashbook_Month   =B.Cashbook_Month
+ORDER BY a.RECEIPT_DATE,b.CASHBOOK_YEAR,B.Cashbook_Month,
+  B.Cheque_Dd_No,
+  B.Cheque_Dd_Date]]></queryString>
+
+	<field name="RECEIPT_DATE" class="java.sql.Timestamp"/>
+	<field name="HO_REF_DATE" class="java.sql.Timestamp"/>
+	<field name="FUNDRECEIVED" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="CHEQUE_DD_NO" class="java.lang.String"/>
+	<field name="CHEQUE_DD_DATE" class="java.sql.Timestamp"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="PAYMENT_DATE" class="java.sql.Timestamp"/>
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="PAID_TO" class="java.lang.String"/>
+
+
+		<group  name="fr_amount" >
+			<groupExpression><![CDATA[$F{FUNDRECEIVED}]]></groupExpression>
+			<groupHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="40"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="19"
+						y="3"
+						width="100"
+						height="35"
+						key="staticText-1"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Fund Receipt Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="119"
+						y="3"
+						width="87"
+						height="35"
+						key="staticText-2"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[HO Cheque Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="205"
+						y="3"
+						width="87"
+						height="35"
+						key="staticText-3"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Fund Received]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="302"
+						y="3"
+						width="66"
+						height="35"
+						key="staticText-4"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Payment Cheque No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="3"
+						width="20"
+						height="35"
+						key="staticText-5"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="383"
+						y="3"
+						width="65"
+						height="35"
+						key="staticText-6"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Payment Cheque Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="457"
+						y="3"
+						width="62"
+						height="35"
+						key="staticText-7"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Payment Cheque Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="520"
+						y="3"
+						width="173"
+						height="35"
+						key="staticText-8"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Paid To]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="692"
+						y="3"
+						width="49"
+						height="35"
+						key="staticText-9"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Payment Vr No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="762"
+						y="3"
+						width="52"
+						height="35"
+						key="staticText-10"/>
+					<box>					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Payment vr Date]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="32"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="10"
+						y="5"
+						width="100"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{RECEIPT_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="109"
+						y="1"
+						width="87"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{HO_REF_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="302"
+						y="5"
+						width="71"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEQUE_DD_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="373"
+						y="9"
+						width="84"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{CHEQUE_DD_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="463"
+						y="9"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="539"
+						y="4"
+						width="154"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PAID_TO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="696"
+						y="1"
+						width="50"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VOUCHER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="746"
+						y="7"
+						width="68"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{PAYMENT_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="200"
+						y="1"
+						width="100"
+						height="18"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{FUNDRECEIVED}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

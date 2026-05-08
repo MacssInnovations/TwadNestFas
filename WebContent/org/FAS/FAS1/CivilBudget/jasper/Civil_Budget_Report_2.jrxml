@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Civil_Budget_Report_2"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="878"
+		 pageHeight="842"
+		 columnWidth="818"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="UnitId" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="OfficeId" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="year" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select a.ACCOUNTING_UNIT_ID,(select b.ACCOUNTING_UNIT_NAME from FAS_MST_ACCT_UNITS b
+ where b.ACCOUNTING_UNIT_ID=a.ACCOUNTING_UNIT_ID ) as orgName,
+a.FINANCIAL_YEAR, a.SL_NO,a.HEAD_OF_ACCOUNT,a.ACTUALS_FOR_LAST_YEAR,a.BE_FOR_THE_YEAR,a.ACTUALS_FOR_PERIOD_APR_TO_NOV,
+a.ANTICIPATED_FR_PERIOD_DEC_MAR,a.RE_FOR_YEAR,a.VARIATION_BETWEN_BE_RE,a.REASON_FOR_VARIATION,a.BE_FOR_NEXT_YEAR,
+a.VARIATION_BTWN_REYR_AND_NXTYR from FAS_BUDGET_FORMAT_2 a where a.accounting_unit_id=$P{UnitId} and 
+a.ACCOUNTING_FOR_OFFICE_ID=$P{OfficeId} and a.FINANCIAL_YEAR=$P{year}]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ORGNAME" class="java.lang.String"/>
+	<field name="FINANCIAL_YEAR" class="java.lang.String"/>
+	<field name="SL_NO" class="java.math.BigDecimal"/>
+	<field name="HEAD_OF_ACCOUNT" class="java.lang.String"/>
+	<field name="ACTUALS_FOR_LAST_YEAR" class="java.lang.Double"/>
+	<field name="BE_FOR_THE_YEAR" class="java.lang.Double"/>
+	<field name="ACTUALS_FOR_PERIOD_APR_TO_NOV" class="java.lang.Double"/>
+	<field name="ANTICIPATED_FR_PERIOD_DEC_MAR" class="java.lang.Double"/>
+	<field name="RE_FOR_YEAR" class="java.lang.Double"/>
+	<field name="VARIATION_BETWEN_BE_RE" class="java.lang.Double"/>
+	<field name="REASON_FOR_VARIATION" class="java.lang.String"/>
+	<field name="BE_FOR_NEXT_YEAR" class="java.lang.Double"/>
+	<field name="VARIATION_BTWN_REYR_AND_NXTYR" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="109"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="184"
+						y="4"
+						width="487"
+						height="69"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Civil Budget - Revenue Account Expenditure ( Format - 2 )]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="3"
+						y="84"
+						width="62"
+						height="20"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[ Unit Name:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="343"
+						y="49"
+						width="74"
+						height="20"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Financial Year:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="421"
+						y="49"
+						width="100"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{FINANCIAL_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="84"
+						width="221"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ORGNAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="64"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="16"
+						y="8"
+						width="38"
+						height="49"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Sl.No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="55"
+						y="8"
+						width="71"
+						height="49"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Account Head code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="127"
+						y="8"
+						width="66"
+						height="49"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Actual for last year (2011-2012)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="195"
+						y="8"
+						width="64"
+						height="49"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[BE for the year (2012-2013)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="263"
+						y="8"
+						width="72"
+						height="49"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Actuals for period Apr to Nov (2012-2013)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="336"
+						y="8"
+						width="85"
+						height="49"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Anticipated for Period Dec  to Mar (2012-2013)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="421"
+						y="8"
+						width="69"
+						height="49"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[RE for year (2012-2013)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="491"
+						y="8"
+						width="92"
+						height="49"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Variation Between BE and RE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="586"
+						y="9"
+						width="63"
+						height="49"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Reson for variation]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="650"
+						y="9"
+						width="84"
+						height="49"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[BE for Next Year (2013-2014)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="735"
+						y="9"
+						width="68"
+						height="49"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Variation Between RE and BE]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="1"
+						width="817"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="63"
+						width="817"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="17"
+						y="2"
+						width="38"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SL_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="56"
+						y="2"
+						width="71"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{HEAD_OF_ACCOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="128"
+						y="2"
+						width="66"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{ACTUALS_FOR_LAST_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="195"
+						y="2"
+						width="66"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{BE_FOR_THE_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="262"
+						y="1"
+						width="72"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{ACTUALS_FOR_PERIOD_APR_TO_NOV}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="335"
+						y="1"
+						width="86"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{ANTICIPATED_FR_PERIOD_DEC_MAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="421"
+						y="2"
+						width="69"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{RE_FOR_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="491"
+						y="2"
+						width="92"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{VARIATION_BETWEN_BE_RE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="587"
+						y="2"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REASON_FOR_VARIATION}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="650"
+						y="2"
+						width="84"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{BE_FOR_NEXT_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="735"
+						y="2"
+						width="69"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{VARIATION_BTWN_REYR_AND_NXTYR}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

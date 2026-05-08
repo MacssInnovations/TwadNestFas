@@ -1,0 +1,1218 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="General_provident_fund"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="765"
+		 pageHeight="842"
+		 columnWidth="705"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="gpfno" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select * from
+(
+select * from 
+(
+select  e.gpfno_1,e.EMP_NAME,e.DESIG,e.DOB,e.open_bal,e.deposit,e.interest,e.withdraw,e.closing_bal,e.cr_ACCT_MMYY,e.cr_REL_MMYY,e.cr_SUB_AMT,
+e.arrear,e. inst_no,e.arrear_inst_no,e.total,f.db_ADV_AMT,f.db_ADV_TYP,f.db_CON_AMT,f.db_INST_AMT,f.db_REL_MMYY,f.db_NO_INST,e.cr_DIVN_CD,e.cum_cb from
+(
+select  c.gpfno_1,c.EMP_NAME,c.DESIG,c.DOB,c.open_bal,c.deposit,c.interest,c.withdraw,c.closing_bal,d.cr_ACCT_MMYY,d.cr_REL_MMYY,d.cr_SUB_AMT,
+d.cr_REF_AMT as arrear,(d.cr_REF_INS_NO||'/'||d.cr_REF_INS_TO) as inst_no,(d.cr_AR_INS_TOT||'/'||d.cr_AR_INS_NO) as arrear_inst_no,c.total,d.cr_DIVN_CD,c.cum_cb
+from
+(
+select a.gpfno_1,a.EMP_NAME,a.DESIG,a.DOB,b.OB as open_bal,b.TOT_DEP,b.TOT_WITH as withdraw ,b.JINT,b.TOT_RECOV,b.CUM_CB as closing_bal,b.TOT_INT,b.deposit,b.interest,b.total,b.cum_cb  from 
+(
+select GPFNO as gpfno_1,EMP_NAME,DESIG,to_char(DOB,'dd/mm/yy') as dob from emp_cat where gpfno =$P{gpfno}
+)a
+left outer join
+(
+select GPFNO,OB,TOT_DEP,TOT_WITH,JINT,TOT_RECOV,TOT_INT,(TOT_DEP+TOT_RECOV) as deposit,(JINT+TOT_INT) as interest, 
+(ob+TOT_DEP+TOT_RECOV+JINT+TOT_INT) as total,(ob+TOT_DEP+TOT_RECOV+JINT+TOT_INT)-(TOT_WITH)as cum_cb from reg_bal
+)b
+on a.gpfno_1=b.gpfno
+)c
+left outer join
+(
+select GPFNO as cr_gpf,ACCT_MMYY as cr_ACCT_MMYY,DIVN_CD as cr_DIVN_CD,REL_MMYY as cr_REL_MMYY,SUB_AMT as cr_SUB_AMT,REF_AMT as cr_REF_AMT,REF_INS_NO as cr_REF_INS_NO ,REF_INS_TO as cr_REF_INS_TO ,SPLIND as cr_SPLIND,SUB_AR_AMT as cr_SUB_AR_AMT,
+AR_INS_NO as cr_AR_INS_NO,AR_INS_TOT as cr_AR_INS_TOT from cr_trn 
+)d
+on c.gpfno_1=d.cr_gpf
+)e
+left outer join
+(
+select DIVN_CD,ACCT_MMYY,GPFNO as gpf1,ADV_AMT as db_ADV_AMT,ADV_TYP as db_ADV_TYP,CON_AMT as db_CON_AMT,INST_AMT as db_INST_AMT,NO_INST as db_NO_INST,REL_MMYY as db_REL_MMYY,GPFTYPE,SPLIND from db_trn
+)f
+on e.gpfno_1=f.gpf1
+)g
+left outer join
+(
+select GPFNO,OB as imp_open_bal,TOT_DEP,TOT_WITH,JINT,TOT_RECOV,(ob+JINT+TOT_INT) as clos_ob_imp,TOT_INT,(TOT_DEP+TOT_RECOV) as imp_deposit,(JINT+TOT_INT) as imp_interest, 
+(ob+JINT+TOT_INT) as imp_total from imp_bal
+)h
+on g.gpfno_1=h.gpfno
+)i
+left outer join
+(
+select GPFNO,OB as imp_open_bal_2003,TOT_DEP,TOT_WITH,JINT,TOT_RECOV,(ob+JINT+TOT_INT) as clos_ob_imp_2003,TOT_INT,(TOT_DEP+TOT_RECOV) as imp_deposit_2003,(JINT+TOT_INT) as imp_interest_2003, 
+(ob+JINT+TOT_INT) as imp_total_2003 from imp_bal2003
+)j
+on gpfno_1=j.gpfno]]></queryString>
+
+	<field name="GPFNO_1" class="java.lang.String"/>
+	<field name="EMP_NAME" class="java.lang.String"/>
+	<field name="DESIG" class="java.lang.String"/>
+	<field name="DOB" class="java.lang.String"/>
+	<field name="OPEN_BAL" class="java.lang.Double"/>
+	<field name="DEPOSIT" class="java.math.BigDecimal"/>
+	<field name="INTEREST" class="java.math.BigDecimal"/>
+	<field name="WITHDRAW" class="java.lang.Double"/>
+	<field name="CLOSING_BAL" class="java.math.BigDecimal"/>
+	<field name="CR_ACCT_MMYY" class="java.lang.String"/>
+	<field name="CR_REL_MMYY" class="java.lang.String"/>
+	<field name="CR_SUB_AMT" class="java.math.BigDecimal"/>
+	<field name="ARREAR" class="java.math.BigDecimal"/>
+	<field name="INST_NO" class="java.lang.String"/>
+	<field name="ARREAR_INST_NO" class="java.lang.String"/>
+	<field name="TOTAL" class="java.math.BigDecimal"/>
+	<field name="DB_ADV_AMT" class="java.math.BigDecimal"/>
+	<field name="DB_ADV_TYP" class="java.lang.String"/>
+	<field name="DB_CON_AMT" class="java.math.BigDecimal"/>
+	<field name="DB_INST_AMT" class="java.math.BigDecimal"/>
+	<field name="DB_REL_MMYY" class="java.lang.String"/>
+	<field name="DB_NO_INST" class="java.math.BigDecimal"/>
+	<field name="CR_DIVN_CD" class="java.math.BigDecimal"/>
+	<field name="CUM_CB" class="java.math.BigDecimal"/>
+	<field name="GPFNO" class="java.lang.String"/>
+	<field name="IMP_OPEN_BAL" class="java.lang.Double"/>
+	<field name="TOT_DEP" class="java.lang.Double"/>
+	<field name="TOT_WITH" class="java.lang.Double"/>
+	<field name="JINT" class="java.lang.Double"/>
+	<field name="TOT_RECOV" class="java.lang.Double"/>
+	<field name="CLOS_OB_IMP" class="java.math.BigDecimal"/>
+	<field name="TOT_INT" class="java.lang.Double"/>
+	<field name="IMP_DEPOSIT" class="java.math.BigDecimal"/>
+	<field name="IMP_INTEREST" class="java.math.BigDecimal"/>
+	<field name="IMP_TOTAL" class="java.math.BigDecimal"/>
+	<field name="IMP_OPEN_BAL_2003" class="java.lang.Double"/>
+	<field name="CLOS_OB_IMP_2003" class="java.math.BigDecimal"/>
+	<field name="IMP_DEPOSIT_2003" class="java.math.BigDecimal"/>
+	<field name="IMP_INTEREST_2003" class="java.math.BigDecimal"/>
+	<field name="IMP_TOTAL_2003" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="127"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="133"
+						y="-1"
+						width="419"
+						height="30"
+						forecolor="#CC3300"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TAMILNADU WATER SUPPLY AND DRAINAGE BOARD]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="160"
+						y="28"
+						width="346"
+						height="17"
+						forecolor="#CC3300"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[31,Kamarajar Salai,Chepauk, chennai -600 005]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="112"
+						y="44"
+						width="468"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[GENERAL PROVIDENT FUND STATEMENT OF ACCOUNTS FOR THE YEAR 2009-2010]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="76"
+						y="68"
+						width="46"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[GPF NO]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="76"
+						y="103"
+						width="84"
+						height="19"
+						forecolor="#CC3300"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[DATE OF BIRTH]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="237"
+						y="68"
+						width="41"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[NAME]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="474"
+						y="68"
+						width="117"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Rate of Interest:8%.pa.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="475"
+						y="104"
+						width="117"
+						height="19"
+						forecolor="#CC3300"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[(Amount in Rupees)]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="124"
+						y="68"
+						width="62"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{GPFNO_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="278"
+						y="68"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{EMP_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="165"
+						y="103"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DOB}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="59"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="8"
+						y="19"
+						width="43"
+						height="40"
+						forecolor="#CC3300"
+						key="staticText-9"/>
+					<box leftPadding="3">					<topPen lineWidth="0.75" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Divn.Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="51"
+						y="19"
+						width="44"
+						height="40"
+						forecolor="#CC3300"
+						key="staticText-10"/>
+					<box leftPadding="3">					<pen lineWidth="0.0" lineStyle="Solid"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Acct. Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="95"
+						y="19"
+						width="44"
+						height="40"
+						forecolor="#CC3300"
+						key="staticText-11"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Rel. Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="139"
+						y="38"
+						width="76"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-12"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Subscription]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="215"
+						y="38"
+						width="40"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-13"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Refund]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="255"
+						y="38"
+						width="40"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-14"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Inst. No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="294"
+						y="38"
+						width="40"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-15"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Arrear]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="334"
+						y="38"
+						width="40"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-16"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Inst. No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="374"
+						y="38"
+						width="64"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-17"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[With Drawal]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="438"
+						y="38"
+						width="40"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-18"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[TYPE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="477"
+						y="38"
+						width="45"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-19"/>
+					<box>					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Credit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="522"
+						y="38"
+						width="61"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-20"/>
+					<box>					<pen lineWidth="1.0"/>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="582"
+						y="19"
+						width="83"
+						height="40"
+						forecolor="#CC3300"
+						key="staticText-21"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Reference]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="139"
+						y="22"
+						width="0"
+						height="0"
+						forecolor="#CC3300"
+						key="staticText-22"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Static Text]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="139"
+						y="19"
+						width="339"
+						height="19"
+						forecolor="#CC3300"
+						key="staticText-23"/>
+					<box>					<pen lineWidth="1.0" lineStyle="Solid"/>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[G.P. F.(REGULAR)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="477"
+						y="19"
+						width="106"
+						height="19"
+						forecolor="#CC3300"
+						key="staticText-24"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[IMPOUNDED]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="86"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="51"
+						y="4"
+						width="44"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_ACCT_MMYY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="95"
+						y="4"
+						width="44"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_REL_MMYY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="139"
+						y="4"
+						width="76"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_SUB_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="255"
+						y="4"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{INST_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="300"
+						y="4"
+						width="34"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ARREAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="334"
+						y="4"
+						width="39"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ARREAR_INST_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="374"
+						y="4"
+						width="64"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DB_ADV_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="438"
+						y="4"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DB_ADV_TYP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="216"
+						y="3"
+						width="36"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_SUB_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="10"
+						y="4"
+						width="39"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_DIVN_CD}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="528"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="0"
+						y="1"
+						width="705"
+						height="41"
+						forecolor="#CC3300"
+						backcolor="#CC3300"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="269"
+						y="1"
+						width="205"
+						height="41"
+						forecolor="#CC3300"
+						backcolor="#FFFFFF"
+						key="staticText-25"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[CONSOLIDATED STATEMENT]]></text>
+				</staticText>
+				<elementGroup><!--  Start: 1 !-->
+				<staticText>
+					<reportElement
+						x="0"
+						y="42"
+						width="248"
+						height="50"
+						forecolor="#CC3300"
+						key="staticText-26"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="12" isBold="false"/>
+					</textElement>
+				<text><![CDATA[PARTICULARS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="248"
+						y="42"
+						width="142"
+						height="49"
+						forecolor="#CC3300"
+						key="staticText-27"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[   GPF (Regular)         2009-2010]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="390"
+						y="42"
+						width="146"
+						height="49"
+						forecolor="#CC3300"
+						key="staticText-28"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[            GPF (imp) V PCA                 2009-2010]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="536"
+						y="42"
+						width="169"
+						height="49"
+						forecolor="#CC3300"
+						key="staticText-29"/>
+					<box>					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font size="12"/>
+					</textElement>
+				<text><![CDATA[    GPF (imp) VI PCA           2009-2010]]></text>
+				</staticText>
+				</elementGroup><!-- End 1 !-->
+				<line direction="TopDown">
+					<reportElement
+						x="247"
+						y="89"
+						width="0"
+						height="318"
+						forecolor="#CC3300"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="89"
+						width="0"
+						height="318"
+						forecolor="#CC3300"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="389"
+						y="91"
+						width="0"
+						height="316"
+						forecolor="#CC3300"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="91"
+						width="0"
+						height="316"
+						forecolor="#CC3300"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="705"
+						y="91"
+						width="0"
+						height="316"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<elementGroup><!--  Start: 2 !-->
+				<staticText>
+					<reportElement
+						x="3"
+						y="107"
+						width="198"
+						height="26"
+						forecolor="#CC3300"
+						key="staticText-30"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[OPENING BALANCE AS ON 1-4-2009]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="8"
+						y="154"
+						width="29"
+						height="25"
+						forecolor="#CC3300"
+						key="staticText-31"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[ADD:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="37"
+						y="191"
+						width="96"
+						height="27"
+						forecolor="#CC3300"
+						key="staticText-32"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[DEPOSIT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="37"
+						y="229"
+						width="96"
+						height="26"
+						forecolor="#CC3300"
+						key="staticText-33"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[INTEREST]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="3"
+						y="269"
+						width="51"
+						height="23"
+						forecolor="#CC3300"
+						key="staticText-34"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[TOTAL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="4"
+						y="313"
+						width="76"
+						height="22"
+						forecolor="#CC3300"
+						key="staticText-35"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[DEDUCT:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="24"
+						y="352"
+						width="125"
+						height="20"
+						forecolor="#CC3300"
+						key="staticText-36"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[WITHDRAWAL]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="5"
+						y="386"
+						width="207"
+						height="21"
+						forecolor="#CC3300"
+						key="staticText-37"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[CLOSING BALANCE OF 31-3-2010]]></text>
+				</staticText>
+				</elementGroup><!-- End 2 !-->
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="407"
+						width="705"
+						height="0"
+						forecolor="#CC3300"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<elementGroup><!--  Start: 3 !-->
+				<staticText>
+					<reportElement
+						x="8"
+						y="419"
+						width="281"
+						height="20"
+						forecolor="#CC3300"
+						key="staticText-38"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Name of the  Nominee and relationship to the subscriber :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="8"
+						y="467"
+						width="43"
+						height="18"
+						forecolor="#CC3300"
+						key="staticText-39"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Date :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1"
+						y="499"
+						width="170"
+						height="22"
+						forecolor="#CC3300"
+						key="staticText-40"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[ Place :EDP Wing , Head Office]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="468"
+						y="459"
+						width="227"
+						height="61"
+						forecolor="#CC3300"
+						key="staticText-41"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[     ADMINISTRATIVE OFFICE CUM
+ASSISTANT SECRETARY (GPF) INCHARGE
+     TWAD BOard /Chennai -5]]></text>
+				</staticText>
+				</elementGroup><!-- End 3 !-->
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="268"
+						y="107"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{OPEN_BAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="269"
+						y="191"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEPOSIT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="269"
+						y="229"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{INTEREST}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="269"
+						y="351"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{WITHDRAW}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="269"
+						y="261"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TOTAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="412"
+						y="107"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{IMP_OPEN_BAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="412"
+						y="229"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{IMP_INTEREST}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="412"
+						y="261"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{IMP_TOTAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="551"
+						y="263"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{IMP_TOTAL_2003}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="552"
+						y="229"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{IMP_INTEREST_2003}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="552"
+						y="386"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CLOS_OB_IMP_2003}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="552"
+						y="103"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{IMP_OPEN_BAL_2003}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="270"
+						y="385"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CUM_CB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="414"
+						y="383"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CLOS_OB_IMP}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="t"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT 
+
+a.Accounting_Unit_Id,
+u.accounting_unit_name,
+  a.Bankname,
+  a.branch_id,
+  a.Bank_Ac_No,
+  a.Bank_Ac_Type_Id,
+  a.acc_type_desc,
+  a.Ac_Operational_Mode_Id,
+  a.acc_Mode_desc,
+  a.Ac_Opening_Date,
+  a.initial_deposit_amt,
+  a.Cr_Dr_Type AS open_CR_Drtype,
+  a.Pb_Balance AS open_PB_Bal,
+  b.Cr_Dr_Type AS closing_CR_Drtype,
+  b.Pb_Balance AS closing_PB_Bal
+FROM
+  (SELECT Balnce.Accounting_Unit_Id,
+    (SELECT BANK_NAME FROM fas_mst_banks bank WHERE bank.bank_id=balnce.bank_id
+    )
+    || '-'
+    ||N.Branch_Name AS Bankname,
+    n.branch_id,
+    Balnce.Bank_Ac_No,
+    Balnce.Bank_Ac_Type_Id,
+    (SELECT ac_t.account_type
+    FROM FAS_MST_BANK_AC_TYPES ac_t
+    WHERE ac_t.account_type_id=Balnce.Bank_Ac_Type_Id
+    ) acc_type_desc,
+    Balnce.Ac_Operational_Mode_Id,
+    (SELECT ac_mo.ac_operational_mode
+    FROM FAS_MST_AC_OPER_MODES ac_mo
+    WHERE ac_mo.Ac_Operational_Mode_Id=Balnce.Ac_Operational_Mode_Id
+    ) acc_Mode_desc,
+    Balnce.Ac_Opening_Date,
+    balnce.initial_deposit_amt,
+    Up.Cr_Dr_Type,
+    Up.Pb_Balance
+  FROM FAS_MST_BANK_BRANCHES n,
+    FAS_MST_BANK_BALANCE balnce,
+    BRS_BANK_BALANCE_UPDATE up
+  WHERE balnce.accounting_unit_id  =up.accounting_unit_id
+  AND balnce.bank_ac_no            =up.bank_ac_no
+  AND balnce.BANK_AC_TYPE_ID       =up.BANK_AC_TYPE_ID
+  AND Balnce.Ac_Operational_Mode_Id=Up.Ac_Operational_Mode_Id
+  AND Balnce.Status                ='Y'
+  AND N.Bank_Id                    =Up.Bank_Id
+  AND n.branch_id                  =up.branch_id
+  AND Up.Cb_Year                   =2014
+  AND Up.Cb_Month                  =3
+  --AND Balnce.Accounting_Unit_Id    =20
+  ORDER BY Balnce.Accounting_Unit_Id,
+    balnce.bank_ac_no
+  )a
+INNER JOIN
+  (SELECT Balnce.Accounting_Unit_Id,
+    (SELECT BANK_NAME FROM fas_mst_banks bank WHERE bank.bank_id=balnce.bank_id
+    )
+    || '-'
+    ||N.Branch_Name AS Bankname,
+    n.branch_id,
+    Balnce.Bank_Ac_No,
+    Balnce.Bank_Ac_Type_Id,
+    (SELECT ac_t.account_type
+    FROM FAS_MST_BANK_AC_TYPES ac_t
+    WHERE ac_t.account_type_id=Balnce.Bank_Ac_Type_Id
+    ) acc_type_desc,
+    Balnce.Ac_Operational_Mode_Id,
+    (SELECT ac_mo.ac_operational_mode
+    FROM FAS_MST_AC_OPER_MODES ac_mo
+    WHERE ac_mo.Ac_Operational_Mode_Id=Balnce.Ac_Operational_Mode_Id
+    ) acc_Mode_desc,
+    Balnce.Ac_Opening_Date,
+    balnce.initial_deposit_amt,
+    Up.Cr_Dr_Type,
+    Up.Pb_Balance
+  FROM FAS_MST_BANK_BRANCHES n,
+    FAS_MST_BANK_BALANCE balnce,
+    BRS_BANK_BALANCE_UPDATE up
+  WHERE balnce.accounting_unit_id  =up.accounting_unit_id
+  AND balnce.bank_ac_no            =up.bank_ac_no
+  AND balnce.BANK_AC_TYPE_ID       =up.BANK_AC_TYPE_ID
+  AND Balnce.Ac_Operational_Mode_Id=Up.Ac_Operational_Mode_Id
+  AND Balnce.Status                ='Y'
+  AND N.Bank_Id                    =Up.Bank_Id
+  AND n.branch_id                  =up.branch_id
+  AND Up.Cb_Year                   =2014
+  AND Up.Cb_Month                  =4
+  --AND Balnce.Accounting_Unit_Id    =20
+  ORDER BY Balnce.Accounting_Unit_Id,
+    balnce.bank_ac_no
+  )b
+ON 
+a.Ac_Operational_Mode_Id=b.Ac_Operational_Mode_Id and
+a. Accounting_Unit_Id=b.Accounting_Unit_Id
+AND a.bank_ac_no        =b.bank_ac_no
+inner join fas_mst_acct_units u
+on a.Accounting_Unit_Id=u.Accounting_Unit_Id
+]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="BANKNAME" class="java.lang.String"/>
+	<field name="BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_TYPE_ID" class="java.lang.String"/>
+	<field name="ACC_TYPE_DESC" class="java.lang.String"/>
+	<field name="AC_OPERATIONAL_MODE_ID" class="java.lang.String"/>
+	<field name="ACC_MODE_DESC" class="java.lang.String"/>
+	<field name="AC_OPENING_DATE" class="java.sql.Timestamp"/>
+	<field name="INITIAL_DEPOSIT_AMT" class="java.math.BigDecimal"/>
+	<field name="OPEN_CR_DRTYPE" class="java.lang.String"/>
+	<field name="OPEN_PB_BAL" class="java.lang.Double"/>
+	<field name="CLOSING_CR_DRTYPE" class="java.lang.String"/>
+	<field name="CLOSING_PB_BAL" class="java.lang.Double"/>
+
+
+		<group  name="unit" >
+			<groupExpression><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="26"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="58"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="123"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{INITIAL_DEPOSIT_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="233"
+						y="0"
+						width="59"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OPEN_CR_DRTYPE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="333"
+						y="0"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{OPEN_PB_BAL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="433"
+						y="1"
+						width="66"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CLOSING_CR_DRTYPE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

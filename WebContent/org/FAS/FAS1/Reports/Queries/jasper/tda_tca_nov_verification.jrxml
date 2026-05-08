@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="tda_tca_nov_verification"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT Unit_Id,
+    (SELECT U.Accounting_Unit_Name
+    FROM Fas_Mst_Acct_Units u
+    WHERE U.Accounting_Unit_Id=unit_id
+    )AS unit_name,
+    Cashbook_Month,
+    CASE
+      WHEN Cashbook_Month=1
+      THEN 'January'
+      WHEN Cashbook_Month=2
+      THEN 'February'
+      WHEN Cashbook_Month=3
+      THEN 'March'
+      WHEN Cashbook_Month=4
+      THEN 'April'
+      WHEN Cashbook_Month=5
+      THEN 'May'
+      WHEN Cashbook_Month=6
+      THEN 'June'
+      WHEN Cashbook_Month=7
+      THEN 'July'
+      WHEN Cashbook_Month=8
+      THEN 'August'
+      WHEN Cashbook_Month=9
+      THEN 'September'
+      WHEN Cashbook_Month=10
+      THEN 'October'
+      WHEN Cashbook_Month=11
+      THEN 'November'
+      WHEN Cashbook_Month=12
+      THEN 'December'
+    END AS month_desc,
+    Account_Head_Code,
+    Trn_Dr,
+    Trn_Cr,
+    Tda_Dr,
+    Tda_Cr,
+    Trn_Net,
+    Tda_Net,
+    (Trn_Net-tda_net)AS difference
+  FROM
+    (SELECT aaa.Accounting_Unit_Id AS unit_id,
+      Aaa.Cashbook_Month,
+      Aaa.Account_Head_Code,
+      Aaa.Trn_Dr,
+      Aaa.Trn_Cr,
+      Bbb.Tda_Dr,
+      Bbb.Tda_Cr,
+      CASE
+        WHEN Aaa.Trn_Dr>Aaa.Trn_Cr
+        THEN (Aaa.Trn_Dr-Aaa.Trn_Cr)
+        WHEN Aaa.Trn_Cr>Aaa.Trn_Dr
+        THEN (Aaa.Trn_Cr-Aaa.Trn_Dr)
+        ELSE 0
+      END AS Trn_Net,
+      CASE
+        WHEN Bbb.Tda_Dr>Bbb.Tda_Cr
+        THEN (Bbb.Tda_Dr-Bbb.Tda_Cr)
+        WHEN Bbb.Tda_Cr>Bbb.Tda_Dr
+        THEN (Bbb.Tda_Cr-Bbb.Tda_Dr)
+        ELSE 0
+      END AS Tda_Net
+    FROM
+      (SELECT Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code,
+        SUM(dr_Amount)AS trn_dr,
+        SUM(cr_amount)AS trn_cr
+      FROM
+        (SELECT Accounting_Unit_Id,
+          Cashbook_Month,
+          Account_Head_Code,
+          SUM(dr_Amount)AS dr_Amount,
+          SUM(cr_amount)AS cr_amount
+        FROM
+          (SELECT B.Cashbook_Month,
+            B.Account_Head_Code,
+            B.Accounting_Unit_Id,
+            CASE
+              WHEN B.Cr_Dr_Indicator='DR'
+              THEN SUM(B.Amount)
+              ELSE 0
+            END AS dr_Amount,
+            CASE
+              WHEN b.Cr_Dr_Indicator='CR'
+              THEN SUM(B.Amount)
+              ELSE 0
+            END AS cr_amount
+          FROM fas_journal_master a,
+            Fas_Journal_Transaction b
+          WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+          AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+          AND A.Cashbook_Year           =B.Cashbook_Year
+          AND A.Cashbook_Month          =B.Cashbook_Month
+          AND A.Voucher_No              =B.Voucher_No
+          And A.Journal_Status          ='L'
+          and A.Accounting_Unit_Id=43
+          AND A.Journal_Type_Code      IN (62,63,65,66)
+          AND A.Mode_Of_Creation        ='A'
+          And B.Cashbook_Year           = 2012
+          and B.Cashbook_Month=11
+          AND B.Account_Head_Code      IN (900108,900109,901001,901002)
+          GROUP BY B.Accounting_Unit_Id,
+            B.Cashbook_Month,
+            B.Account_Head_Code,
+            B.Cr_Dr_Indicator
+          UNION ALL
+          SELECT B.Cashbook_Month,
+            B.Account_Head_Code,
+            B.Accounting_Unit_Id,
+            CASE
+              WHEN B.Cr_Dr_Indicator='DR'
+              THEN SUM(B.Amount)
+              ELSE 0
+            END AS dr_Amount,
+            CASE
+              WHEN b.Cr_Dr_Indicator='CR'
+              THEN SUM(B.Amount)
+              ELSE 0
+            END AS cr_amount
+          FROM fas_journal_master a,
+            Fas_Journal_Transaction b
+          WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+          AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+          AND A.Cashbook_Year           =B.Cashbook_Year
+          AND A.Cashbook_Month          =B.Cashbook_Month
+          AND A.Voucher_No              =B.Voucher_No
+          And A.Journal_Status          ='L'
+          and A.Accounting_Unit_Id=43
+          AND A.Journal_Type_Code      IN (54)
+          And B.Cashbook_Year           = 2012
+          and B.Cashbook_Month=11
+          AND B.Account_Head_Code      IN (900108,900109,901001,901002)
+          GROUP BY B.Accounting_Unit_Id,
+            B.Cashbook_Month,
+            B.Account_Head_Code,
+            B.Cr_Dr_Indicator
+          )
+        GROUP BY Accounting_Unit_Id,
+          Cashbook_Month,
+          Account_Head_Code
+        UNION ALL
+        SELECT B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          CASE
+            WHEN B.Cr_Dr_Indicator='DR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS dr_Amount,
+          CASE
+            WHEN b.Cr_Dr_Indicator='CR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS cr_amount
+        FROM FAS_PAYMENT_MASTER a,
+          FAS_PAYMENT_TRANSACTION b
+        WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        And A.Voucher_No              =B.Voucher_No
+        and A.Accounting_Unit_Id=43
+        AND A.Payment_Status          ='L'
+        And B.Cashbook_Year           =2012
+        and B.Cashbook_Month=11
+        AND B.Account_Head_Code      IN (900108,900109,901001,901002)
+        GROUP BY B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          B.Cr_Dr_Indicator
+        UNION ALL
+        SELECT B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          CASE
+            WHEN B.Cr_Dr_Indicator='DR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS dr_Amount,
+          CASE
+            WHEN b.Cr_Dr_Indicator='CR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS cr_amount
+        FROM FAS_RECEIPT_MASTER a,
+          FAS_RECEIPT_TRANSACTION b
+        WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        AND A.RECEIPT_NO              =B.RECEIPT_NO
+        And A.Receipt_Status          ='L'
+        and A.Accounting_Unit_Id=43
+        And B.Cashbook_Year           =2012
+        and B.Cashbook_Month=11
+        AND B.Account_Head_Code      IN (900108,900109,901001,901002)
+        GROUP BY B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          B.Cr_Dr_Indicator
+        )
+      GROUP BY Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code
+      ORDER BY Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code
+      )aaa
+    LEFT OUTER JOIN
+      (SELECT Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code,
+        SUM(dr_Amount)AS tda_dr,
+        SUM(cr_amount)AS tda_cr
+      FROM
+        (SELECT B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          CASE
+            WHEN B.Cr_Dr_Indicator='DR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS dr_Amount,
+          CASE
+            WHEN b.Cr_Dr_Indicator='CR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS cr_amount
+        FROM Fas_Tda_Tca_Raised_Mst A,
+          Fas_Tda_Tca_Raised_Trn B
+        WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        AND A.Voucher_No              =B.Voucher_No
+        And A.Status                  ='L'
+        and A.Accounting_Unit_Id=43
+        And B.Cashbook_Year           =2012
+        and B.Cashbook_Month=11
+        AND B.Account_Head_Code      IN (900108,900109,901001,901002)
+        GROUP BY B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          B.Account_Head_Code,
+          B.Cr_Dr_Indicator
+        ORDER BY B.Accounting_Unit_Id,
+          B.Cashbook_Month,
+          b.Account_Head_Code
+        )
+      GROUP BY Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code
+      ORDER BY Accounting_Unit_Id,
+        Cashbook_Month,
+        Account_Head_Code
+      )Bbb
+    ON aaa.Accounting_Unit_Id=bbb.Accounting_Unit_Id
+    AND Aaa.Cashbook_Month   =Bbb.Cashbook_Month
+    AND Aaa.Account_Head_Code=Bbb.Account_Head_Code
+    )
+]]></queryString>
+
+	<field name="UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="MONTH_DESC" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="TRN_DR" class="java.math.BigDecimal"/>
+	<field name="TRN_CR" class="java.math.BigDecimal"/>
+	<field name="TDA_DR" class="java.math.BigDecimal"/>
+	<field name="TDA_CR" class="java.math.BigDecimal"/>
+	<field name="TRN_NET" class="java.math.BigDecimal"/>
+	<field name="TDA_NET" class="java.math.BigDecimal"/>
+	<field name="DIFFERENCE" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="100"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

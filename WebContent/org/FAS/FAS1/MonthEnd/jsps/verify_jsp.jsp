@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<%@ page session="false" contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*,java.util.*,Servlets.Security.classes.UserProfile"%>
+<%@ include file="//org/Security/jsps/Check_SessionJSPF.jspf"%>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
+    <meta http-equiv="cache-control" content="no-cache"></meta>
+    <title>Verify Trial Balance</title>
+    <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/Library/scripts/comJS.js"></script>
+    <script type="text/javascript"
+            src="../../../../../../org/Library/scripts/checkDate.js"></script>
+    <link href="../../../../../../css/CalendarControl.css" rel="stylesheet"
+          media="screen"/>
+    <link href="../../../../../css/Sample3.css" rel="stylesheet"
+          media="screen"/>
+    <script type="text/javascript"
+            src="../../../../../../org/HR/HR1/EmployeeMaster/scripts/CalendarControl.js"></script>   
+             <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/FAS/FAS1/CommonControls/scripts/Common_Load_Accounting_Unit_ID.js"></script>
+    <script language="javascript" type="text/javascript" src="../scripts/verify_js.js"></script>
+    
+    <script type="text/javascript" language="javascript">
+     function loadyear_month()
+         {
+         var today= new Date(); 
+         var day=today.getDate();
+         var month=today.getMonth();
+         month=month+1;
+         var year=today.getYear();
+         if(year < 1900) year += 1900;
+       
+         document.frmSL_GL_CB_Freeze.txtCB_Year.value="2011";
+        // document.frmSL_GL_CB_Freeze.txtCB_Month.value=month;
+        
+         }
+         
+         function ListAll()      
+         {
+         var a=chkMonth();
+         
+         if(a)
+         {
+          var Acc_UnitCode=document.frmSL_GL_CB_Freeze.cmbAcc_UnitCode.value;        
+            var CashbookYear=document.frmSL_GL_CB_Freeze.txtCB_Year.value;
+        var CashbookMonth=document.frmSL_GL_CB_Freeze.txtCB_Month.value;
+        
+        listPopupwindow= window.open("ViewFreeze_GL.jsp?cmbAcc_UnitCode="+Acc_UnitCode+"&CashbookYear="+CashbookYear+"&CashbookMonth="+CashbookMonth,"mywindow1","status=1,height=400,width=500,resizable=YES, scrollbars=yes"); 
+        listPopupwindow.moveTo(250,250); 
+        }
+        
+         }
+         
+         function chkMonth()
+         {
+           var mon=document.frmSL_GL_CB_Freeze.txtCB_Month.value;
+           if(mon!=3)
+           {
+            alert('Please Select Month');
+            return false; 
+           }
+           return true;
+         }
+
+    </script>
+    <script language="javascript" type="text/javascript">
+                function closeWindow()
+                {                
+                    window.open('','_parent','');                
+                    window.close(); 
+                    window.opener.focus();
+                }
+    </script>
+  </head>
+  <body class="table" onload="LoadAccountingUnitID('LIST_ALL_UNITS');loadyear_month();">
+  <form name="frmSL_GL_CB_Freeze" id="frmSL_GL_CB_Freeze">
+                                                      
+<%
+  Connection con=null;
+  ResultSet rs=null,rs2=null;
+  PreparedStatement ps=null,ps2=null;
+  ResultSet results=null;
+  ResultSet results1=null;
+  ResultSet results2=null;
+    
+  
+  try
+  { 
+  
+            ResourceBundle rs1=ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString="";
+            String strDriver=rs1.getString("Config.DATA_BASE_DRIVER");
+            String strdsn=rs1.getString("Config.DSN");
+            String strhostname=rs1.getString("Config.HOST_NAME");
+            String strportno=rs1.getString("Config.PORT_NUMBER");
+            String strsid=rs1.getString("Config.SID");
+            String strdbusername=rs1.getString("Config.USER_NAME");
+            String strdbpassword=rs1.getString("Config.PASSWORD");
+            ConnectionString = strdsn.trim() + "@" + strhostname.trim() + ":" + strportno.trim() + ":" +strsid.trim() ;
+            Class.forName(strDriver.trim());
+            con=DriverManager.getConnection(ConnectionString,strdbusername.trim(),strdbpassword.trim());
+  }
+  catch(Exception e)
+  {
+    System.out.println("Exception in connection...."+e);
+  }
+  int  cmbAcc_UnitCode=0,cmbOffice_code=0;
+
+%>
+
+
+      <table cellspacing="2" cellpadding="3" width="100%">
+        <tr class="tdH">
+          <td colspan="2">
+            <div align="center">
+              <strong>Verify and Freeze GL and SL </strong>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <div align="center">
+        <table cellspacing="1" cellpadding="2" border="0" width="100%">
+        <tr class="table">
+                    <td>
+                      <div align="left" >
+                              Accounting Unit Code  <font color="#ff2121">*</font>
+                      </div>
+                    </td>
+                    <td>
+                      <div align="left">
+                         <select size="1" name="cmbAcc_UnitCode" id="cmbAcc_UnitCode" onchange="Ledger_Details();" >        
+                         </select>
+                      </div>
+                    </td>
+              </tr>
+          <tr align="left">
+            <td class="table">
+              <div align="left">Cash Book Year &amp; Month</div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtCB_Year" id="txtCB_Year"
+                       tabindex="3" maxlength="4" size="5"
+                       onkeypress="return numbersonly(event)" onblur="Ledger_Details();Status_Check()"   ></input>
+                 
+                <select name="txtCB_Month" id="txtCB_Month" tabindex="4"  onchange="Ledger_Details();">
+                  <option value="0">-- Select the Month --</option>
+                  <option value="3">March</option>
+                </select>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+                <div id="grid" style="display:block">
+                    <table id="mytable" cellspacing="3" cellpadding="2"
+                           border="0" width="100%">
+                      <tr class="tdH">
+                        <th> GL A/C Head </th>  
+                        <th> A/C Head Description </th>  
+                        <th> GL OB  </th>
+                        <th> GL OB Ind   </th>          
+                        <th> SL A/C Head </th>
+                        <th> SL OB  </th>
+                        <th> SL OB Ind   </th>
+                      </tr>
+                       <tbody id="grid_body" class="table" align="left" >
+                       </tbody>
+                    </table>
+                  </div>
+      
+      
+      <table align="center" cellspacing="3" cellpadding="2" border="0"
+             width="100%">
+        <tr class="tdH">
+          <td>
+            <div align="center">
+              <input type="button" name="btFreezeGL" value="GL Freeze" id="btFreezeGL" disabled="true" onclick="Freeze_GL()" />               
+              <input type="button" name="btFreezeSL" value="SL Freeze" id="btFreezeSL" disabled="true" onclick="Freeze_SL()" />
+              <input type="button" id="cmdcancel" name="cancel" value="EXIT" onclick="closeWindow()"></input>
+            </div>
+          </td>
+        </tr>
+      </table>
+      
+      
+    </form></body>
+</html>

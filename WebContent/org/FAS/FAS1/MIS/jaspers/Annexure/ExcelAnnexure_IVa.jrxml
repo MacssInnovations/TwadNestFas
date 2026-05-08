@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ExcelAnnexure_IVa"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="547"
+		 pageHeight="546"
+		 columnWidth="547"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="sub_qry" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="Statement" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="head" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select ct.ACCOUNTING_UNIT_ID,ct.statement_name,
+  ct.STATEMENT_HEADING,
+sum(cr200605)cr200605,
+unit.accounting_unit_name
+from
+(SELECT map.STATEMENT_NO,
+ -- map.LEVEL_NO,
+--  map.ACCOUNT_HEAD_TITLE,
+ -- map.ACCOUNT_HEAD_CODE,
+  mis.statement_name,
+  mis.STATEMENT_HEADING,
+  aa.ACCOUNTING_UNIT_ID,
+  aa.account_head_code head_code,
+  aa.DR_AMOUNT,
+  aa.CR_AMOUNT,
+ case
+   WHEN aa.ACCOUNT_HEAD_CODE=200605
+   THEN aa.CR_AMOUNT
+   else 0
+ END AS cr200605
+  
+  FROM (
+  (SELECT a.ACCOUNTING_UNIT_ID,
+    a.account_head_code,
+    SUM( current_month_debit )                               AS DR_AMOUNT,
+    SUM( current_month_credit)                               AS CR_AMOUNT,
+    (SUM( current_month_debit )- SUM( Current_Month_Credit)) AS Net_Amt,
+    0                                                        AS Sup_No,
+    0                                                        AS Fin_Year ,
+    Cashbook_Year,
+    Cashbook_Month,
+    To_date(Cashbook_Month
+    ||'-'
+    ||Cashbook_Year,'MM-yyyy') Month_Tb
+  FROM FAS_TRIAL_BALANCE a
+  WHERE (current_month_debit!=0
+  OR current_month_credit!   =0)
+  GROUP BY a.ACCOUNTING_UNIT_ID,
+    a.account_head_code,
+    0,
+    0,
+    Cashbook_Year,
+    Cashbook_Month,
+    To_date(Cashbook_Month
+    ||'-'
+    ||Cashbook_Year,'MM-yyyy')
+  )
+UNION ALL
+  (SELECT a.ACCOUNTING_UNIT_ID,
+    a.account_head_code,
+    SUM( current_month_debit )                               AS debit,
+    SUM( current_month_credit)                               AS credit,
+    (SUM( current_month_debit )- SUM( Current_Month_Credit)) AS Net,
+    Supplement_No                                            AS Sup_No,
+    0                                                        AS Fin_Year ,
+    Cashbook_Year,
+    Cashbook_Month,
+    To_date(Cashbook_Month
+    ||'-'
+    ||Cashbook_Year,'MM-yyyy')+Supplement_No month_TB
+  FROM Fas_Trial_Balance_Supplement A
+  WHERE (current_month_debit!=0
+  OR current_month_credit!   =0)
+  GROUP BY a.ACCOUNTING_UNIT_ID,
+    a.account_head_code,
+    Supplement_No,
+    0,
+    Cashbook_Year,
+    Cashbook_Month,
+    To_date(Cashbook_Month
+    ||'-'
+    ||Cashbook_Year,'MM-yyyy')+Supplement_No
+  ) )aa
+INNER JOIN FAS_MIS_ANNEXURE_HEADS_MAP map
+ON aa.account_head_code=map.account_head_code
+INNER JOIN FAS_MIS_ANNEXURE_MST mis
+ON mis.statement_no =map.statement_no
+and map.status      ='L'
+and map.statement_no=$P{Statement}
+and $P!{sub_qry}
+  
+
+group by map.STATEMENT_NO,  mis.statement_name, mis.STATEMENT_HEADING, aa.ACCOUNTING_UNIT_ID, aa.account_head_code,
+ aa.DR_AMOUNT,
+  aa.CR_AMOUNT
+--ORDER BY map.LEVEL_NO
+)ct inner join FAS_MST_ACCT_UNITS unit 
+on ct.accounting_unit_id=unit.accounting_unit_id
+group by ct.ACCOUNTING_UNIT_ID, ct.statement_name, ct.STATEMENT_HEADING, unit.accounting_unit_name]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="STATEMENT_NAME" class="java.lang.String"/>
+	<field name="STATEMENT_HEADING" class="java.lang.String"/>
+	<field name="CR200605" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+
+	<variable name="Total" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR200605}]]></variableExpression>
+	</variable>
+	<variable name="200605_tot" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR200605}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="25"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="42"
+						height="25"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Division Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="42"
+						y="0"
+						width="223"
+						height="25"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Name of Division]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="265"
+						y="0"
+						width="163"
+						height="25"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[                200605
+Administrative Expenditure]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="428"
+						y="0"
+						width="119"
+						height="25"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="32"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="42"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="0"
+						width="223"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="16"
+						width="265"
+						height="16"
+						key="staticText-17"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<text><![CDATA[AccountHeadwise Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="0"
+						width="163"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR200605}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="428"
+						y="0"
+						width="119"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Total}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="265"
+						y="16"
+						width="163"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{200605_tot}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

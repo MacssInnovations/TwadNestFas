@@ -1,0 +1,1823 @@
+//alert("hello")
+var com_id;
+var seq=0;
+var global_min_id=0;
+var global_wing_id=0;
+
+var SG1_flag=false;
+var SG2_flag=false;
+var off_flag=false;
+var global_SG1_id=0;
+var global_off_id=0;
+
+//_______________________________________________________________________________________________________________//
+
+//////////////   FOR DEPUTATION JOB POPUP WINDOW //////////////////////
+var winjob;
+
+function jobpopup()
+{
+    if (winjob && winjob.open && !winjob.closed) 
+    {
+       winjob.resizeTo(500,500);
+       winjob.moveTo(250,250); 
+       winjob.focus();
+    }
+    else
+    {
+        winjob=null
+    }
+        
+    winjob= window.open("../../../../../org/HR/HR1/OfficeMaster/jsps/JobPopupJSP.jsp","JobSearch","status=1,height=500,width=500,resizable=YES, scrollbars=yes"); 
+    winjob.moveTo(250,250);  
+    winjob.focus();
+    
+}
+
+//_______________________________________________________________________________________________________________//
+function forChildOption()
+{
+   
+     if (winjob && winjob.open && !winjob.closed) 
+             winjob.officeSelection(true,true,true,false);
+}
+
+//_______________________________________________________________________________________________________________//
+function doParentJob(jobid,deptid)
+{
+   document.getElementById("txtApp_offid").value=jobid;
+   doFunction('office',jobid);
+   return true;
+}
+
+//_______________________________________________________________________________________________________________//
+var winAccHeadCode;
+function AccHeadpopup()
+{
+    if (winAccHeadCode && winAccHeadCode.open && !winAccHeadCode.closed) 
+    {
+       winAccHeadCode.resizeTo(500,500);
+       winAccHeadCode.moveTo(250,250); 
+       winAccHeadCode.focus();
+    }
+    else
+    {
+        winAccHeadCode=null
+    }
+        
+    winAccHeadCode= window.open("../../../../../org/FAS/FAS1/AccountHeadDirectory/jsps/Acc_Head_Dir_List_InUse.jsp","AccountHeadSearch","status=1,height=500,width=500,resizable=YES, scrollbars=yes"); 
+    winAccHeadCode.moveTo(250,250);  
+    winAccHeadCode.focus();
+    
+}
+
+//_______________________________________________________________________________________________________________//
+function doParentAccHead(code)
+{
+   document.getElementById("txtAcc_HeadCode").value=code;
+   doFunction('checkCode','null');
+   return true;
+}
+
+//_______________________________________________________________________________________________________________//
+window.onunload=function()
+{
+
+if (winjob && winjob.open && !winjob.closed) winjob.close();
+if (winAccHeadCode && winAccHeadCode.open && !winAccHeadCode.closed) winAccHeadCode.close();
+}
+
+//_______________________________________________________________________________________________________________//
+function getTransport()
+{
+ var req = false;
+ try 
+ {
+       req= new ActiveXObject("Msxml2.XMLHTTP");
+ }
+ catch (e) 
+ {
+       try 
+       {
+            req = new ActiveXObject("Microsoft.XMLHTTP");
+       }
+       catch (e2) 
+       {
+            req = false;
+       }
+ }
+ if (!req && typeof XMLHttpRequest != 'undefined') 
+ {
+       req = new XMLHttpRequest();
+ }   
+ return req;
+}
+
+//_______________________________________________________________________________________________________________//
+function office_Function(param)
+{
+            startwaiting(document.FasAcc_Headform_Edit);
+            var oid=param;
+            var url="../../../../../Edit_Acc_Head_Dir_Sys_New.view?Command=office_Function&oid="+oid;
+            var req=getTransport();
+            req.open("POST",url,true); 
+            req.onreadystatechange=function()
+            {
+               call_loadOffice(req);
+            }   
+                    req.send(null);
+}
+
+//_______________________________________________________________________________________________________________//
+function call_loadOffice(req)
+{
+  if(req.readyState==4)
+    {
+    if(req.status==200)
+        {    
+            stopwaiting(document.FasAcc_Headform_Edit) ;
+            
+            var baseResponse=req.responseXML.getElementsByTagName("response")[0];
+            loadOffice(baseResponse);
+        }
+    }
+      
+}
+
+//_______________________________________________________________________________________________________________//
+function doFunction(Command,param)
+{
+    
+    if(Command=="office")
+        {  
+            startwaiting(document.FasAcc_Headform_Edit);
+            var oid=param;
+            var url="../../../../../Edit_Acc_Head_Dir_Sys_New.view?Command=office&oid="+oid;
+            var req=getTransport();
+            req.open("POST",url,true); 
+            req.onreadystatechange=function()
+            {
+               handleResponse(req);
+            }   
+                    req.send(null);
+                    
+        }
+        else if(Command=="subgroup")
+        {  
+            startwaiting(document.FasAcc_Headform_Edit);
+            var txtProg_id=document.getElementById("txtProg_id").value;
+            var txtProg_sub_id=param;
+                var url="../../../../../Edit_Acc_Head_Dir_Sys_New.view?Command=subgroup&txtProg_id="+txtProg_id+"&txtProg_sub_id="+txtProg_sub_id;
+                var req=getTransport();
+                req.open("POST",url,true); 
+                req.onreadystatechange=function()
+                {
+                   handleResponse(req);
+                }   
+                        req.send(null);
+        }
+        else if(Command=="loadMinor")
+        {  
+            var txtMajor_id=param;      // Value may come when loading account head..
+            startwaiting(document.FasAcc_Headform_Edit);
+            if(txtMajor_id=='I')
+            {document.FasAcc_Headform_Edit.txtBal_type[0].checked=true;}
+            else if(txtMajor_id=='E')
+            {document.FasAcc_Headform_Edit.txtBal_type[1].checked=true;}
+            else
+            {
+            document.FasAcc_Headform_Edit.txtBal_type[2].checked=true;
+            }
+            
+            var url="../../../../../Edit_Acc_Head_Dir_Sys_New.view?Command=loadMinor&txtMajor_id="+txtMajor_id;
+            var req=getTransport();
+            req.open("POST",url,true); 
+            req.onreadystatechange=function()
+            {
+            	processResponse(req);
+            }   
+                    req.send(null);
+                    
+        }
+      
+         else if(Command=="checkCode")
+        {   
+        	 
+            txtAcc_HeadCode=document.getElementById("txtAcc_HeadCode").value;
+            if(txtAcc_HeadCode.length>=6)
+            {
+            startwaiting(document.FasAcc_Headform_Edit);
+            var url="../../../../../Edit_Acc_Head_Dir_Sys_New.view?Command=checkCode&txtAcc_HeadCode="+txtAcc_HeadCode;
+            
+            var req=getTransport();
+            req.open("POST",url,true); 
+            req.onreadystatechange=function()
+            {
+            	processResponse(req);
+            }   
+                    req.send(null);
+            }         
+        }
+        
+ }   
+//_______________________________________________________________________________________________________________//
+function processResponse(req)
+{  
+    if(req.readyState==4)
+    {
+        if(req.status==200)
+        {   
+            
+            var baseResponse=req.responseXML.getElementsByTagName("response")[0];
+            var tagcommand=baseResponse.getElementsByTagName("command")[0];
+            var Command=tagcommand.firstChild.nodeValue;
+           
+            if(Command=="office")
+            {
+                stopwaiting(document.FasAcc_Headform_Edit) ;
+                loadOffice(baseResponse);
+            }
+            else if(Command=="subgroup")
+            {   
+                stopwaiting(document.FasAcc_Headform_Edit) ;
+                load_subgroup(baseResponse);
+                
+            }
+            else if(Command=="loadMinor")
+            {
+                stopwaiting(document.FasAcc_Headform_Edit) ;
+                loadMinor(baseResponse);
+                if(SG2_flag==true)                                      // to avoid XML overlapping of Command tag in servlet
+                {
+                 doFunction('subgroup',global_SG2);      //global_SG2 passed to servlet and get back as prog_subid tag.. so global_SG2=0 doesn't affect
+                 SG2_flag=false;
+                 global_SG2=0;
+                }
+                
+            }
+            else if(Command=="checkCode")
+            {
+                stopwaiting(document.FasAcc_Headform_Edit) ;
+               // alert('test');
+                loadcheckCode(baseResponse);
+            }
+           
+            
+        }
+    }
+}
+
+//_______________________________________________________________________________________________________________//
+function loadcheckCode(baseResponse)
+{
+    var flag=baseResponse.getElementsByTagName("flag")[0].firstChild.nodeValue;
+    var cmbsubgroup=document.getElementById("txtProg_sub_id");
+    cmbsubgroup.innerHTML="";
+        var option=document.createElement("OPTION");
+        option.text="--Select Sub Group--";
+        option.value=0;
+        try
+        {
+            cmbsubgroup.add(option);
+        }catch(errorObject)
+        {
+            cmbsubgroup.add(option,null);
+        }
+    if(flag=="success")
+    {
+      var hid=baseResponse.getElementsByTagName("hid")[0].firstChild.nodeValue;
+      //alert("Account Head Code '"+hid+"' Already Exist");
+          document.getElementById("txtAcc_HeadCode").value=hid;
+      //document.getElementById("txtAcc_HeadCode").focus();
+       var hdesc=baseResponse.getElementsByTagName("hdesc")[0].firstChild.nodeValue;
+       var mjHC=baseResponse.getElementsByTagName("mjHC")[0].firstChild.nodeValue;
+       var miHC =baseResponse.getElementsByTagName("miHC")[0].firstChild.nodeValue;
+       var SG1=baseResponse.getElementsByTagName("SG1")[0].firstChild.nodeValue;
+       var SG2=baseResponse.getElementsByTagName("SG2")[0].firstChild.nodeValue;
+       var DOC =baseResponse.getElementsByTagName("DOC")[0].firstChild.nodeValue;
+       if(baseResponse.getElementsByTagName("BalType")[0].firstChild==null){
+		   var BalType="";
+	   }
+	   else{
+		   var BalType=baseResponse.getElementsByTagName("BalType")[0].firstChild.nodeValue;
+	   }
+      // var BalType=baseResponse.getElementsByTagName("BalType")[0].firstChild.nodeValue;
+       if(baseResponse.getElementsByTagName("Nature")[0].firstChild==null){
+		   var Nature="";
+	   }
+	   else{
+		   var Nature=baseResponse.getElementsByTagName("Nature")[0].firstChild.nodeValue;
+	   }
+      // var Nature=baseResponse.getElementsByTagName("Nature")[0].firstChild.nodeValue;
+       var inUse =baseResponse.getElementsByTagName("inUse")[0].firstChild.nodeValue;
+   //    alert("inUse::"+inUse);
+       var LastUse=baseResponse.getElementsByTagName("LastUse")[0].firstChild.nodeValue;
+       if(baseResponse.getElementsByTagName("FRN")[0].firstChild==null){
+		   var FRN="";
+	   }
+	   else{
+		   var FRN=baseResponse.getElementsByTagName("FRN")[0].firstChild.nodeValue;
+	   }
+       //var FRN=baseResponse.getElementsByTagName("FRN")[0].firstChild.nodeValue;
+       var FRD =baseResponse.getElementsByTagName("FRD")[0].firstChild.nodeValue;
+      // alert("ref no :: "+FRN+"  date >> "+FRD);
+       document.getElementById("txtRef_no").value=FRN;
+       document.getElementById("txtRef_date").value=FRD.split("-")[2]+"/"+FRD.split("-")[1]+"/"+FRD.split("-")[0];
+       var TB=baseResponse.getElementsByTagName("TB")[0].firstChild.nodeValue;
+       var AccRes=baseResponse.getElementsByTagName("AccRes")[0].firstChild.nodeValue;
+       if(baseResponse.getElementsByTagName("WNature_id")[0].firstChild==null){
+		   var WNature_id ="";    
+	   }
+	   else{
+		   var WNature_id =baseResponse.getElementsByTagName("WNature_id")[0].firstChild.nodeValue;    
+	   }
+            
+//            var WNature_Desc =baseResponse.getElementsByTagName("WNature_Desc")[0].firstChild.nodeValue;
+//            var oid=baseResponse.getElementsByTagName("oid")[0].firstChild.nodeValue;
+//            var wingid=baseResponse.getElementsByTagName("wingid")[0].firstChild.nodeValue;
+       var SL_Man_YN =baseResponse.getElementsByTagName("SL_Man_YN")[0].firstChild.nodeValue;   //  Sub-Ledger Mandatory
+       var SL_YN =baseResponse.getElementsByTagName("SL_YN")[0].firstChild.nodeValue;    
+       
+              //  Sub-Ledger Applicable  
+              
+              if(baseResponse.getElementsByTagName("rmk")[0].firstChild==null){
+				   var rmk ="";
+			  }
+			  else{
+				  var rmk =baseResponse.getElementsByTagName("rmk")[0].firstChild.nodeValue;
+			  }
+       //var rmk =baseResponse.getElementsByTagName("rmk")[0].firstChild.nodeValue;
+       document.getElementById("txtAcc_HeadCode").value=hid;
+       document.getElementById("txtAcc_HeadDesc").value=hdesc;
+       document.getElementById("txtMajor_id").value=mjHC;
+      
+       if(inUse=="Y")
+       {
+       document.FasAcc_Headform_Edit.txtUse_status[0].checked=true;
+       }
+   else if(inUse=="N")
+       {
+       document.FasAcc_Headform_Edit.txtUse_status[1].checked=true;
+       }
+       
+       if(SG1!=0)
+       {
+       document.getElementById("txtProg_id").value=SG1;       // txtProg_id and txtProg_sub_id are Sub_head_code
+       SG2_flag=true;                                    // it's used to call doFunction('subgroup','..') after loadminor xml return 
+       global_SG2=SG2;
+       //doFunction('subgroup',SG2);
+       //setTimeout("doFunction('subgroup',"+SG2+");",500);
+       }
+       else
+       {
+       document.getElementById("txtProg_id").value=0;
+       }
+       doFunction('loadMinor',mjHC);
+   
+       global_min_id=miHC;
+       /*if(SG2!=0)
+       document.getElementById("txtProg_sub_id").value=SG2;
+       else
+       document.getElementById("txtProg_sub_id").value=0;*/
+       
+        var m=DOC.split('-');
+            //alert(m[0]+"U"+m[1]+"U"+m[2])
+            DOC=m[2]+"/"+m[1]+"/"+m[0];
+            
+       document.getElementById("txtCrea_date").value=DOC;
+     // alert(BalType);
+       if(BalType=="CR")
+             { document.FasAcc_Headform_Edit.txtBal_type[0].checked=true;}
+       else if(BalType=="DR")
+       {
+            document.FasAcc_Headform_Edit.txtBal_type[1].checked=true;
+            }
+       else if(BalType=="null")
+           {document.FasAcc_Headform_Edit.txtBal_type[2].checked=true;}
+       else if(BalType=="NCR")
+       {document.FasAcc_Headform_Edit.txtBal_type[3].checked=true;}
+       else if(BalType=="NDR")
+       {document.FasAcc_Headform_Edit.txtBal_type[4].checked=true;}
+        
+       if(TB=="Y")
+            {
+            document.FasAcc_Headform_Edit.txtTB_mandatory[0].checked=true;
+            }
+        else if(TB=="N")
+            {
+            document.FasAcc_Headform_Edit.txtTB_mandatory[1].checked=true;
+            }
+       //document.getElementById("txtTB_mandatory").value=TB;
+       if(AccRes=="Y")
+            {
+                document.FasAcc_Headform_Edit.txtaccess[0].checked=true;
+                enableOffice(AccRes);
+                 var tbody=document.getElementById("grid_body1");
+                        var t=0;
+                        for(t=tbody.rows.length-1;t>=0;t--)
+                        {
+                           tbody.deleteRow(0);
+                        }
+               var Office_id=baseResponse.getElementsByTagName("Office_id");
+                    var items=new Array();
+                    for(var k=0;k<Office_id.length;k++)
+                    {
+                    //alert("status"+baseResponse.getElementsByTagName("STAUTS_SL")[k].firstChild.nodeValue);
+                    items[0]=baseResponse.getElementsByTagName("Office_id")[k].firstChild.nodeValue;  
+                    
+                    items[1]=baseResponse.getElementsByTagName("Office_name")[k].firstChild.nodeValue; 
+                    
+                    items[3]=baseResponse.getElementsByTagName("wingId")[k].firstChild.nodeValue; 
+                    
+                    items[2]=baseResponse.getElementsByTagName("Wing_Name")[k].firstChild.nodeValue;
+                    
+                    items[4]=baseResponse.getElementsByTagName("WNature_Desc")[k].firstChild.nodeValue; 
+                     
+                    
+                  //  alert("statussl"+items[2]);
+                    tbody=document.getElementById("grid_body1");
+                    var mycurrent_row=document.createElement("TR");
+                    seq=seq+1;
+                    mycurrent_row.id=seq;
+                    //alert("row ID"+mycurrent_row.id);
+                    var cell=document.createElement("TD");
+                    var anc=document.createElement("A");
+                    var url="javascript:loadTable1('"+mycurrent_row.id+"')";
+                    anc.href=url;
+                    var txtedit=document.createTextNode("EDIT");
+                    anc.appendChild(txtedit);
+                    cell.appendChild(anc);
+                    mycurrent_row.appendChild(cell);
+                    var i=0;
+                    var cell2;
+                    var i=0;
+            var cell2;
+            
+            for(i=0;i<3;i++)
+            {   
+                cell2=document.createElement("TD");
+                  if(i==0)
+                  {
+                      var HOFF_id=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HOFF_id.type="hidden";
+                      HOFF_id.name="HOFF_id";
+                      HOFF_id.value=items[i];
+                      cell2.appendChild(HOFF_id);
+                  }
+                  if(i==1)
+                  {
+                      var HOFF_name=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HOFF_name.type="hidden";
+                      HOFF_name.name="HOFF_name";
+                      HOFF_name.value=items[i];
+                      cell2.appendChild(HOFF_name);
+                  }
+                  if(i==2)
+                  {
+                      var HWing_name=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HWing_name.type="hidden";
+                      HWing_name.name="HWing_name";
+                      HWing_name.value=items[3];
+                      cell2.appendChild(HWing_name);
+                  }
+                var currentText=document.createTextNode(items[i]);
+                cell2.appendChild(currentText);
+                mycurrent_row.appendChild(cell2);
+            }
+            tbody.appendChild(mycurrent_row);
+           } 
+        
+                 //document.getElementById("txtApp_for_workid").value=WNature_id;
+              /*   if(WNature_id=="null")
+                 document.getElementById("txtApp_for_workid").value="";
+                 else
+                 document.getElementById("txtApp_for_workid").value=WNature_id;
+               
+                 if(WNature_Desc=="null")
+                 document.getElementById("txtApp_for_workDesc").value="";
+                 else
+                 document.getElementById("txtApp_for_workDesc").value=WNature_Desc;
+                
+                if(wingid!=0)
+                {
+                //document.getElementById("txtApp_wingId").value=wingid;
+                global_wing_id=wingid;
+                }
+                else
+                document.getElementById("txtApp_wingId").value=0;
+                
+                if(oid!=0)
+                {   
+                   document.getElementById("txtApp_offid").value=oid;
+                   //setTimeout("doFunction('office',"+oid+");",500);
+                   office_Function(oid);
+                   }
+                else
+                    document.getElementById("txtApp_offid").value="";*/
+               //document.getElementById("txtApp_OffName").value="";
+              
+            }
+        else if(AccRes=="N")
+            {
+                document.FasAcc_Headform_Edit.txtaccess[1].checked=true;
+                enableOffice(AccRes);
+                var min_id=document.getElementById("txtApp_wingId");
+                min_id.innerHTML="";
+                var option=document.createElement("OPTION");
+                option.text="--Select Wing--";
+                option.value=0;
+                try
+                {
+                    min_id.add(option);
+                }catch(errorObject)
+                {
+                    min_id.add(option,null);
+                }
+            }
+       //document.getElementById("txtaccess").value=AccRes;
+       
+       if(rmk!="null")
+       document.getElementById("txtRemarks").value=rmk;
+       else
+       document.getElementById("txtRemarks").value="";
+       
+       
+       if (SL_Man_YN=="Y")
+       {
+       
+       document.FasAcc_Headform_Edit.txtsub_ledger_man_YN[0].checked=true;
+       document.getElementById("no_applicalbe").style.display='none'
+       }
+       else if (SL_Man_YN=="N")
+       {
+       document.FasAcc_Headform_Edit.txtsub_ledger_man_YN[1].checked=true;
+       }
+                 
+       if(SL_YN=="Y")
+       {
+        document.FasAcc_Headform_Edit.txtsub_ledger_YN[0].checked=true;
+        enableSub_Ledger(SL_YN);
+        var tbody=document.getElementById("grid_body");
+                        var t=0;
+                        for(t=tbody.rows.length-1;t>=0;t--)
+                        {
+                           tbody.deleteRow(0);
+                        }
+        var SLCODE=baseResponse.getElementsByTagName("SLCODE");
+        var items=new Array();
+        for(var k=0;k<SLCODE.length;k++)
+        {
+        //alert("status"+baseResponse.getElementsByTagName("STAUTS_SL")[k].firstChild.nodeValue);
+        items[0]=baseResponse.getElementsByTagName("SLCODE")[k].firstChild.nodeValue;   
+        items[1]=baseResponse.getElementsByTagName("SLDESC")[k].firstChild.nodeValue; 
+        items[2]=baseResponse.getElementsByTagName("STATUS_SL")[k].firstChild.nodeValue; 
+      //  alert("statussl"+items[2]);
+        tbody=document.getElementById("grid_body");
+        var mycurrent_row=document.createElement("TR");
+        seq=seq+1;
+        mycurrent_row.id=seq;
+        //alert("row ID"+mycurrent_row.id);
+        var cell=document.createElement("TD");
+        var anc=document.createElement("A");
+        var url="javascript:loadTable('"+mycurrent_row.id+"')";
+        anc.href=url;
+        var txtedit=document.createTextNode("EDIT");
+        anc.appendChild(txtedit);
+        cell.appendChild(anc);
+        mycurrent_row.appendChild(cell);
+        var i=0;
+        var cell2;
+        
+        for(i=0;i<3;i++)
+        {   
+            cell2=document.createElement("TD");
+            //Hcell=document.createElement("Textbox");
+              if(i==0)
+              {
+                  var HSL_code=document.createElement("input");
+                  HSL_code.type="hidden";
+                  HSL_code.name="HSL_code";
+                  HSL_code.value=items[i];
+                  cell2.appendChild(HSL_code);
+              }
+              if(i==1)
+              {
+                  var HSL_type=document.createElement("input");
+                  HSL_type.type="hidden";
+                  HSL_type.name="HSL_type";
+                  HSL_type.value=items[i];
+                  cell2.appendChild(HSL_type);
+              }
+              if(i==2)
+              {
+                  var HSL_status=document.createElement("input");
+                  HSL_status.type="hidden";
+                  HSL_status.name="HSL_status";
+                  HSL_status.value=items[i];
+                  cell2.appendChild(HSL_status);
+              }
+            var currentText=document.createTextNode(items[i]);
+            cell2.appendChild(currentText);
+            mycurrent_row.appendChild(cell2);
+        }
+        tbody.appendChild(mycurrent_row);
+       } 
+        
+       }
+       else if(SL_YN=="N")
+       {
+       document.FasAcc_Headform_Edit.txtsub_ledger_YN[1].checked=true;
+       enableSub_Ledger(SL_YN);
+       }
+       
+      
+    }
+    else if(flag=="failure")
+     {
+         alert("Account Head Code '"+document.getElementById("txtAcc_HeadCode").value+"' doesn't Exist");
+         document.getElementById("txtAcc_HeadCode").value="";
+         document.getElementById("txtAcc_HeadCode").focus();
+     }
+}
+
+//_______________________________________________________________________________________________________________//
+function loadOffice(baseResponse)
+{
+    var flag=baseResponse.getElementsByTagName("flag")[0].firstChild.nodeValue;
+    
+    if(flag=="success")
+    {  //alert("success");
+        var oid=baseResponse.getElementsByTagName("oid")[0].firstChild.nodeValue;
+        var oname=baseResponse.getElementsByTagName("oname")[0].firstChild.nodeValue;
+        var wing =baseResponse.getElementsByTagName("wing")[0].firstChild.nodeValue;
+        var WNature_id =baseResponse.getElementsByTagName("WNature_id")[0].firstChild.nodeValue;
+        var WNature_Desc =baseResponse.getElementsByTagName("WNature_Desc")[0].firstChild.nodeValue;
+         if(WNature_id=="null")
+         document.getElementById("txtApp_for_workid").value="";
+         else
+         document.getElementById("txtApp_for_workid").value=WNature_id;
+         if(WNature_Desc=="null")
+         document.getElementById("txtApp_for_workDesc").value="";
+         else
+         document.getElementById("txtApp_for_workDesc").value=WNature_Desc;
+         
+        document.getElementById("txtApp_offid").value=oid;
+        document.getElementById("txtApp_OffName").value=oname;
+        
+        var min_id=document.getElementById("txtApp_wingId");
+        if(wing=="Y")
+        {
+            //var wid=baseResponse.getElementsByTagName("wid")[0].firstChild.nodeValue;
+            //var wname=baseResponse.getElementsByTagName("wname")[0].firstChild.nodeValue;
+            var Maj_id=baseResponse.getElementsByTagName("wid");
+            //var items_maj=new Array();
+            var items_min=new Array();
+            var items_desc=new Array();
+            
+            
+            for(var k=0;k<Maj_id.length;k++)
+            {
+                 //items_maj[k]=baseResponse.getElementsByTagName("Maj_id")[k].firstChild.nodeValue;   
+                 items_min[k]=baseResponse.getElementsByTagName("wid")[k].firstChild.nodeValue;
+                 items_desc[k]=baseResponse.getElementsByTagName("wname")[k].firstChild.nodeValue;
+            }
+            min_id.innerHTML="";
+            var option=document.createElement("OPTION");
+            option.text="--Select Wing--";
+            option.value=0;
+            try
+            {
+                min_id.add(option);
+            }catch(errorObject)
+            {
+                min_id.add(option,null);
+            }
+            
+            for(var k=0;k<Maj_id.length;k++)
+            {   
+              var option=document.createElement("OPTION");
+              option.text=items_desc[k];
+              option.value=items_min[k];
+               try
+              {
+                  min_id.add(option);
+              }
+              catch(errorObject)
+              {
+                  min_id.add(option,null);
+              }
+               // document.dgetElementById("txtMinor_id").value=items_min[k];
+               // document.getElementById("txtMinor_id").text=items_desc[k];
+            }
+            
+           document.getElementById("txtApp_wingId").value=global_wing_id;
+           global_wing_id=0;
+        }
+        if(wing=="N" || wing=="null")
+           {    
+                min_id.innerHTML=""; 
+                var option=document.createElement("OPTION");
+                option.text="--Select Wing--";
+                option.value=0;
+                try
+                {
+                    min_id.add(option);
+                }catch(errorObject)
+                {
+                    min_id.add(option,null);
+                }
+            }
+    }
+    else 
+    {
+     var oid=baseResponse.getElementsByTagName("oid")[0].firstChild.nodeValue;
+     alert("Office Id '"+oid+"' doesn't Exist");
+     document.getElementById("txtApp_offid").value="";
+     document.getElementById("txtApp_OffName").value="";
+    }
+}
+
+//_______________________________________________________________________________________________________________//
+function load_subgroup(baseResponse)
+{
+ var flag=baseResponse.getElementsByTagName("flag")[0].firstChild.nodeValue;
+    
+    if(flag=="success")
+    {   
+        var Maj_id=baseResponse.getElementsByTagName("sub_id");
+        var items_maj=new Array();
+        var items_min=new Array();
+        var items_desc=new Array();
+        var min_id=document.getElementById("txtProg_sub_id");
+        
+        for(var k=0;k<Maj_id.length;k++)
+        {
+             items_min[k]=baseResponse.getElementsByTagName("sub_id")[k].firstChild.nodeValue;
+             items_desc[k]=baseResponse.getElementsByTagName("sub_desc")[k].firstChild.nodeValue;
+        }
+        min_id.innerHTML="";
+        var option=document.createElement("OPTION");
+        option.text="--Select Sub Group--";
+        option.value=0;
+        try
+        {
+            min_id.add(option);
+        }catch(errorObject)
+        {
+            min_id.add(option,null);
+        }
+        
+        for(var k=0;k<Maj_id.length;k++)
+        {   
+          var option=document.createElement("OPTION");
+          option.text=items_desc[k];
+          option.value=items_min[k];
+           try
+          {
+              min_id.add(option);
+          }
+          catch(errorObject)
+          {
+              min_id.add(option,null);
+          }
+          
+        }
+        var prog_subid=baseResponse.getElementsByTagName("prog_subid")[0].firstChild.nodeValue;;
+        document.getElementById("txtProg_sub_id").value=prog_subid;
+    }
+    //else
+      //alert("No data found in Minor Group");
+
+}
+
+//_______________________________________________________________________________________________________________//
+function loadMinor(baseResponse)
+{
+    var flag=baseResponse.getElementsByTagName("flag")[0].firstChild.nodeValue;
+    
+    if(flag=="success")
+    {   
+        var Maj_id=baseResponse.getElementsByTagName("Maj_id");
+        var items_maj=new Array();
+        var items_min=new Array();
+        var items_desc=new Array();
+        var min_id=document.getElementById("txtMinor_id");
+        
+        for(var k=0;k<Maj_id.length;k++)
+        {
+             items_maj[k]=baseResponse.getElementsByTagName("Maj_id")[k].firstChild.nodeValue;   
+             items_min[k]=baseResponse.getElementsByTagName("Min_id")[k].firstChild.nodeValue;
+             items_desc[k]=baseResponse.getElementsByTagName("Min_desc")[k].firstChild.nodeValue;
+        }
+        min_id.innerHTML="";
+        var option=document.createElement("OPTION");
+        option.text="--Select Minor Group--";
+        option.value=0;
+        try
+        {
+            min_id.add(option);
+        }catch(errorObject)
+        {
+            min_id.add(option,null);
+        }
+        
+        for(var k=0;k<Maj_id.length;k++)
+        {   
+          var option=document.createElement("OPTION");
+          option.text=items_desc[k];
+          option.value=items_min[k];
+           try
+          {
+              min_id.add(option);
+          }
+          catch(errorObject)
+          {
+              min_id.add(option,null);
+          }
+           // document.dgetElementById("txtMinor_id").value=items_min[k];
+           // document.getElementById("txtMinor_id").text=items_desc[k];
+        }
+        
+    }
+    document.getElementById("txtMinor_id").value=global_min_id;
+    global_min_id=0;                                                // Assign to '0' avoids same value reside in global variable
+}
+
+//_______________________________________________________________________________________________________________//
+function loadSL(txtSL_Value)
+{  
+    document.getElementById("txtSL_code").value=txtSL_Value;
+}
+
+//_______________________________________________________________________________________________________________//
+function checkForRedundancy(sc)
+{
+  try
+  {
+      var tbody=document.getElementById("grid_body");
+      
+      if(tbody.rows.length>0)
+        {
+         fg=true;         
+        }
+        else
+         return true;
+      if(fg)
+      {
+        var i;
+        var found=false;
+        //alert(sc+"  ")
+        rows=tbody.getElementsByTagName("tr");
+        for(i=0;i<rows.length;i++)
+        {
+            var cells=rows[i].cells;
+            
+            if(cells.item(1).lastChild.nodeValue==sc)
+            {
+              return false;
+              break;
+            }
+        }
+              
+      }
+  }
+  catch(e)
+  {
+  alert(e);
+  }
+  return true;
+}
+function checkForRedundancy1(oc,wid,wname)
+{
+  try
+  {
+     var tbody=document.getElementById("grid_body1");
+      
+      if(tbody.rows.length>0)
+        {
+         fg=true;         
+        }
+        else
+         return true;
+      if(fg)
+      {
+        if((oc==5000) && (wid==1 || wid==2 || wid==3 || wid==4))
+        {
+        	var i;
+        	var found=false;
+        	rows=tbody.getElementsByTagName("tr");
+        	for(i=0;i<rows.length;i++)
+        	{
+        		var cells=rows[i].cells;
+        		            
+        		if((cells.item(1).lastChild.nodeValue==oc)&&(cells.item(3).lastChild.nodeValue==wname))
+        		{
+                                        return false;
+        				break;
+        		}
+        	}
+        }
+      }
+  }
+  catch(e)
+  {
+  alert(e);
+  }
+  return true;
+}
+//_______________________________________________________________________________________________________________//
+function enableSub_Ledger(opt)
+{
+    if(opt=="Y")
+    {
+        document.getElementById("sub_ledge_dis").style.display='block';
+        document.getElementById("grid").style.display='block';
+    }
+    else if(opt=="N")
+    {
+        document.getElementById("sub_ledge_dis").style.display='none';
+        document.getElementById("grid").style.display='none';
+    }
+}
+
+
+//_______________________________________________________________________________________________________________//
+function sub_Ledger_man(opt)
+{
+  if (opt=="Y")
+  {
+ //  document.FasAcc_Headform_create.txtsub_ledger_YN[0].checked=true;
+   document.getElementById("no_applicalbe").style.display='none'
+  }
+ else if (opt=="N")
+  { 
+//   document.FasAcc_Headform_create.txtsub_ledger_YN[1].checked=true;
+   document.getElementById("no_applicalbe").style.display='block'
+  }
+
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+function enableUsage(opt)
+{
+    
+	// alert(opt);
+	 
+	if(opt=="Y")
+    {
+        document.FasAcc_Headform_Edit.txtlast_date.value="";
+        document.FasAcc_Headform_Edit.txtRef_no.value="";
+        document.FasAcc_Headform_Edit.txtRef_date.value="";
+        document.FasAcc_Headform_Edit.txtlast_date.disabled=true;
+        document.FasAcc_Headform_Edit.txtRef_no.disabled=true;
+        document.FasAcc_Headform_Edit.txtRef_date.disabled=true;
+        
+    }
+    else if(opt=="N")
+    {
+        document.FasAcc_Headform_Edit.txtlast_date.disabled=false;
+        document.FasAcc_Headform_Edit.txtRef_no.disabled=false;
+        document.FasAcc_Headform_Edit.txtRef_date.disabled=false;
+        
+    }
+    else if(opt=="B")
+    {
+        document.FasAcc_Headform_Edit.txtlast_date.disabled=false;
+        document.FasAcc_Headform_Edit.txtRef_no.disabled=false;
+        document.FasAcc_Headform_Edit.txtRef_date.disabled=false;
+        document.getElementById('datecaption').innerHTML = 'Blocked Date ';
+        
+    }
+}
+//_______________________________________________________________________________________________________________//
+function enableOffice(opt)
+{  
+  
+	if(opt=="Y")
+    {
+         document.getElementById("office_disp").style.display='block';
+            document.getElementById("grid1").style.display='block';
+         document.FasAcc_Headform_Edit.txtApp_for_workDesc.disabled=false;
+        document.FasAcc_Headform_Edit.txtApp_for_workid.disabled=false;
+        document.FasAcc_Headform_Edit.txtApp_offid.disabled=false;
+        //document.FasAcc_Headform_Edit.txtApp_OffName.disabled=false;
+        document.FasAcc_Headform_Edit.txtApp_wingId.disabled=false;
+        //document.FasAcc_Headform_Edit.txtApp_wingName.disabled=false;
+        
+        
+    }
+    else if(opt=="N")
+    {
+        document.getElementById("office_disp").style.display='none';
+        document.getElementById("grid1").style.display='none';
+        document.FasAcc_Headform_Edit.txtApp_offid.value="";
+        document.FasAcc_Headform_Edit.txtApp_OffName.value="";
+        document.FasAcc_Headform_Edit.txtApp_wingId.value=0;
+         document.FasAcc_Headform_Edit.txtApp_for_workid.value="";
+        document.FasAcc_Headform_Edit.txtApp_for_workDesc.value="";
+         document.FasAcc_Headform_Edit.txtApp_for_workDesc.disabled=true;
+        document.FasAcc_Headform_Edit.txtApp_for_workid.disabled=true;
+        document.FasAcc_Headform_Edit.txtApp_offid.disabled=true;
+        //document.FasAcc_Headform_Edit.txtApp_OffName.disabled=true;
+        document.FasAcc_Headform_Edit.txtApp_wingId.disabled=true;
+        //document.FasAcc_Headform_Edit.txtApp_wingName.disabled=false;
+    }
+   
+}
+//_______________________________________________________________________________________________________________//
+function loadTable(scod)
+{
+        com_id=scod;
+       // document.FasAcc_Headform_Edit.cmdadd.disabled=true;
+        var r=document.getElementById(scod);
+        var rcells=r.cells;
+        try {document.getElementById("txtSL_code").value=rcells.item(1).lastChild.nodeValue;}catch(e){}
+        try{document.getElementById("txtSL_Desc").value=rcells.item(1).lastChild.nodeValue;}catch(e){}
+       // alert("99999"+rcells.item(3).lastChild.nodeValue);
+         try {document.getElementById("txtstatus").value=rcells.item(3).lastChild.nodeValue;}catch(e){}
+          if(rcells.item(3).firstChild.value=="Y")
+         document.FasAcc_Headform_Edit.txtstatus[0].checked=true;
+         else if(rcells.item(3).firstChild.value=="N")
+         document.FasAcc_Headform_Edit.txtstatus[1].checked=true;
+      /*   if(rcells.item(3).lastChild.nodeValue=="N")
+         {
+         alert("insideNNN");
+         document.FasAcc_Headform_Edit.txtstatus[1].checked==true
+         }
+         else
+         {
+         document.FasAcc_Headform_Edit.txtstatus[0].checked==true
+         }*/
+       
+    document.FasAcc_Headform_Edit.cmdupdate.style.display='block';
+    document.FasAcc_Headform_Edit.cmddelete.disabled=false;
+    document.FasAcc_Headform_Edit.cmdadd.style.display='none';
+}
+function loadTable1(scod)
+{
+        com_id=scod;
+        //document.FasAcc_Headform_Edit.cmdadd.disabled=true;
+        //alert(com_id);
+        var r=document.getElementById(scod);
+        var rcells=r.cells;
+        try {document.getElementById("txtApp_offid").value=rcells.item(1).lastChild.nodeValue;}catch(e){}
+        
+        doFunction('office',document.getElementById("txtApp_offid").value);
+        try {document.getElementById("txtApp_OffName").value=rcells.item(2).lastChild.nodeValue;}catch(e){}
+        if((rcells.item(3).lastChild.nodeValue)=='-')
+        	{
+        	try {document.getElementById("txtApp_wingId").value=0;}catch(e){}
+        	}
+        else
+        	{
+        		alert('wing name :'+rcells.item(3).lastChild.nodeValue);
+                      document.getElementById("txtApp_wingId").options[document.getElementById("txtApp_wingId").selectedIndex].text=rcells.item(3).lastChild.nodeValue;
+                }
+      
+       
+    document.FasAcc_Headform_Edit.cmdupdate1.style.display='block';
+    document.FasAcc_Headform_Edit.cmddelete1.disabled=false;
+    document.FasAcc_Headform_Edit.cmdadd1.style.display='none';
+}
+//_______________________________________________________________________________________________________________//        
+function clearall()
+{
+
+document.getElementById("txtSL_code").value="";
+document.getElementById("txtSL_Desc").value=0;
+document.FasAcc_Headform_Edit.txtstatus[0].checked=true;
+//document.getElementById("txtstatus").value="";
+ document.FasAcc_Headform_Edit.cmdadd.style.display='block';
+ document.FasAcc_Headform_Edit.cmdupdate.style.display='none';
+ document.FasAcc_Headform_Edit.cmddelete.disabled=true;
+}
+function clearall1()
+{
+ document.getElementById("txtApp_offid").value="";
+ document.getElementById("txtApp_OffName").value="";
+ document.getElementById("txtApp_for_workDesc").value="";
+ document.getElementById("txtApp_wingId").value=0;
+ 
+ document.FasAcc_Headform_Edit.cmdadd1.style.display='block';
+ document.FasAcc_Headform_Edit.cmdupdate1.style.display='none';
+ document.FasAcc_Headform_Edit.cmddelete1.disabled=true;
+}
+//_______________________________________________________________________________________________________________//
+function call_clr()
+{
+        document.FasAcc_Headform_Edit.txtAcc_HeadCode.value="";
+        document.getElementById("txtAcc_HeadDesc").value="";
+        document.getElementById("txtMajor_id").value="";
+        document.getElementById("txtMinor_id").value=0;
+        document.getElementById("txtProg_id").value=0;
+        document.getElementById("txtProg_sub_id").value=0;
+        document.FasAcc_Headform_Edit.txtBal_type[0].checked=true;
+        document.FasAcc_Headform_Edit.txtTB_mandatory[0].checked=true;
+        document.getElementById("txtCrea_date").value="";
+        document.getElementById("txtRemarks").value="";
+        document.FasAcc_Headform_Edit.txtaccess[1].checked=true;
+        document.FasAcc_Headform_Edit.txtApp_offid.value="";
+        document.FasAcc_Headform_Edit.txtApp_OffName.value="";
+        document.FasAcc_Headform_Edit.txtApp_wingId.value=0;
+        document.FasAcc_Headform_Edit.txtApp_for_workid.value="";
+        document.FasAcc_Headform_Edit.txtApp_for_workDesc.value="";
+        document.getElementById("txtSL_code").value="";
+        document.getElementById("txtSL_Desc").value=0;
+        document.getElementById("txtstatus").value="";
+        var min_id=document.getElementById("txtMinor_id"); 
+        min_id.innerHTML="";
+            var option=document.createElement("OPTION");
+            option.text="--Select Minor Group--";
+            option.value=0;
+            try
+            {
+                min_id.add(option);
+            }catch(errorObject)
+            {
+                min_id.add(option,null);
+            }
+
+        min_id=document.getElementById("txtApp_wingId");
+        min_id.innerHTML="";
+            var option=document.createElement("OPTION");
+            option.text="--Select Wing--";
+            option.value=0;
+            try
+            {
+                min_id.add(option);
+            }catch(errorObject)
+            {
+                min_id.add(option,null);
+            }
+        enableOffice('N');
+        document.FasAcc_Headform_Edit.txtsub_ledger_YN[1].checked=true;
+        
+        var tbody=document.getElementById("grid_body");
+        var t=0;
+        for(t=tbody.rows.length-1;t>=0;t--)
+        {
+           tbody.deleteRow(0);
+        }
+        document.getElementById("sub_ledge_dis").style.display='none';
+        document.getElementById("grid").style.display='none';
+}
+//_______________________________________________________________________________________________________________//
+function clrForm()
+{
+ if(window.confirm("Do you want to clear ALL fields ?"))
+ {
+       call_clr();
+  }
+}
+        
+//_______________________________________________________________________________________________________________//        
+function ADD_GRID()
+{
+        
+        if(document.getElementById("txtSL_Desc").value==0)
+        {
+        alert("select a Sub-Ledger type");
+        return false;
+        }
+        var tbody=document.getElementById("grid_body");
+        var t=0;
+        var exist=document.getElementById("txtSL_code").value;
+        if(checkForRedundancy(exist))
+        {
+        var x=document.getElementById("txtSL_Desc");
+        var items=new Array();
+        items[0]=document.getElementById("txtSL_code").value;
+        items[1]=document.getElementById("txtSL_Desc").options[document.getElementById("txtSL_Desc").selectedIndex].text;    
+    
+       if(document.FasAcc_Headform_Edit.txtstatus[0].checked)
+       {
+          items[2]="Y";
+        }
+        else if(document.FasAcc_Headform_Edit.txtstatus[1].checked)
+        {
+          items[2]="N";
+        }
+        
+     
+        tbody=document.getElementById("grid_body");
+        var mycurrent_row=document.createElement("TR");
+        seq=seq+1;
+        mycurrent_row.id=seq;
+        //alert("row ID"+mycurrent_row.id);
+        var cell=document.createElement("TD");
+        var anc=document.createElement("A");
+        var url="javascript:loadTable('"+mycurrent_row.id+"')";
+        anc.href=url;
+        var txtedit=document.createTextNode("EDIT");
+        anc.appendChild(txtedit);
+        cell.appendChild(anc);
+        mycurrent_row.appendChild(cell);
+        var i=0;
+        var cell2;
+        
+        for(i=0;i<3;i++)
+        {   
+            cell2=document.createElement("TD");
+            //Hcell=document.createElement("Textbox");
+              if(i==0)
+              {
+                  var HSL_code=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                  HSL_code.type="hidden";
+                  HSL_code.name="HSL_code";
+                  HSL_code.value=items[i];
+                  cell2.appendChild(HSL_code);
+              }
+              if(i==1)
+              {
+                  var HSL_type=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                  HSL_type.type="hidden";
+                  HSL_type.name="HSL_type";
+                  HSL_type.value=items[i];
+                  cell2.appendChild(HSL_type);
+              }
+              if(i==2)
+              {
+                  var HSL_status=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                  HSL_status.type="hidden";
+                  HSL_status.name="HSL_status";
+                  HSL_status.value=items[i];
+                  cell2.appendChild(HSL_status);
+              }
+            var currentText=document.createTextNode(items[i]);
+            cell2.appendChild(currentText);
+            mycurrent_row.appendChild(cell2);
+        }
+        tbody.appendChild(mycurrent_row);
+      }
+      else
+        {
+          alert("Subledger Type already exist...");
+        }
+}
+function ADD_GRID1()
+{
+        
+        if(document.getElementById("txtApp_offid").value==0)
+        {
+        alert("enter or select a office id ");
+        return false;
+        }
+        var offname=document.getElementById("txtApp_OffName").value;
+        var wingid=document.getElementById("txtApp_wingId").value;
+        var wingname=document.getElementById("txtApp_wingId").options[document.getElementById("txtApp_wingId").selectedIndex].text;
+        
+        var tbody=document.getElementById("grid_body1");
+        var t=0;
+        var exist=document.getElementById("txtApp_offid").value;
+       
+        if(checkForRedundancy1(exist,wingid,wingname))
+        {
+            //var x=document.getElementById("txtSL_Desc");
+            var items=new Array();
+            items[0]=document.getElementById("txtApp_offid").value;
+            items[1]=document.getElementById("txtApp_OffName").value;
+            if(document.getElementById("txtApp_offid").value==5000)
+            	{
+            		items[2]=document.getElementById("txtApp_wingId").options[document.getElementById("txtApp_wingId").selectedIndex].text;
+                        items[3]=document.getElementById("txtApp_wingId").value;
+            	}
+            else
+            	{
+            	items[2]="-";
+                items[3]=0;
+            	}
+            tbody=document.getElementById("grid_body1");
+            var mycurrent_row=document.createElement("TR");
+            seq=seq+1;
+            mycurrent_row.id=seq;
+            //alert("row ID"+mycurrent_row.id);
+            var cell=document.createElement("TD");
+            var anc=document.createElement("A");
+            var url="javascript:loadTable1('"+mycurrent_row.id+"')";
+            anc.href=url;
+            var txtedit=document.createTextNode("EDIT");
+            anc.appendChild(txtedit);
+            cell.appendChild(anc);
+            mycurrent_row.appendChild(cell);
+            var i=0;
+            var cell2;
+            
+            for(i=0;i<3;i++)
+            {   
+                cell2=document.createElement("TD");
+                  if(i==0)
+                  {
+                      var HOFF_id=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HOFF_id.type="hidden";
+                      HOFF_id.name="HOFF_id";
+                      HOFF_id.value=items[i];
+                      cell2.appendChild(HOFF_id);
+                  }
+                  if(i==1)
+                  {
+                      var HOFF_name=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HOFF_name.type="hidden";
+                      HOFF_name.name="HOFF_name";
+                      HOFF_name.value=items[i];
+                      cell2.appendChild(HOFF_name);
+                  }
+                  if(i==2)
+                  {
+                      var HWing_name=document.createElement("input");// HIDDEN INPUT TO GET THE SAME VALUE OF THE SERNO INPUT
+                      HWing_name.type="hidden";
+                      HWing_name.name="HWing_name";
+                      HWing_name.value=items[3];
+                      cell2.appendChild(HWing_name);
+                  }
+                var currentText=document.createTextNode(items[i]);
+                cell2.appendChild(currentText);
+                mycurrent_row.appendChild(cell2);
+            }
+            tbody.appendChild(mycurrent_row);
+      }
+      else
+        {
+          alert("Office and corresponding wing already exist...");
+        }
+}
+//_______________________________________________________________________________________________________________//
+function update_GRID()
+{    //  alert("insideupdate");
+        if(document.getElementById("txtSL_Desc").value==0)
+        {
+        alert("select a Sub-Ledger type");
+        return false;
+        }
+        var exist=document.getElementById("txtSL_code").value;
+        var status=document.getElementById("txtstatus").value;
+      //  alert(status);
+       //  if(checkForRedundancy(exist))
+        if (exist!=0) 
+       {
+         var items=new Array();
+         try {items[0]=document.getElementById("txtSL_code").value}catch(e){}
+         try{items[1]=document.getElementById("txtSL_Desc").options[document.getElementById("txtSL_Desc").selectedIndex].text;}catch(e){}
+       
+         
+    if(document.FasAcc_Headform_Edit.txtstatus[0].checked==true)
+          items[2]="Y";
+        else if(document.FasAcc_Headform_Edit.txtstatus[1].checked==true)
+          items[2]="N";
+         
+        var r=document.getElementById(com_id);
+        var rcells=r.cells;
+        for(i=0,j=1;i<3;i++,j++)
+        {
+            try{
+           
+            rcells.item(j).firstChild.value=items[i];
+            rcells.item(j).lastChild.nodeValue=items[i];
+            }
+            catch(e){
+            }
+        }
+        alert("Record Updated");
+        clearall();
+    }
+      else
+        {
+          alert("Subledger code already exist...");
+        }
+}
+function update_GRID1()
+{      
+        if(document.getElementById("txtApp_offid").value==0)
+        {
+        alert("select a Office Id");
+        return false;
+        }
+        var offname=document.getElementById("txtApp_OffName").value;
+        if(document.getElementById("txtApp_offid").value==5000)
+        	{
+        		var wingid=document.getElementById("txtApp_wingId").value;
+        		var wingname=document.getElementById("txtApp_wingId").options[document.getElementById("txtApp_wingId").selectedIndex].text;
+        	}
+        var exist=document.getElementById("txtApp_offid").value;
+        if(checkForRedundancy1(exist,wingid,wingname))
+        {
+             var items=new Array();
+             try {items[0]=document.getElementById("txtApp_offid").value}catch(e){}
+             try {items[1]=document.getElementById("txtApp_OffName").value}catch(e){}
+             try{items[2]=document.getElementById("txtApp_wingId").options[document.getElementById("txtApp_wingId").selectedIndex].text;}catch(e){}
+            var r=document.getElementById(com_id);
+            var rcells=r.cells;
+            for(i=0,j=1;i<3;i++,j++)
+            {
+             try{
+                rcells.item(j).firstChild.value=items[i];           // for hidden field
+                rcells.item(j).lastChild.nodeValue=items[i];
+                }
+                catch(e){
+                }
+            }
+            alert("Record Updated");
+            clearall();
+       }
+       else
+        {
+          alert("Office and Wing already exist...");
+        }
+}
+
+//_______________________________________________________________________________________________________________//
+function delete_GRID()
+{
+        if(confirm("Do you want to delete ?"))
+        {
+        var tbody=document.getElementById("mytable");
+        var r=document.getElementById(com_id);
+        var ri=r.rowIndex;
+        tbody.deleteRow(ri);
+        clearall();
+        }
+}
+function delete_GRID1()
+{
+        if(confirm("Do you want to delete ?"))
+        {
+        var tbody=document.getElementById("mytable1");
+        var r=document.getElementById(com_id);
+        var ri=r.rowIndex;
+        tbody.deleteRow(ri);
+        clearall1();
+        }
+}
+//_______________________________________________________________________________________________________________//
+function numbersonly(e)
+{   
+        var unicode=e.charCode? e.charCode : e.keyCode
+         if(unicode==13)
+        {
+          //try{t.blur();}catch(e){}
+          //return true;
+        
+        }
+        if (unicode!=8 && unicode !=9  )
+        {
+            if (unicode<48||unicode>57 ) 
+                return false 
+        }
+}
+//_______________________________________________________________________________________________________________//
+function getCurrentYear() {
+    var year = new Date().getYear();
+    if(year < 1900) year += 1900;
+    return year;
+  }
+//_______________________________________________________________________________________________________________//
+  function getCurrentMonth() {
+    return new Date().getMonth() + 1;
+  } 
+//_______________________________________________________________________________________________________________//
+  function getCurrentDay() {
+    return new Date().getDate();
+  }
+//_______________________________________________________________________________________________________________//
+  
+function isValidDate(dateStr) {
+	  
+	  // Checks for the following valid date formats:
+	  // MM/DD/YYYY
+	  // Also separates date into month, day, and year variables
+	  var datePat = /^(\d{2,2})(\/)(\d{2,2})\2(\d{4}|\d{4})$/;
+	  
+	  var matchArray = dateStr.match(datePat); // is the format ok?
+	  if (matchArray == null) {
+	   alert("Date must be in MM/DD/YYYY format")
+	   return false;
+	  }
+	  
+	  month = matchArray[3]; // parse date into variables
+	  day = matchArray[1];
+	  year = matchArray[4];
+	  if (month < 1 || month > 12) { // check month range
+	   alert("Month must be between 1 and 12");
+	   return false;
+	  }
+	  if (day < 1 || day > 31) {
+	   alert("Day must be between 1 and 31");
+	   return false;
+	  }
+	  if ((month==4 || month==6 || month==9 || month==11) && day==31) {
+	   alert("Month "+month+" doesn't have 31 days!")
+	   return false;
+	  }
+	  if (month == 2) { // check for february 29th
+	   var isleap = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+	   if (day>29 || (day==29 && !isleap)) {
+	    alert("February " + year + " doesn't have " + day + " days!");
+	    return false;
+	     }
+	  }
+	  return true;  // date is valid
+	 }
+  
+  
+function checkdt(t)
+{
+  
+    if(t.value.length==0)
+        return false;
+    if(t.value.length==10  && t.value.indexOf('/',0)==2 && t.value.indexOf('/',3)==5)
+    {
+      
+       
+        // var c=t.value.replace(/-/g,'/');
+         var c=t.value;
+       ///New code implemented on 28-03-2019  for year 2019 wrongly displayed 201 
+         try{
+             var f=isValidDate(c);
+            }
+        catch(e){
+        //exception  start
+        
+         t.value=c;
+            var sc=t.value.split('/');
+            var currenDay =sc[0];
+            var currentMonth=sc[1];
+            var currentYear=sc[2];
+            if(currentYear<_Service_Period_Beg_Year)
+            {
+            alert('Entered date should be greater than or equal to '+_Service_Period_Beg_Year);
+            t.value="";
+            t.focus();
+            return false;
+            }
+            //alert(currentYear == getCurrentYear()  && currentMonth == getCurrentMonth() && currenDay > getCurrentDay());
+            if(currentYear > getCurrentYear())
+            {
+            
+                    alert('Entered date should be less than current date ');
+                    t.value="";
+                    t.focus();
+                    return false;
+           } 
+           else if(currentYear == getCurrentYear())
+            {
+                    if( currentMonth > getCurrentMonth())
+                    {
+                        alert('Entered date should be less than current date');
+                        t.value="";
+                        t.focus();
+                        return false;
+                    }
+                    else if( currentMonth == getCurrentMonth())
+                    {
+                        if(currenDay > getCurrentDay() )
+                        {
+                                alert('Entered date should be less than current date ');
+                                t.value="";
+                                t.focus();
+                                return false;
+                        }
+                    }
+                    
+            }
+            
+            t.value=c;
+             if(err!=0)
+                {
+                    t.value="";
+                    return false;
+                }
+            return true;
+        
+        
+        //exception end
+        
+        }
+        if( f==true)
+        {
+            //alert(f);
+            //t.value=c.replace(/\//g,'-');
+            t.value=c;
+            var sc=t.value.split('/');
+            var currenDay =sc[0];
+            var currentMonth=sc[1];
+            var currentYear=sc[2];
+            //alert(currentYear == getCurrentYear()  && currentMonth == getCurrentMonth() && currenDay > getCurrentDay());
+             if(currentYear<_Service_Period_Beg_Year)
+            {
+            alert('Entered date should be greater than or equal to '+_Service_Period_Beg_Year);
+            t.value="";
+            t.focus();
+            return false;
+            }
+            if(currentYear > getCurrentYear())
+            {
+            
+                    alert('Entered date should be less than current date');
+                    t.value="";
+                    t.focus();
+                    return false;
+           } 
+           else if(currentYear == getCurrentYear())
+            {
+                    if( currentMonth > getCurrentMonth())
+                    {
+                         alert('Entered date should be less than current date');
+                        t.value="";
+                        t.focus();
+                        return false;
+                    }
+                    else if( currentMonth == getCurrentMonth())
+                    {
+                        if(currenDay > getCurrentDay() )
+                        {
+                                alert('Entered date should be less than current date ');
+                                t.value="";
+                                t.focus();
+                                return false;
+                        }
+                    }
+                    
+            }
+            
+            t.value=c;
+           
+            return true;
+            
+        }
+        else
+        {
+                if(err!=0)
+                {
+                    t.value="";
+                    return false;
+                }
+        }
+            
+    }
+    else
+    {
+            alert('Date format  should be (dd/mm/yyyy)');
+            t.value="";
+            //t.focus();
+            return false
+    }
+    
+}
+
+//_______________________________________________________________________________________________________________//
+function calins(e,t)
+{
+    var unicode=e.charCode? e.charCode : e.keyCode;
+        //alert(unicode);
+        //if(unicode !=8)
+        if(t.value.length==2 || t.value.length==5)
+                t.value=t.value + '/';
+        if (unicode!=8 && unicode !=9 && unicode!=37 && unicode !=39  )
+        {
+            if (unicode<48||unicode>57 ) 
+                return false 
+        }
+       
+
+}
+//_______________________________________________________________________________________________________________//    
+function numbersonly1(e,t)
+    {
+        var unicode=e.charCode? e.charCode : e.keyCode;
+       if(unicode==13)
+        {
+          //t.blur();
+          //return true;-------------------- for taking action when press ENTER
+        
+        }
+        if (unicode!=8 && unicode !=9  )
+        {
+            if (unicode<48||unicode>57 ) 
+                return false 
+        }
+     }
+//_______________________________________________________________________________________________________________//     
+function sixdigit()
+{
+ if(document.getElementById("txtAcc_HeadCode").value.length!=0)
+    {
+        if((document.getElementById("txtAcc_HeadCode").value).length<6)
+        {
+        alert("Account Head Code shouldn't less than 6 digit number");
+        document.getElementById("txtAcc_HeadCode").value="";
+        document.getElementById("txtAcc_HeadCode").focus();
+        return false;
+        }
+        else if((document.getElementById("txtAcc_HeadCode").value).length>6)
+        {
+        alert("Account Head Code shouldn't be greater than 6 digit number");
+        document.getElementById("txtAcc_HeadCode").value="";
+        document.getElementById("txtAcc_HeadCode").focus();
+        return false;
+        }
+    }
+}
+//_______________________________________________________________________________________________________________//
+function check_group()
+{
+  if(document.getElementById("txtProg_id").value==0 && document.getElementById("txtProg_sub_id").value==0)
+    {
+      return true;    
+    }
+  if(document.getElementById("txtProg_id").value==document.getElementById("txtProg_sub_id").value)
+    {
+        alert("Selection of Sub-Group-1 and Sub-Group-2 shouldn't be Same");
+        document.getElementById("txtProg_sub_id").value=0;
+        document.getElementById("txtProg_sub_id").focus();
+        return false;    
+    }
+}
+//_______________________________________________________________________________________________________________//
+function checkNull()
+{
+if(document.getElementById("txtAcc_HeadCode").value.length==0)
+{
+    alert("Enter the Account Head Code");
+    document.getElementById("txtAcc_HeadCode").focus();
+    return false;
+}
+if(document.getElementById("txtAcc_HeadDesc").value.length==0)
+{
+    alert("Enter the Account Head Description");
+    document.getElementById("txtAcc_HeadDesc").focus();
+    return false;    
+}
+if(document.getElementById("txtMajor_id").value=="")
+{
+    alert("Select the Major Group");
+    document.getElementById("txtMajor_id").focus();
+    return false;    
+}
+if(document.getElementById("txtMinor_id").value==0)
+{
+    alert("Select the Minor Group");
+    document.getElementById("txtMinor_id").focus();
+    return false;    
+}
+if(document.getElementById("txtCrea_date").value.length==0)
+{
+    alert("Enter the Date of Creation");
+    document.getElementById("txtCrea_date").focus();
+    return false;    
+}
+
+
+if(document.FasAcc_Headform_Edit.txtUse_status[1].checked==true)
+{
+    if(document.getElementById("txtlast_date").value.length==0)
+    {
+    alert("Enter the last used Date");
+    //document.getElementById("txtlast_date").focus();
+    return false;    
+    }
+    if(document.getElementById("txtRef_no").value.length==0)
+    {
+    alert("Enter the File Reference Number");
+    //document.getElementById("txtRef_no").focus();
+    return false;    
+    }
+    if(document.getElementById("txtRef_date").value.length==0)
+    {
+    alert("Enter the File Reference Date");
+    //document.getElementById("txtRef_date").focus();
+    return false;    
+    }
+}
+if(document.FasAcc_Headform_Edit.txtaccess[0].checked==true)
+{
+    var tbody1=document.getElementById("grid_body1");
+    if(tbody1.rows.length==0)
+        {
+         alert("Add Office details");
+         return false;
+        }
+}
+if(document.FasAcc_Headform_Edit.txtsub_ledger_YN[0].checked==true)
+{
+    var tbody=document.getElementById("grid_body");
+ //   alert("tbody length:"+tbody.rows.length+" "+document.getElementById("txtsub_ledger_YN").value)
+      if(tbody.rows.length==0)
+        {
+         alert("Add Sub-Ledger in Sub-Ledger Types ");
+         return false;
+        }
+}
+return true;
+}
+//_______________________________________________________________________________________________________________//
+function check_leng(val)
+{
+if(val.length>=250)
+return false;
+}
+//_______________________________________________________________________________________________________________//
+function exit()
+{
+       self.close();
+}

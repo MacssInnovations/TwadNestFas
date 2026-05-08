@@ -1,0 +1,840 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ExcelAnnexureReport-IIIB"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="999"
+		 pageHeight="842"
+		 columnWidth="999"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="sub_qry" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="Statement" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="head" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[Select Ct.Accounting_Unit_Id,
+Ct.Statement_Name,
+Ct.Statement_Heading,
+unit.accounting_unit_name,
+Sum(Cr_222301)Cr_222301,
+Sum(Cr_222302)Cr_222302,
+Sum(Cr_222303)Cr_222303,
+Sum(Cr_222304)Cr_222304,
+Sum(Cr_222305)Cr_222305,
+Sum(Cr_222306)Cr_222306,
+Sum(Cr_222307)Cr_222307,
+Sum(Cr_222308)Cr_222308,
+Sum(Cr_222309)Cr_222309,
+Sum(Cr_221102)Cr_221102,
+Sum(Cr_221202)Cr_221202,
+Sum(Cr_251101)Cr_251101
+from
+(Select  
+ Map.Statement_No,Mis.Statement_Name,Mis.Statement_Heading,
+ Aa.Accounting_Unit_Id,Aa.Account_Head_Code ,
+Aa.Net_Amt,
+Case When Aa.Account_Head_Code=222301 Then Aa.Net_Amt Else 0 End As Cr_222301,
+Case When Aa.Account_Head_Code=222302 Then Aa.Net_Amt Else 0 End As Cr_222302,
+Case When Aa.Account_Head_Code=222303 Then Aa.Net_Amt Else 0 End As Cr_222303,
+Case When Aa.Account_Head_Code=222304 Then Aa.Net_Amt Else 0 End As Cr_222304,
+Case When Aa.Account_Head_Code=222305 Then Aa.Net_Amt Else 0 End As Cr_222305,
+Case When Aa.Account_Head_Code=222306 Then Aa.Net_Amt Else 0 End As Cr_222306,
+Case When Aa.Account_Head_Code=222309 Then Aa.Net_Amt Else 0 End As Cr_222309,
+Case When Aa.Account_Head_Code=222308 Then Aa.Net_Amt Else 0 End As Cr_222308,
+Case When Aa.Account_Head_Code=221102 Then Aa.Net_Amt Else 0 End As Cr_221102,
+Case When Aa.Account_Head_Code=221202 Then Aa.Net_Amt Else 0 End As Cr_221202,
+Case When Aa.Account_Head_Code=222307 Then Aa.Net_Amt Else 0 End As Cr_222307,
+Case When Aa.Account_Head_Code=251101 Then Aa.Net_Amt Else 0 End As Cr_251101
+ from
+( (SELECT a.ACCOUNTING_UNIT_ID, 
+                   a.account_head_code, 
+                   SUM( current_month_debit )                               AS DR_AMOUNT, 
+                   SUM( current_month_credit)                               AS CR_AMOUNT, 
+                   (SUM( current_month_debit )- SUM( Current_Month_Credit)) AS Net_Amt, 
+                   0                                                        AS Sup_No, 
+                   0                                                        AS Fin_Year , 
+                   Cashbook_Year, 
+                   Cashbook_Month, 
+                   To_date(Cashbook_Month 
+                   ||'-' 
+                   ||Cashbook_Year,'MM-yyyy') Month_Tb 
+                 FROM FAS_TRIAL_BALANCE a 
+                 WHERE (current_month_debit!=0 
+                 OR current_month_credit!   =0) 
+                 GROUP BY a.ACCOUNTING_UNIT_ID, 
+                   a.account_head_code, 
+                   0, 
+                   0, 
+                   Cashbook_Year, 
+                   Cashbook_Month, 
+                   To_date(Cashbook_Month 
+                   ||'-' 
+                   ||Cashbook_Year,'MM-yyyy') 
+                 ) 
+               UNION ALL 
+                 (SELECT a.ACCOUNTING_UNIT_ID, 
+                   a.account_head_code, 
+                   SUM( current_month_debit )                               AS debit, 
+                   SUM( current_month_credit)                               AS credit, 
+                   (SUM( current_month_debit )- SUM( Current_Month_Credit)) AS Net, 
+                   Supplement_No                                            AS Sup_No, 
+                   0                                                        AS Fin_Year , 
+                   Cashbook_Year, 
+                   Cashbook_Month, 
+                   To_date(Cashbook_Month 
+                   ||'-' 
+                   ||Cashbook_Year,'MM-yyyy')+Supplement_No month_TB 
+                 FROM Fas_Trial_Balance_Supplement A 
+                 WHERE (current_month_debit!=0 
+                 OR current_month_credit!   =0) 
+                 GROUP BY a.ACCOUNTING_UNIT_ID, 
+                   a.account_head_code, 
+                   Supplement_No, 
+                   0, 
+                   Cashbook_Year, 
+                   Cashbook_Month, 
+                   To_date(Cashbook_Month 
+                   ||'-' 
+                   ||Cashbook_Year,'MM-yyyy')+Supplement_No 
+                 ) )Aa
+               Inner Join Fas_Mis_Annexure_Heads_Map Map
+                 On Aa.Account_Head_Code=Map.Account_Head_Code
+                Inner Join Fas_Mis_Annexure_Mst Mis
+                On Mis.STATEMENT_NO=Map.Statement_No
+                And Map.Status='L'
+               And Map.Statement_No=$P{Statement}
+                 and $P!{sub_qry}
+            --     Group By
+                 --Map.Statement_No,Mis.Statement_Name,Mis.Statement_Heading,
+               -- Aa.Accounting_Unit_Id,Aa.Account_Head_Code,Aa.Net_Amt
+                 
+                 
+                 
+                 )Ct
+                 Inner Join Fas_Mst_Acct_Units Unit
+                 On Ct.Accounting_Unit_Id=Unit.Accounting_Unit_Id
+                 Group By Ct.Accounting_Unit_Id,Ct.Statement_Name,
+                 ct.statement_heading,unit.accounting_unit_name]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="STATEMENT_NAME" class="java.lang.String"/>
+	<field name="STATEMENT_HEADING" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="CR_222301" class="java.math.BigDecimal"/>
+	<field name="CR_222302" class="java.math.BigDecimal"/>
+	<field name="CR_222303" class="java.math.BigDecimal"/>
+	<field name="CR_222304" class="java.math.BigDecimal"/>
+	<field name="CR_222305" class="java.math.BigDecimal"/>
+	<field name="CR_222306" class="java.math.BigDecimal"/>
+	<field name="CR_222307" class="java.math.BigDecimal"/>
+	<field name="CR_222308" class="java.math.BigDecimal"/>
+	<field name="CR_222309" class="java.math.BigDecimal"/>
+	<field name="CR_221102" class="java.math.BigDecimal"/>
+	<field name="CR_221202" class="java.math.BigDecimal"/>
+	<field name="CR_251101" class="java.math.BigDecimal"/>
+
+	<variable name="pow_cons" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222301}]]></variableExpression>
+	</variable>
+	<variable name="work_cost" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222302}]]></variableExpression>
+	</variable>
+	<variable name="material" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222303}]]></variableExpression>
+	</variable>
+	<variable name="chem" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222304}]]></variableExpression>
+	</variable>
+	<variable name="RMotor" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222305}]]></variableExpression>
+	</variable>
+	<variable name="pipeline" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222306}]]></variableExpression>
+	</variable>
+	<variable name="other" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222309}]]></variableExpression>
+	</variable>
+	<variable name="origImpWorks" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222308}]]></variableExpression>
+	</variable>
+	<variable name="Main_expr" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_221102}]]></variableExpression>
+	</variable>
+	<variable name="Major_repair" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_221202}]]></variableExpression>
+	</variable>
+	<variable name="royalty" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222307}]]></variableExpression>
+	</variable>
+	<variable name="Depr_sch" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_251101}]]></variableExpression>
+	</variable>
+	<variable name="tot_var" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_222301}.add($F{CR_222302}.add($F{CR_222303}.add($F{CR_222304}.add($F{CR_222305}.add(
+$F{CR_222306}.add($F{CR_222307}.add($F{CR_222308}.add($F{CR_222309}.add($F{CR_221102}.add(
+$F{CR_221202}.add($F{CR_251101})))))))))))]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="25"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="29"
+						height="25"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Div Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="29"
+						y="0"
+						width="155"
+						height="25"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Name of Division]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="184"
+						y="0"
+						width="64"
+						height="25"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222301 Power Consumption]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="248"
+						y="0"
+						width="48"
+						height="25"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222302 Workers Cost]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="296"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222303 Materials ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="363"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222304 Chemicals]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="430"
+						y="0"
+						width="54"
+						height="25"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222305 R & R of Motor Pumpsets]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="484"
+						y="0"
+						width="55"
+						height="25"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222306 Pipeline Burst Cost]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="539"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222309 Others]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="606"
+						y="0"
+						width="66"
+						height="25"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222308 Original and Imp Works ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="672"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[221102 Maint Expr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="739"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[221202 Major Repair Expr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="806"
+						y="0"
+						width="58"
+						height="25"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[222307 Royalty Payments]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="864"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[251101 Depreciation on Bd Owned schemes]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="931"
+						y="0"
+						width="67"
+						height="25"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="6" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="16"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="29"
+						height="16"
+						key="textField-1"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="29"
+						y="0"
+						width="155"
+						height="16"
+						key="textField-2"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="184"
+						y="0"
+						width="64"
+						height="16"
+						key="textField-3"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222301}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="248"
+						y="0"
+						width="48"
+						height="16"
+						key="textField-4"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222302}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="296"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-5"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222303}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="363"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-6"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222304}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="430"
+						y="0"
+						width="54"
+						height="16"
+						key="textField-7"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222305}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="484"
+						y="0"
+						width="55"
+						height="16"
+						key="textField-8"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222306}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="539"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-9"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222309}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="606"
+						y="0"
+						width="66"
+						height="16"
+						key="textField-10"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222308}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="672"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-11"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_221102}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="739"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-12"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_221202}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="806"
+						y="0"
+						width="58"
+						height="16"
+						key="textField-13"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222307}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="864"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-14"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_251101}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="931"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-15"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_222301}.add($F{CR_222302}.add($F{CR_222303}.add($F{CR_222304}.add($F{CR_222305}.add(
+$F{CR_222306}.add($F{CR_222307}.add($F{CR_222308}.add($F{CR_222309}.add($F{CR_221102}.add(
+$F{CR_221202}.add($F{CR_251101})))))))))))]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="16"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="184"
+						y="0"
+						width="64"
+						height="16"
+						key="textField-21"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{pow_cons}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="248"
+						y="0"
+						width="48"
+						height="16"
+						key="textField-22"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{work_cost}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="296"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-23"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{material}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="363"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-24"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{chem}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="430"
+						y="0"
+						width="54"
+						height="16"
+						key="textField-25"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{RMotor}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="484"
+						y="0"
+						width="55"
+						height="16"
+						key="textField-26"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{pipeline}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="539"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-27"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{other}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="606"
+						y="0"
+						width="66"
+						height="16"
+						key="textField-28"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{origImpWorks}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="672"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-29"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Main_expr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="739"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-30"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Major_repair}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="806"
+						y="0"
+						width="58"
+						height="16"
+						key="textField-31"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{royalty}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="864"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-32"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Depr_sch}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="931"
+						y="0"
+						width="67"
+						height="16"
+						key="textField-33"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="6"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_var}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

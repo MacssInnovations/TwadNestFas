@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Fas_WE_SubLedger_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="821"
+		 pageHeight="842"
+		 columnWidth="761"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[Select 1 As Data_Tb,
+  to_number(Fh.Projectid) as projectId,
+   Pr.Projectname,
+  Fh.Programid,
+  Pg.Programname,
+  fh.Schemeid,
+  Ps.Schemename,
+  V.Account_Head_Code,
+  Fh.Headofaccount,
+  Sub_Ledger_Type_Code,
+  Sub_Ledger_Code,
+  Cashbook_Year,
+  CASHBOOK_MONTH,
+  DOCUMENT_TYPE,
+  SUM(dr_amt)DR_AMOUNT,
+  SUM(CR_AMT)CR_AMOUNT,
+  Sum(Dr_Amt)-Sum(Cr_Amt) As Net_Amt ,
+    Fh.Activityid,
+    Ac.Activityname,
+  CASE Fh.activityid
+    WHEN '1'
+    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+  End As Funds,
+  CASE Fh.activityid
+    WHEN '2'
+    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+  End As Works_Expenditure,
+  CASE Fh.activityid
+    WHEN '3'
+    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+  End As Centage,
+  CASE Fh.activityid
+    WHEN '4'
+    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+  End As Interest_Charged,
+  CASE Fh.activityid
+    WHEN '15'
+    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+  END AS Materials,
+  Fin_Year,
+  SUB_LEDGER_TYPE_DESC,
+  SLDESC
+FROM Fas_Wrkexp_View V
+Inner Join Headofaccounts Fh
+On V.Account_Head_Code=Fh.Accountcode
+Inner Join Activity1 Ac
+on Fh.Activityid=Ac.Activityid
+INNER JOIN Project Pr
+ON Fh.Projectid=Pr.Projectid
+INNER JOIN Program Pg
+On Fh.Programid=Pg.Programid
+	INNER JOIN Schemes Ps 
+    		On Fh.Projectid =Ps.Projectid 
+    		And Fh.Programid=Ps.Programid 
+    		AND fh.Schemeid =Ps.Schemeid 
+And Cmonth Between '01-APR-2011' And '01-AUG-2013'
+AND Fh.Minorgroupingid='1166'
+Group By 
+--Data_Tb,
+  to_number (Fh.Projectid),
+   Pr.Projectname,
+  Fh.Programid,
+  Pg.Programname,
+  fh.Schemeid,
+  Ps.Schemename,
+  V.Account_Head_Code,
+  Fh.Headofaccount,
+  Sub_Ledger_Type_Code,
+  Sub_Ledger_Code,
+  Cashbook_Year,
+  CASHBOOK_MONTH,
+  DOCUMENT_TYPE,
+
+    Fh.Activityid,
+    Ac.Activityname,
+--  CASE Fh.activityid
+--    WHEN '1'
+--    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+--  End As Funds,
+--  CASE Fh.activityid
+--    WHEN '2'
+--    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+--  End As Works_Expenditure,
+--  CASE Fh.activityid
+--    WHEN '3'
+--    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+--  End As Centage,
+--  CASE Fh.activityid
+--    WHEN '4'
+--    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+--  End As Interest_Charged,
+--  CASE Fh.activityid
+--    WHEN '15'
+--    THEN Sum(Dr_Amt)-Sum(Cr_Amt)
+--  END AS Materials,
+  Fin_Year,
+  SUB_LEDGER_TYPE_DESC,
+  SLDESC
+Order By 
+  to_number (Fh.Projectid),Sub_Ledger_Type_Code,
+  Sub_Ledger_Code,
+  Cashbook_Year,
+  CASHBOOK_MONTH,
+  Fin_Year,
+  Account_Head_Code]]></queryString>
+
+	<field name="DATA_TB" class="java.math.BigDecimal"/>
+	<field name="PROJECTID" class="java.math.BigDecimal"/>
+	<field name="PROJECTNAME" class="java.lang.String"/>
+	<field name="PROGRAMID" class="java.lang.String"/>
+	<field name="PROGRAMNAME" class="java.lang.String"/>
+	<field name="SCHEMEID" class="java.lang.String"/>
+	<field name="SCHEMENAME" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="HEADOFACCOUNT" class="java.lang.String"/>
+	<field name="SUB_LEDGER_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="SUB_LEDGER_CODE" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="DOCUMENT_TYPE" class="java.lang.String"/>
+	<field name="DR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="NET_AMT" class="java.math.BigDecimal"/>
+	<field name="ACTIVITYID" class="java.lang.String"/>
+	<field name="ACTIVITYNAME" class="java.lang.String"/>
+	<field name="FUNDS" class="java.math.BigDecimal"/>
+	<field name="WORKS_EXPENDITURE" class="java.math.BigDecimal"/>
+	<field name="CENTAGE" class="java.math.BigDecimal"/>
+	<field name="INTEREST_CHARGED" class="java.math.BigDecimal"/>
+	<field name="MATERIALS" class="java.math.BigDecimal"/>
+	<field name="FIN_YEAR" class="java.lang.String"/>
+	<field name="SUB_LEDGER_TYPE_DESC" class="java.lang.String"/>
+	<field name="SLDESC" class="java.lang.String"/>
+
+	<variable name="sum_Fund" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{FUNDS}]]></variableExpression>
+	</variable>
+	<variable name="sum_WE" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{WORKS_EXPENDITURE}]]></variableExpression>
+	</variable>
+	<variable name="sum_cent" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{CENTAGE}]]></variableExpression>
+	</variable>
+	<variable name="sum_Interest" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{INTEREST_CHARGED}]]></variableExpression>
+	</variable>
+	<variable name="sum_mater" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{MATERIALS}]]></variableExpression>
+	</variable>
+	<variable name="sum_net" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_project" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET_AMT}]]></variableExpression>
+	</variable>
+	<variable name="sch_fund" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{FUNDS}]]></variableExpression>
+	</variable>
+	<variable name="sch_WE" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{WORKS_EXPENDITURE}]]></variableExpression>
+	</variable>
+	<variable name="sch_cent" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{CENTAGE}]]></variableExpression>
+	</variable>
+	<variable name="sch_int" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{INTEREST_CHARGED}]]></variableExpression>
+	</variable>
+	<variable name="sch_mater" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{MATERIALS}]]></variableExpression>
+	</variable>
+	<variable name="sch_net" class="java.math.BigDecimal" resetType="Group" resetGroup="grp_scheme" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET_AMT}]]></variableExpression>
+	</variable>
+
+		<group  name="grp_project" >
+			<groupExpression><![CDATA[$F{PROJECTID}]]></groupExpression>
+			<groupHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="761"
+						height="20"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PROJECTNAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="21"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="0"
+						y="0"
+						width="761"
+						height="21"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="261"
+						y="2"
+						width="80"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_Fund}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="341"
+						y="2"
+						width="80"
+						height="18"
+						key="textField-16"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_WE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="421"
+						y="2"
+						width="85"
+						height="18"
+						key="textField-17"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_cent}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="506"
+						y="2"
+						width="85"
+						height="18"
+						key="textField-18"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_Interest}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="591"
+						y="2"
+						width="85"
+						height="18"
+						key="textField-19"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_mater}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="676"
+						y="2"
+						width="85"
+						height="18"
+						key="textField-20"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_net}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="grp_scheme" >
+			<groupExpression><![CDATA[$F{SCHEMEID}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="261"
+						height="20"
+						key="textField-9"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SCHEMENAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="261"
+						y="0"
+						width="80"
+						height="20"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_fund}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="341"
+						y="0"
+						width="80"
+						height="20"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_WE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="421"
+						y="0"
+						width="85"
+						height="20"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_cent}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="506"
+						y="0"
+						width="85"
+						height="20"
+						key="textField-13"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_int}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="591"
+						y="0"
+						width="85"
+						height="20"
+						key="textField-14"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_mater}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="676"
+						y="0"
+						width="85"
+						height="20"
+						key="textField-15"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sch_net}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="13"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="761"
+						height="13"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Works Expenditure]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="18"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="261"
+						height="18"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Description]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="261"
+						y="0"
+						width="80"
+						height="18"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Fund]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="341"
+						y="0"
+						width="80"
+						height="18"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Expenditure]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="421"
+						y="0"
+						width="85"
+						height="18"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Centage]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="506"
+						y="0"
+						width="85"
+						height="18"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Interest ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="591"
+						y="0"
+						width="85"
+						height="18"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Material]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="676"
+						y="0"
+						width="85"
+						height="18"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Net]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

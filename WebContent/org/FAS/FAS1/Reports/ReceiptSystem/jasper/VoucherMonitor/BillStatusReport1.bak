@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BillStatusReport1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="932"
+		 pageHeight="842"
+		 columnWidth="872"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="monthwords" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="UnitId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="OfceId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="formdate" isForPrompting="true" class="java.util.Date"/>
+	<parameter name="todate" isForPrompting="true" class="java.util.Date"/>
+	<queryString><![CDATA[SELECT
+m.Accounting_Unit_Id,
+  m.Accounting_Unit_Office_Id,
+ m.Cashbook_Month,
+ m.CASHBOOK_YEAR,
+ M.STATUS,
+ M.BILL_NO,
+ M.NET_AMOUNT,
+ TO_CHAR(M.BILL_DATE,'DD/MM/YY')as BillDate,
+ to_char(M.BILL_SCRUTINY_DATE,'DD/MM/YY')as ScrutinyDate,
+  (SELECT u.accounting_unit_name
+  FROM Fas_Mst_Acct_Units U
+  WHERE U.Accounting_Unit_Id      = M.Accounting_Unit_Id
+  AND U.Accounting_Unit_Office_Id = M.Accounting_Unit_Office_Id
+  )AS Unitname,
+  (SELECT F1.Bill_Major_Type_Desc
+  FROM Fas_Bill_Major_Types F1
+  WHERE F1.Bill_Major_Type_Code=M.Bill_Major_Type
+  )AS Majordesc,
+  (SELECT f2.bill_minor_type_desc
+  FROM Fas_Bill_Minor_Types_Mst F2
+  WHERE F2.Bill_Major_Type_Code=M.Bill_Major_Type
+  AND F2.Bill_Minor_Type_Code  =M.Bill_Minor_Type_Code
+  )AS Minordesc,
+  (SELECT F3.Bill_Sub_Type_Desc
+  FROM FAS_BILL_SUB_TYPES f3
+  WHERE M.BILL_MAJOR_TYPE    =f3.bill_major_type_code
+  AND M.bill_minor_type_code =f3.bill_minor_type_code
+  AND M.BILL_SUB_TYPE_CODE   =F3.BILL_SUB_TYPE_CODE
+  )AS Subdesc,
+M.PASS_ORDER_DATE,
+  M.SANCTION_PROC_NO,
+  M.NET_AMOUNT,
+  M.PASS_ORDER_BY,
+  M.PASS_ORDER_AMOUNT,
+  PMST.PASS_ORDER_NO,
+  --TO_CHAR(PMST.APPROVED_DATE,'DD/MM/YY')AS APPROVEDDATE,
+ TO_CHAR(MTC.MTC70_ENTRY_DATE,'DD/MM/YY')AS MTC70ENTRYDATE,
+ TO_CHAR(M.PRE_AUDIT_DATE,'DD/MM/YY')AS AUDITDATE,
+ TO_CHAR(M.TREASURY_VERIFY_DATE,'DD/MM/YY')AS MTCTRESARYUPDATE,
+ C.CHEQUE_NO,
+ TO_CHAR(C.CHEQUE_MEMO_DATE,'DD/MM/YY')AS CHEQUEDATE,
+ P.VOUCHER_NO,
+ P.TOTAL_AMOUNT,
+ TO_CHAR(P.PAYMENT_DATE,'DD/MM/YY')AS paymentVocherDate
+FROM FAS_BILL_REGISTER_MASTER M
+INNER JOIN FAS_PASS_ORDER_MST PMST
+ON M.ACCOUNTING_UNIT_ID        =PMST.ACCOUNTING_UNIT_ID
+AND M.ACCOUNTING_UNIT_OFFICE_ID=PMST.ACCOUNTING_FOR_OFFICE_ID
+AND M.CASHBOOK_MONTH           =PMST.CASHBOOK_MONTH
+AND M.CASHBOOK_YEAR            =PMST.CASHBOOK_YEAR
+AND M.ACCOUNTING_UNIT_ID       =23
+--AND M.CASHBOOK_MONTH           =1
+--AND M.CASHBOOK_YEAR            =2015
+and To_Date((m.Cashbook_Month
+||'-'
+|| m.Cashbook_Year),'mm-yyyy') BETWEEN To_Date(3
+||'-'
+||2013,'mm-yyyy')
+AND to_date(8
+||'-'
+||2015,'mm-yyyy')
+--AND TO_DATE('01/'|| M.CASHBOOK_MONTH||'/'|| M.CASHBOOK_YEAR ,'DD/MM/YYYY')
+--BETWEEN ('01/02/2014','DD/MM/YYYY') AND ('01/05/2014','DD/MM/YYYY')
+AND M.STATUS                   ='L'
+AND M.BILL_TYPE                ='WSP'
+INNER JOIN FAS_PASS_ORDER_TRN PTRN
+ON PTRN.ACCOUNTING_UNIT_ID       =PMST.ACCOUNTING_UNIT_ID
+AND PTRN.ACCOUNTING_FOR_OFFICE_ID=PMST.ACCOUNTING_FOR_OFFICE_ID
+AND PTRN.CASHBOOK_MONTH          =PMST.CASHBOOK_MONTH
+AND PTRN.CASHBOOK_YEAR           =PMST.CASHBOOK_YEAR
+AND M.SANCTION_PROC_NO           =PTRN.SANCTION_PROC_NO
+AND M.NET_AMOUNT                 =PTRN.BILL_AMOUNT
+AND M.PASS_ORDER_DATE=PMST.PASS_ORDER_DATE
+INNER JOIN FAS_MTC70_REGISTER MTC
+ON M.ACCOUNTING_UNIT_ID        =MTC.ACCOUNTING_UNIT_ID
+AND M.ACCOUNTING_UNIT_OFFICE_ID=MTC.ACCOUNTING_FOR_OFFICE_ID
+AND M.CASHBOOK_MONTH=MTC.CASHBOOK_MONTH
+AND M.CASHBOOK_YEAR=MTC.CASHBOOK_YEAR
+AND M.BILL_NO=MTC.BILL_NO
+INNER JOIN FAS_CHEQUE_MEMO_MST C
+ON M.ACCOUNTING_UNIT_ID        =C.ACCOUNTING_UNIT_ID
+AND M.ACCOUNTING_UNIT_OFFICE_ID=C.ACCOUNTING_FOR_OFFICE_ID
+AND M.CASHBOOK_MONTH=C.CASHBOOK_MONTH
+AND M.CASHBOOK_YEAR=C.CASHBOOK_YEAR
+AND M.NET_AMOUNT=C.CHEQUE_AMOUNT
+INNER JOIN FAS_PAYMENT_MASTER P
+ON M.ACCOUNTING_UNIT_ID        =P.ACCOUNTING_UNIT_ID
+AND M.ACCOUNTING_UNIT_OFFICE_ID=P.ACCOUNTING_FOR_OFFICE_ID
+AND M.CASHBOOK_MONTH=P.CASHBOOK_MONTH
+AND M.CASHBOOK_YEAR=P.CASHBOOK_YEAR
+and M.NET_AMOUNT=P.TOTAL_AMOUNT]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="BILL_NO" class="java.math.BigDecimal"/>
+	<field name="NET_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="BILLDATE" class="java.lang.String"/>
+	<field name="SCRUTINYDATE" class="java.lang.String"/>
+	<field name="UNITNAME" class="java.lang.String"/>
+	<field name="MAJORDESC" class="java.lang.String"/>
+	<field name="MINORDESC" class="java.lang.String"/>
+	<field name="SUBDESC" class="java.lang.String"/>
+	<field name="PASS_ORDER_DATE" class="java.sql.Timestamp"/>
+	<field name="SANCTION_PROC_NO" class="java.math.BigDecimal"/>
+	<field name="PASS_ORDER_BY" class="java.math.BigDecimal"/>
+	<field name="PASS_ORDER_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="PASS_ORDER_NO" class="java.math.BigDecimal"/>
+	<field name="MTC70ENTRYDATE" class="java.lang.String"/>
+	<field name="AUDITDATE" class="java.lang.String"/>
+	<field name="MTCTRESARYUPDATE" class="java.lang.String"/>
+	<field name="CHEQUE_NO" class="java.lang.String"/>
+	<field name="CHEQUEDATE" class="java.lang.String"/>
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="TOTAL_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="PAYMENTVOCHERDATE" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="42"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="42"
+						y="10"
+						width="0"
+						height="0"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Static Text]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="280"
+						y="0"
+						width="167"
+						height="18"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Bill Satus Report]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="236"
+						y="21"
+						width="41"
+						height="18"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[year]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="111"
+						y="21"
+						width="52"
+						height="18"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[monthof]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="163"
+						y="21"
+						width="71"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthwords}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="280"
+						y="21"
+						width="53"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{year}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="755"
+						y="13"
+						width="109"
+						height="22"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="684"
+						y="21"
+						width="52"
+						height="18"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Date:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="351"
+						y="21"
+						width="60"
+						height="18"
+						key="staticText-26"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[FormDate:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="480"
+						y="21"
+						width="46"
+						height="18"
+						key="staticText-27"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ToDate:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="413"
+						y="21"
+						width="60"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$P{formdate}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="527"
+						y="21"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$P{todate}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="26"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="11"
+						y="5"
+						width="93"
+						height="16"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[UnitName:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="104"
+						y="5"
+						width="338"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNITNAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="43"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="5"
+						y="5"
+						width="46"
+						height="31"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillMajorDesc]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="51"
+						y="5"
+						width="53"
+						height="31"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillMinorDesc]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="104"
+						y="5"
+						width="38"
+						height="31"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillSubDesc]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="208"
+						y="5"
+						width="20"
+						height="31"
+						key="staticText-10"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Bill no]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="228"
+						y="5"
+						width="48"
+						height="31"
+						key="staticText-11"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="276"
+						y="5"
+						width="63"
+						height="31"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillAmount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="339"
+						y="5"
+						width="56"
+						height="31"
+						key="staticText-13"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BillScrutinyDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="395"
+						y="5"
+						width="39"
+						height="31"
+						key="staticText-14"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PassOrderNo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="434"
+						y="5"
+						width="56"
+						height="24"
+						key="staticText-15"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PassOrderDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="554"
+						y="5"
+						width="54"
+						height="24"
+						key="staticText-16"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[MTCEntryDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="608"
+						y="5"
+						width="50"
+						height="24"
+						key="staticText-18"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[MTCUpdateDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="658"
+						y="5"
+						width="49"
+						height="24"
+						key="staticText-19"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PreAuditDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="142"
+						y="5"
+						width="66"
+						height="31"
+						key="staticText-20"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ProceedingNo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="490"
+						y="5"
+						width="64"
+						height="24"
+						key="staticText-21"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PassApprovalDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="707"
+						y="5"
+						width="35"
+						height="24"
+						key="staticText-22"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ChequeDate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="746"
+						y="5"
+						width="36"
+						height="24"
+						key="staticText-23"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ChequeNo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="784"
+						y="5"
+						width="38"
+						height="24"
+						key="staticText-24"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PaymentNo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="824"
+						y="5"
+						width="48"
+						height="24"
+						key="staticText-25"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[PaymentDate]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="34"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="7"
+						width="51"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MAJORDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="51"
+						y="7"
+						width="45"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MINORDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="96"
+						y="7"
+						width="46"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SUBDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="142"
+						y="7"
+						width="45"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SANCTION_PROC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="194"
+						y="7"
+						width="27"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BILL_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="221"
+						y="7"
+						width="55"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BILLDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="7"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="339"
+						y="7"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SCRUTINYDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="395"
+						y="7"
+						width="39"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PASS_ORDER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="434"
+						y="7"
+						width="51"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{PASS_ORDER_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="527"
+						y="7"
+						width="73"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MTC70ENTRYDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="600"
+						y="7"
+						width="58"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MTCTRESARYUPDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="658"
+						y="7"
+						width="49"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{AUDITDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="707"
+						y="7"
+						width="35"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEQUEDATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="742"
+						y="7"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEQUE_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="782"
+						y="7"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VOUCHER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="822"
+						y="7"
+						width="50"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PAYMENTVOCHERDATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="5"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="7"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="4"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

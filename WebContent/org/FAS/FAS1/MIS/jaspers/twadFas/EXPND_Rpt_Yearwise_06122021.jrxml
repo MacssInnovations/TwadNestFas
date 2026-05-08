@@ -1,0 +1,1448 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="EXPND_Rpt_Yearwise_06122021"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1016"
+		 pageHeight="842"
+		 columnWidth="1016"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT x.accounting_unit_id,
+  x.unitdesc AS uname,
+  x.account_head_code,
+  x.Headdesc,
+  MAX(
+  CASE
+    WHEN x.cashbook_month=4
+    THEN tot
+    ELSE 0
+  END )AS APR,
+  MAX(
+  CASE
+    WHEN x.cashbook_month=5
+    THEN tot
+    ELSE 0
+  END )AS MAY,
+  MAX(
+  CASE
+    WHEN x.cashbook_month=6
+    THEN tot
+    ELSE 0
+  END )AS JUN,
+  MAX(
+  CASE
+    WHEN x.cashbook_month=7
+    THEN tot
+    ELSE 0
+  END )AS Jul,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=8
+    THEN tot
+    ELSE 0
+  END )AS AUG,
+  MAX(
+  CASE
+    WHEN cashbook_month=9
+    THEN tot
+    ELSE 0
+  END )AS SEP,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=10
+    THEN tot
+    ELSE 0
+  END )AS OCT,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=11
+    THEN tot
+    ELSE 0
+  END )AS NOV,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=12
+    THEN tot
+    ELSE 0
+  END )AS DEC,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=1
+    THEN tot
+    ELSE 0
+  END )AS JAN,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=2
+    THEN tot
+    ELSE 0
+  END )AS FEB,
+  MAX(
+  CASE
+    WHEN x.CASHBOOK_MONTH=3
+    THEN tot
+    ELSE 0
+  END ) AS mar
+FROM
+  (SELECT DISTINCT a.accounting_unit_id,
+    a.unitdesc,
+    a.offc,
+    a.account_head_code,
+    a.Headdesc,
+    a.cashbook_month,
+    a.cashbook_year,
+    a.current_month_credit,
+    a.current_month_debit,
+    (SUM(a.current_month_debit)-SUM(a.current_month_credit)) AS tot
+  FROM
+    (SELECT t.accounting_unit_id,
+      (SELECT acc.accounting_unit_name
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS unitdesc,
+      (SELECT acc.accounting_unit_office_id
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS offc,
+      T.Account_Head_Code,
+      (SELECT S.Account_Head_Desc
+      FROM Com_Mst_Account_Heads S
+      WHERE s.account_head_code=t.account_head_code
+      )AS headdesc,
+      t.cashbook_month,
+      t.cashbook_year,
+      t.current_month_credit,
+      t.current_month_debit
+    FROM FAS_TRIAL_BALANCE_CMP t
+    WHERE To_Date((Cashbook_Month
+      ||'-'
+      || Cashbook_Year),'mm-yyyy') BETWEEN To_Date(4
+      ||'-'
+      ||2020,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2021,'mm-yyyy')
+    UNION ALL
+    SELECT t.accounting_unit_id,
+      (SELECT acc.accounting_unit_name
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS unitdesc,
+      (SELECT acc.accounting_unit_office_id
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS offc,
+      T.Account_Head_Code,
+      (SELECT S.Account_Head_Desc
+      FROM Com_Mst_Account_Heads S
+      WHERE s.account_head_code=t.account_head_code
+      )AS Headdesc,
+      t.cashbook_month,
+      t.cashbook_year,
+      t.current_month_credit,
+      t.current_month_debit
+    FROM fas_trial_balance_sjv_cmp t
+    WHERE Cashbook_Year=2021
+    AND cashbook_month =3
+    AND supplement_no <=1
+    )a
+  JOIN
+    (SELECT account_head_code,
+      ACCOUNT_HEAD_DESC,
+      major_head_code
+    FROM com_mst_account_heads
+    WHERE major_head_code='E'
+    ORDER BY account_head_code
+    )b
+  ON a.account_head_code=b.account_head_code
+  AND a.offc            =5000
+  GROUP BY a.accounting_unit_id,
+    a.unitdesc,
+    a.offc,
+    a.account_head_code,
+    a.Headdesc,
+    a.cashbook_month,
+    a.cashbook_year,
+    a.current_month_credit,
+    a.current_month_debit
+  UNION ALL
+  SELECT DISTINCT a.accounting_unit_id,
+    a.unitdesc,
+    a.offc,
+    a.account_head_code,
+    a.Headdesc,
+    a.cashbook_month,
+    a.cashbook_year,
+    a.current_month_credit,
+    a.current_month_debit,
+    (SUM(a.current_month_debit)-SUM(a.current_month_credit)) AS tot
+  FROM
+    (SELECT t.accounting_unit_id,
+      (SELECT acc.accounting_unit_name
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS unitdesc,
+      (SELECT acc.accounting_unit_office_id
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS offc,
+      T.Account_Head_Code,
+      (SELECT S.Account_Head_Desc
+      FROM Com_Mst_Account_Heads S
+      WHERE s.account_head_code=t.account_head_code
+      )AS Headdesc,
+      t.cashbook_month,
+      t.cashbook_year,
+      t.current_month_credit,
+      t.current_month_debit
+    FROM FAS_TRIAL_BALANCE_CMP t
+    WHERE To_Date((Cashbook_Month
+      ||'-'
+      || Cashbook_Year),'mm-yyyy') BETWEEN To_Date(4
+      ||'-'
+      ||2020,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2021,'mm-yyyy')
+    UNION ALL
+    SELECT t.accounting_unit_id,
+      (SELECT acc.accounting_unit_name
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS unitdesc,
+      (SELECT acc.accounting_unit_office_id
+      FROM fas_mst_acct_units acc
+      WHERE acc.accounting_unit_id=t.accounting_unit_id
+      ) AS offc,
+      T.Account_Head_Code,
+      (SELECT S.Account_Head_Desc
+      FROM Com_Mst_Account_Heads S
+      WHERE s.account_head_code=t.account_head_code
+      )AS Headdesc,
+      t.cashbook_month,
+      t.Cashbook_Year,
+      t.current_month_credit,
+      t.current_month_debit
+    FROM fas_trial_balance_sjv_cmp t
+    WHERE Cashbook_Year=2021
+    AND cashbook_month =3
+    AND supplement_no <=1
+    )a
+  JOIN
+    (SELECT account_head_code,
+      ACCOUNT_HEAD_DESC,
+      major_head_code
+    FROM com_mst_account_heads
+    WHERE major_head_code='E'
+    ORDER BY account_head_code
+    )b
+  ON a.account_head_code   =b.account_head_code
+  AND a.offc!              =5000
+  AND a.account_head_code IN (201525,201325,201367,201510)
+  GROUP BY a.accounting_unit_id,
+    a.unitdesc,
+    a.offc,
+    a.account_head_code,
+    a.Headdesc,
+    a.cashbook_month,
+    a.cashbook_year,
+    a.current_month_credit,
+    a.current_month_debit
+  ORDER BY accounting_unit_id,
+    account_head_code,
+    cashbook_year,
+    cashbook_month
+  )x
+GROUP BY x.accounting_unit_id,
+  x.unitdesc,
+  x.account_head_code,
+  x.Headdesc 
+ORDER BY x.accounting_unit_id,
+  x.account_head_code]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNAME" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="HEADDESC" class="java.lang.String"/>
+	<field name="APR" class="java.math.BigDecimal"/>
+	<field name="MAY" class="java.math.BigDecimal"/>
+	<field name="JUN" class="java.math.BigDecimal"/>
+	<field name="JUL" class="java.math.BigDecimal"/>
+	<field name="AUG" class="java.math.BigDecimal"/>
+	<field name="SEP" class="java.math.BigDecimal"/>
+	<field name="OCT" class="java.math.BigDecimal"/>
+	<field name="NOV" class="java.math.BigDecimal"/>
+	<field name="DEC" class="java.math.BigDecimal"/>
+	<field name="JAN" class="java.math.BigDecimal"/>
+	<field name="FEB" class="java.math.BigDecimal"/>
+	<field name="MAR" class="java.math.BigDecimal"/>
+
+	<variable name="tot" class="java.math.BigDecimal" resetType="Group" incrementType="Group" incrementGroup="unitwise" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{APR}.add( $F{MAY} ).add($F{JUN}).add($F{JUL}).add($F{AUG}).add($F{SEP}).add($F{OCT}).add($F{NOV}).add($F{DEC}).add($F{JAN}).add($F{FEB}).add($F{MAR})]]></variableExpression>
+	</variable>
+	<variable name="APR_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{APR}]]></variableExpression>
+	</variable>
+	<variable name="MAY_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{MAY}]]></variableExpression>
+	</variable>
+	<variable name="JUN_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUN}]]></variableExpression>
+	</variable>
+	<variable name="JUL_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{JUL}]]></variableExpression>
+	</variable>
+	<variable name="AUG_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{AUG}]]></variableExpression>
+	</variable>
+	<variable name="SEP_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{SEP}]]></variableExpression>
+	</variable>
+	<variable name="OCT_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{OCT}]]></variableExpression>
+	</variable>
+	<variable name="NOV_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{NOV}]]></variableExpression>
+	</variable>
+	<variable name="DEC_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEC}]]></variableExpression>
+	</variable>
+	<variable name="JAN_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{JAN}]]></variableExpression>
+	</variable>
+	<variable name="FEB_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{FEB}]]></variableExpression>
+	</variable>
+	<variable name="MAR_cnt" class="java.math.BigDecimal" resetType="Group" resetGroup="unitwise" calculation="Sum">
+		<variableExpression><![CDATA[$F{MAR}]]></variableExpression>
+	</variable>
+
+		<group  name="unitwise" >
+			<groupExpression><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="19"
+						width="1016"
+						height="0"
+						key="line-45"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="222"
+						y="1"
+						width="62"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{APR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="284"
+						y="2"
+						width="54"
+						height="18"
+						key="textField-22"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MAY}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="341"
+						y="2"
+						width="54"
+						height="18"
+						key="textField-23"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="401"
+						y="2"
+						width="54"
+						height="18"
+						key="textField-24"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JUL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="460"
+						y="2"
+						width="54"
+						height="18"
+						key="textField-25"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AUG}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="519"
+						y="2"
+						width="54"
+						height="18"
+						key="textField-26"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{SEP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="577"
+						y="1"
+						width="59"
+						height="18"
+						key="textField-27"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{OCT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="636"
+						y="1"
+						width="57"
+						height="18"
+						key="textField-28"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NOV}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="693"
+						y="1"
+						width="60"
+						height="18"
+						key="textField-29"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="753"
+						y="1"
+						width="60"
+						height="18"
+						key="textField-30"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{JAN}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="813"
+						y="2"
+						width="59"
+						height="18"
+						key="textField-31"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{FEB}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="872"
+						y="2"
+						width="59"
+						height="18"
+						key="textField-32"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{MAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="936"
+						y="2"
+						width="76"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="128"
+						y="4"
+						width="83"
+						height="16"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TOTAL]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="284"
+						y="1"
+						width="55"
+						height="18"
+						key="textField-34"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{MAY_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="219"
+						y="0"
+						width="65"
+						height="18"
+						key="textField-35"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{APR_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="339"
+						y="1"
+						width="56"
+						height="18"
+						key="textField-37"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{JUN_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="397"
+						y="0"
+						width="56"
+						height="18"
+						key="textField-38"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{JUL_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="458"
+						y="0"
+						width="57"
+						height="18"
+						key="textField-39"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{AUG_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="517"
+						y="0"
+						width="58"
+						height="18"
+						key="textField-40"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{SEP_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="577"
+						y="1"
+						width="60"
+						height="18"
+						key="textField-41"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{OCT_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="637"
+						y="0"
+						width="56"
+						height="18"
+						key="textField-42"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{NOV_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="695"
+						y="0"
+						width="57"
+						height="18"
+						key="textField-43"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{DEC_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="755"
+						y="0"
+						width="58"
+						height="18"
+						key="textField-44"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{JAN_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="815"
+						y="0"
+						width="55"
+						height="18"
+						key="textField-45"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{FEB_cnt}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="872"
+						y="0"
+						width="58"
+						height="18"
+						key="textField-46"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{MAR_cnt}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="19"
+						width="1015"
+						height="0"
+						key="line-48"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="0"
+						width="1"
+						height="19"
+						key="line-49"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="219"
+						y="0"
+						width="1"
+						height="19"
+						key="line-50"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="284"
+						y="0"
+						width="1"
+						height="19"
+						key="line-51"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="339"
+						y="0"
+						width="1"
+						height="19"
+						key="line-52"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="397"
+						y="0"
+						width="1"
+						height="19"
+						key="line-53"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="456"
+						y="0"
+						width="1"
+						height="19"
+						key="line-54"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="516"
+						y="0"
+						width="1"
+						height="19"
+						key="line-55"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="576"
+						y="0"
+						width="1"
+						height="19"
+						key="line-56"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="637"
+						y="0"
+						width="1"
+						height="19"
+						key="line-57"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="694"
+						y="0"
+						width="1"
+						height="19"
+						key="line-58"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="754"
+						y="0"
+						width="1"
+						height="19"
+						key="line-59"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="813"
+						y="0"
+						width="1"
+						height="19"
+						key="line-60"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="870"
+						y="0"
+						width="1"
+						height="19"
+						key="line-61"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="931"
+						y="0"
+						width="1"
+						height="19"
+						key="line-62"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1015"
+						y="0"
+						width="1"
+						height="19"
+						key="line-63"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="19"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="589"
+						y="3"
+						width="158"
+						height="15"
+						key="textField-8"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="450"
+						y="3"
+						width="139"
+						height="15"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Date :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="88"
+						y="2"
+						width="524"
+						height="13"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Expenditure Report for the Financial year(2020-2021)"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="30"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="1"
+						y="4"
+						width="1015"
+						height="25"
+						forecolor="#FFFFFF"
+						backcolor="#647BC7"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<line direction="TopDown">
+					<reportElement
+						x="637"
+						y="4"
+						width="0"
+						height="24"
+						key="line-17"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="694"
+						y="4"
+						width="0"
+						height="24"
+						key="line-18"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="813"
+						y="4"
+						width="0"
+						height="24"
+						key="line-19"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="4"
+						width="1015"
+						height="0"
+						key="line-20"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="28"
+						width="988"
+						height="1"
+						key="line-21"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="931"
+						y="4"
+						width="0"
+						height="24"
+						key="line-22"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="870"
+						y="4"
+						width="0"
+						height="24"
+						key="line-24"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="754"
+						y="4"
+						width="0"
+						height="24"
+						key="line-26"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="576"
+						y="5"
+						width="0"
+						height="24"
+						key="line-28"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="516"
+						y="5"
+						width="0"
+						height="24"
+						key="line-30"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="456"
+						y="4"
+						width="0"
+						height="24"
+						key="line-32"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="397"
+						y="4"
+						width="0"
+						height="24"
+						key="line-34"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="339"
+						y="4"
+						width="0"
+						height="24"
+						key="line-36"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="219"
+						y="5"
+						width="0"
+						height="24"
+						key="line-40"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="236"
+						y="5"
+						width="33"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Apr"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="293"
+						y="5"
+						width="39"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["May"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="352"
+						y="5"
+						width="36"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jun"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="415"
+						y="6"
+						width="30"
+						height="22"
+						forecolor="#FFFFFF"
+						key="textField-13"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jul"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="472"
+						y="5"
+						width="39"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-14"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Aug"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="529"
+						y="6"
+						width="39"
+						height="22"
+						forecolor="#FFFFFF"
+						key="textField-15"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Sep"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="596"
+						y="5"
+						width="33"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-16"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Oct"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="651"
+						y="5"
+						width="37"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-17"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Nov"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="707"
+						y="7"
+						width="39"
+						height="22"
+						forecolor="#FFFFFF"
+						key="textField-18"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Dec"+"-"+"2020"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="771"
+						y="5"
+						width="33"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-19"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Jan"+"-"+"2021"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="823"
+						y="6"
+						width="35"
+						height="23"
+						forecolor="#FFFFFF"
+						key="textField-20"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Feb"+"-"+"2021"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="875"
+						y="5"
+						width="55"
+						height="24"
+						forecolor="#FFFFFF"
+						key="textField-21"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Mar"+"-"+"2021"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="284"
+						y="4"
+						width="0"
+						height="24"
+						key="line-44"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="28"
+						width="1016"
+						height="1"
+						key="line-14"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="933"
+						y="5"
+						width="82"
+						height="24"
+						forecolor="#FFFFFF"
+						key="textField-33"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ToT"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="1015"
+						y="4"
+						width="0"
+						height="24"
+						key="line-46"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="2"
+						width="215"
+						height="16"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNAME}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="-26"
+						width="0"
+						height="24"
+						key="line-23"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="103"
+						y="-22"
+						width="61"
+						height="16"
+						forecolor="#FFFFFF"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Unit Name]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="-42"
+						width="1"
+						height="41"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="931"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="637"
+						y="-42"
+						width="0"
+						height="41"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="694"
+						y="-42"
+						width="0"
+						height="41"
+						key="line-10"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="813"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="870"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-25"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="754"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-27"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="-1"
+						width="1015"
+						height="0"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="576"
+						y="-42"
+						width="0"
+						height="41"
+						key="line-29"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="516"
+						y="-42"
+						width="0"
+						height="41"
+						key="line-31"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="456"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-33"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="397"
+						y="-51"
+						width="0"
+						height="50"
+						key="line-35"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="339"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-37"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="284"
+						y="-46"
+						width="0"
+						height="45"
+						key="line-39"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="219"
+						y="-42"
+						width="0"
+						height="41"
+						key="line-41"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="-23"
+						width="215"
+						height="22"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{HEADDESC}+"("+$F{ACCOUNT_HEAD_CODE}+")"]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="1015"
+						y="-45"
+						width="0"
+						height="44"
+						key="line-47"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

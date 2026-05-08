@@ -1,0 +1,141 @@
+<%@ page contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*"%>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>untitled</title>
+    <script language="javascript" src="../scripts/Listajax2.js"></script>
+    <script language="javascript">
+    
+    function changeTableContent()
+    {
+      alert("inside changeTableContent");
+      
+      var ahc=document.form2.txtahc.value;
+      
+      
+      var rid=document.form2.txthid.value; 
+      alert(rid);
+      var doc=window.opener.document;     
+      var row=doc.getElementById(rid);
+      row.id=rid;
+      var rcells=row.cells;
+      rcells.item(1).firstChild.value=document.form2.txt_sltypeCode.value;
+      rcells.item(2).firstChild.value=document.form2.txt_sldesc.options[document.form2.txt_sldesc.selectedIndex].text;
+      closeWindow();
+    }
+    
+    
+    function closeWindow()
+    {
+        self.close();
+    }
+    </script>
+  </head>
+  <body>
+  <%
+  Connection connection=null;
+  Statement statement=null;
+  ResultSet results=null;
+  try
+  {
+    Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+    connection = DriverManager.getConnection("jdbc:odbc:fas");
+    try
+    {
+      statement=connection.createStatement();
+    }
+    catch(SQLException e)
+    {
+    }
+  }
+  catch(Exception e)
+  {
+  }
+  %>
+    <form name="form2" method="get">
+   
+    <%! int slcode;
+String sldesc; %>
+    <%! 
+    String selectedRow="";
+String ahcode;
+String tblid;
+String command;
+  %>
+
+    <% 
+    try
+    {
+    
+   ahcode=request.getParameter("AHC");
+   //tblid=request.getParameter("TblId");
+   //command=request.getParameter("Command");
+   //slcode=Integer.parseInt(request.getParameter("SLTCode"));
+  // sldesc=request.getParameter("SLTDesc"); 
+ 
+    }
+    catch(NumberFormatException nfe)
+    {}
+%>   
+
+    <% 
+    try
+    {
+    selectedRow=request.getParameter("rowid"); 
+    slcode=Integer.parseInt(request.getParameter("SLTCode"));
+sldesc=request.getParameter("SLTDesc"); 
+    }
+    catch(NumberFormatException nfe)
+    {}
+%>   
+    
+      <H3 align="center">SubLedger Types</H3>
+      <table cellspacing="3" cellpadding="2" border="1" width="100%">
+        <tr>
+          <td>Sub-Ledger Type Code</td>
+          <td>
+            <input type="text" name="txt_sltypeCode" readonly value=<%=slcode%>>
+            <input type="HIDDEN" name="txthid" value=<%=selectedRow%>>
+          </td>
+        </tr>
+        <tr>
+          <td>Sub-Ledger Type Description</td>
+          <td>
+            <select onchange="displaysubcode2()" name="txt_sldesc">
+              <option value="Value">--Select Here--</option>
+                <%
+                    
+                        System.out.println("Before the query");
+                        String sql="select SUB_LEDGER_TYPE_CODE,SUB_LEDGER_TYPE_DESC from SUB_LEDGER_TYPE"  ;                                                                                  
+                      System.out.println(sql);
+                      results=statement.executeQuery(sql);
+                      while(results.next())
+                      {
+                            String ss=results.getString("SUB_LEDGER_TYPE_DESC");
+                            if(sldesc.equals(ss))
+                             
+                              out.println("<option value='" + results.getString("SUB_LEDGER_TYPE_CODE") + "' selected >" + ss + "</option>");
+                            else
+                              out.println("<option value='" + results.getString("SUB_LEDGER_TYPE_CODE") + "'>" + ss + "</option>");                            
+   
+                      }
+
+               %>
+            </select>
+          </td>
+        </tr>
+        <tr>
+        <td>
+        <input type="BUTTON" value="Update" onclick="changeTableContent()">
+        <input type="BUTTON" value="Cancel" onclick="closeWindow()">
+          <input type="HIDDEN" name="txtahc" value=<%=ahcode%>>
+        </td>
+        </tr>
+      </table>
+      <P>&nbsp;</P>
+      <P>&nbsp;</P>
+      <P>&nbsp;</P>
+    </form>
+  </body>
+</html>

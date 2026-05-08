@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<%@ page contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*,java.util.*,Servlets.Security.classes.UserProfile"%>
+<%@ page session="false" contentType="text/html;charset=windows-1252"%>
+<%@ include file="//org/Security/jsps/Check_SessionJSPF.jspf" %>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
+    <title>WQS_LabTransferJSP</title>
+    <script type="text/javascript" src="<%=request.getContextPath()%>/org/Library/scripts/comJS.js">
+    </script>
+    <link href="../../../../../../css/Sample3.css" rel="stylesheet" media="screen"/>
+    <script type="text/javascript" src="../scripts/WQS_LabTransfer_InJS.js"></script>
+    <link href="../../../../../../css/CalendarControl.css" rel="stylesheet"          media="screen"/>    
+    <script type="text/javascript" src="<%=request.getContextPath()%>/org/Library/scripts/CalendarControl.js"></script>        
+    <script type="text/javascript" src="../HR/HR1/EmployeeMaster/scripts/CalendarControl.js"></script>  
+  </head>
+ <body onload="clearAll()">
+  <form name="transfer" method="POST" action="../../../../../../WQS_LabTransfer_InServ" onsubmit="return nullValue()">
+  <%
+            Connection con=null;
+            Statement st=null;
+            ResultSet rs=null;
+            PreparedStatement ps=null;
+            try
+              {
+                  //Class.forName("oracle.jdbc.OracleDriver");
+                  //con=DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe","test","test");
+                  ResourceBundle rb=ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+                  String ConnectionString="";
+
+                  String strDriver=rb.getString("Config.DATA_BASE_DRIVER");
+                  String strdsn=rb.getString("Config.DSN");
+                  String strhostname=rb.getString("Config.HOST_NAME");
+                  String strportno=rb.getString("Config.PORT_NUMBER");
+                  String strsid=rb.getString("Config.SID");
+                  String strdbusername=rb.getString("Config.USER_NAME");
+                  String strdbpassword=rb.getString("Config.PASSWORD");
+                  ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+                  //ConnectionString = strdsn.trim() + "@" + strhostname.trim() + ":" + strportno.trim() + ":" +strsid.trim() ;
+                  Class.forName(strDriver.trim());
+                  con=DriverManager.getConnection(ConnectionString,strdbusername.trim(),strdbpassword.trim());             
+                  System.out.println("Connected THRO JSP");
+              }
+              catch(Exception e)
+              {
+              System.out.println(e.getMessage());
+              }
+ 
+                HttpSession session=request.getSession(false);
+                UserProfile empProfile=(UserProfile)session.getAttribute("UserProfile");
+                  
+                System.out.println("user id::"+empProfile.getEmployeeId());
+                int empid=empProfile.getEmployeeId();
+                int  oid=0,odidt=0;
+                String odt="",lb=""; 
+                try
+                {
+           
+                    ps=con.prepareStatement("select OFFICE_ID from HRM_EMP_CURRENT_POSTING where EMPLOYEE_ID=?" );
+                    ps.setInt(1,empid);
+                    rs=ps.executeQuery();
+                    if(rs.next()) 
+                    {
+                            oid=rs.getInt("OFFICE_ID");
+                        
+                    }
+                    rs.close();
+                    ps.close();
+                    ps=con.prepareStatement("select LAB_CODE,LAB_DESC from WQS_MST_LAB where LAB_CODE=?");
+                    ps.setInt(1,oid);
+                    rs=ps.executeQuery();
+                    if(rs.next()) 
+                    {
+                        odidt=Integer.parseInt(rs.getString("LAB_CODE"));
+                        odt=rs.getString("LAB_DESC");
+                        lb=odidt+"--"+odt;
+                        System.out.println(lb);
+                    }
+                    rs.close();
+                    ps.close();
+               
+                }
+                catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+  %>
+   <table cellspacing="2" cellpadding="3" border="1" width="100%"
+             align="center">
+       <tr>
+            <td colspan="2" class="tdH" align="center"><b>Lab to Lab Stock Transaction</b></td>
+       </tr> 
+         <tr>
+            <td class="table" align="left" width="49%">Lab</td>
+            <td class="table" align="left" width="51%">
+                <input type="text" name="tlab" id="tlab" size="35" value="<%=lb%>" readonly="readonly"/>
+            </td>
+        </tr>
+         <tr>
+            <td class="table" align="left" width="49%">Stock From</td>
+            <td class="table" align="left" width="51%">
+                <select name="flab" id="flab" onchange="changeLab()">
+                    <option value="0">--Select Lab--</option>
+                    <%
+                         try
+                        {
+                            st=con.createStatement();
+                            rs=st.executeQuery("select * from(Select distinct FROM_LAB_CODE from WQS_LAB_TRANSFER where TO_LAB_CODE="+odidt+" and STATUS='Pending')a left outer join(select LAB_CODE,LAB_DESC from WQS_MST_LAB)b on a.FROM_LAB_CODE=b.LAB_CODE");
+                            while(rs.next())
+                            {
+                                int lcode=Integer.parseInt(rs.getString("FROM_LAB_CODE"));
+                                String ldesc=rs.getString("LAB_DESC");
+                                if(lcode!=odidt)
+                                {
+                                    out.println("<option value='"+lcode+"--"+ldesc+"'>"+lcode+"--"+ldesc+"</option>");
+                                }
+                            }      
+                        }
+                        catch(Exception e)
+                        {
+                            System.out.println("Err2:"+e.getMessage());
+                        }              
+                    %>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td class="table" width="50%">Category</td>
+            <td class="table" width="50%">
+            <select name="category" id="category" onchange="changeCat()">
+            <option value="">--Select Category--</option>
+            </select>
+            </td>
+        </tr>  
+        <tr>
+            <td class="table" width="50%">Item</td>
+            <td class="table" width="50%">
+            <select name="item" id="item" onchange="changeItem('item','null')">
+            <option value="">--Select Item--</option>
+            </select>
+            </td>
+        </tr>
+        <tr id="divwork" style="display:none">
+           <td class="table" width="50%">Brand</td>
+           <td class="table" width="50%">
+              <select name="bcode" id="bcode" onchange="changeItem('brand','null')">
+               <option value="">--Select Brand--</option>
+                <%
+                  try
+                  {
+                     st=con.createStatement();
+                     rs=st.executeQuery("select brand_code from wqs_chemical_brand");
+                     while(rs.next())
+                     {
+                      out.print("<option value='"+rs.getString(1)+"'>"+rs.getString(1)+"</option>");
+                     }
+                   }
+                   catch(Exception e)
+                   {
+                      out.println(e.getMessage());
+                   }
+                %>
+              </select>
+            </td>
+        </tr> 
+         <tr>
+            <td class="table" width="50%">Issued Quantity</td>
+            <td class="table" width="50%">
+            <input type="text" name="qty" id="qty" readonly="readonly">
+            <input type="text" name=auom id=auom readonly="readonly" size="3" style="visibility:hidden">
+            </td>
+        </tr>        
+        <tr>
+            <td class="table" width="50%">Date Of Issued</td>
+            <td class="table" width="50%">
+            <input type="text" name="rdate" id="rdate" readonly="readonly">
+            </td>
+        </tr> 
+        <tr>
+            <td class="table" align="left" width="49%">Date Of Accept &nbsp;<font color="Gray">[dd/mm/yyyy]</font></td>
+            <td class="table" align="left" width="51%">
+                <input type="text" name="adate" id="adate" readonly="readonly"></input>
+                <img src="../../../../../../images/calendr3.gif" onclick="showCalendarControl(document.transfer.adate);" alt="Show Calendar" id="pur_date_cal"></img>                                    
+            </td>
+        </tr>
+        <tr class="table">
+          <td colspan="2">&nbsp;</td>
+        </tr>
+        <tr class="tdH">
+          <td colspan="2" align="center">
+            <input type="submit" name="submit" value="Accept" id="submit"/>
+            <input type="button" name="exit" value="Cancel" id="exit" onclick="javascript:self.close();"/>
+          </td>
+        </tr>
+    </table>
+  </form>
+  </body>
+</html>

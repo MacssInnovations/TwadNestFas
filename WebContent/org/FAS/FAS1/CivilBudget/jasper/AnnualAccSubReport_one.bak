@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="AnnualAccSubReport_one"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="381"
+		 pageHeight="842"
+		 columnWidth="381"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="CASHBOOK_MONTH_FROM" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="CASHBOOK_YEAR_FROM" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="CASHBOOK_MONTH_TO" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="CASHBOOK_YEAR_TO" isForPrompting="false" class="java.lang.Integer"/>
+	<queryString><![CDATA[select case when total1 is null then 0
+else total1 end as total1_before,
+case when total1_next is null then 0
+else total1_next end as total1_after,
+fin.*
+
+from
+
+(SELECT aa.ORDER_NO,
+  aa.minor_head_code,
+ (SELECT MINOR_HEAD_DESC FROM COM_MST_MINOR_HEADS min1 WHERE min1.MINOR_HEAD_CODE=aa.MINOR_HEAD_CODE)as MINOR_HEAD_DESC,
+  aa.major_head_code,
+  (SELECT MAJOR_HEAD_DESC
+  FROM com_mst_major_heads maj
+  WHERE MAJ.MAJOR_HEAD_CODE= aa.major_head_code
+  )as MAJOR_HEAD_DESC,
+  aa.GROUP_HEAD_CODE,
+ (select GROUP_HEAD_DESC from FAS_MIS_GROUP_MASTER gp where gp.group_head_code= aa.GROUP_HEAD_CODE)as GROUP_HEAD_DESC,
+
+  sum((SELECT SUM(trial.DEBIT_CLOSING_BALANCE+trial.CREDIT_CLOSING_BALANCE)
+  FROM FAS_TRIAL_BALANCE trial
+  WHERE trial.ACCOUNT_HEAD_CODE=hc.ACCOUNT_HEAD_CODE
+  AND 
+  To_Date((trial.cashbook_month
+  ||'-'
+  || trial.cashbook_year),'mm-yyyy') BETWEEN To_Date($P{CASHBOOK_MONTH_FROM}
+  ||'-'
+  ||($P{CASHBOOK_YEAR_FROM}-1),'mm-yyyy')
+AND to_date($P{CASHBOOK_MONTH_TO}
+  ||'-'
+  ||($P{CASHBOOK_YEAR_TO}-1),'mm-yyyy') 
+  ))AS total1,
+ sum((SELECT SUM(trial.DEBIT_CLOSING_BALANCE+trial.CREDIT_CLOSING_BALANCE)
+  FROM FAS_TRIAL_BALANCE trial
+  WHERE trial.ACCOUNT_HEAD_CODE=hc.ACCOUNT_HEAD_CODE
+  AND 
+  To_Date((trial.cashbook_month
+  ||'-'
+  || trial.cashbook_year),'mm-yyyy') BETWEEN To_Date($P{CASHBOOK_MONTH_FROM}
+  ||'-'
+  ||$P{CASHBOOK_YEAR_FROM},'mm-yyyy')
+AND to_date($P{CASHBOOK_MONTH_TO}
+  ||'-'
+  ||$P{CASHBOOK_YEAR_TO},'mm-yyyy') 
+  GROUP BY trial.ACCOUNT_HEAD_CODE
+  ))AS total1_next
+FROM ANNUAL_ACCOUNT_SUB_GROUP aa,
+  com_mst_account_heads hc
+WHERE aa.MINOR_HEAD_CODE= hc.MINOR_HEAD_CODE
+AND aa.MAJOR_HEAD_CODE  = hc.MAJOR_HEAD_CODE
+AND hc.MAJOR_HEAD_CODE ='L'
+GROUP BY aa.ORDER_NO,
+  aa.minor_head_code,
+  aa.major_head_code,
+  aa.GROUP_HEAD_CODE
+ORDER BY aa.major_head_code, aa.minor_head_code,aa.GROUP_HEAD_CODE,
+  aa.ORDER_NO)fin]]></queryString>
+
+	<field name="TOTAL1_BEFORE" class="java.math.BigDecimal"/>
+	<field name="TOTAL1_AFTER" class="java.math.BigDecimal"/>
+	<field name="ORDER_NO" class="java.lang.String"/>
+	<field name="MINOR_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="MINOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="MAJOR_HEAD_CODE" class="java.lang.String"/>
+	<field name="MAJOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="GROUP_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="GROUP_HEAD_DESC" class="java.lang.String"/>
+	<field name="TOTAL1" class="java.math.BigDecimal"/>
+	<field name="TOTAL1_NEXT" class="java.math.BigDecimal"/>
+
+	<variable name="sum_beforeyear" class="java.math.BigDecimal" resetType="Group" resetGroup="groupHead" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL1}]]></variableExpression>
+	</variable>
+	<variable name="sum_nextyear" class="java.math.BigDecimal" resetType="Group" resetGroup="groupHead" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL1_NEXT}]]></variableExpression>
+	</variable>
+
+		<group  name="majorHead" >
+			<groupExpression><![CDATA[$F{MAJOR_HEAD_CODE}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="groupHead" >
+			<groupExpression><![CDATA[$F{GROUP_HEAD_CODE}]]></groupExpression>
+			<groupHeader>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="0"
+						width="313"
+						height="20"
+						forecolor="#40AAD4"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{GROUP_HEAD_DESC}+"("+$F{GROUP_HEAD_CODE}+")"]]></textFieldExpression>
+				</textField>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="21"
+						width="381"
+						height="0"
+						key="line-26"
+						isRemoveLineWhenBlank="true"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="29"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="36"
+						y="1"
+						width="92"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_beforeyear}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="274"
+						y="1"
+						width="106"
+						height="27"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum_nextyear}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="2"
+						y="1"
+						width="32"
+						height="27"
+						key="staticText-6"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="0"
+						width="381"
+						height="0"
+						key="line-19"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="28"
+						width="381"
+						height="0"
+						key="line-20"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="132"
+						y="0"
+						width="0"
+						height="29"
+						key="line-24"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="273"
+						y="0"
+						width="0"
+						height="29"
+						key="line-25"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="-1"
+						width="381"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="34"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="136"
+						y="4"
+						width="79"
+						height="15"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MAJOR_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="132"
+						y="0"
+						width="0"
+						height="34"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="273"
+						y="0"
+						width="0"
+						height="34"
+						key="line-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="33"
+						width="381"
+						height="0"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="49"
+						y="4"
+						width="78"
+						height="25"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Amount for Prevoius year"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="303"
+						y="4"
+						width="68"
+						height="28"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Amount for Next year"]]></textFieldExpression>
+				</textField>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="36"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="131"
+						y="1"
+						width="142"
+						height="34"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MINOR_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="34"
+						y="1"
+						width="94"
+						height="34"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TOTAL1_BEFORE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="274"
+						y="1"
+						width="106"
+						height="34"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TOTAL1_AFTER}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="132"
+						y="0"
+						width="0"
+						height="36"
+						key="line-22"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="273"
+						y="0"
+						width="0"
+						height="36"
+						key="line-23"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="2"  isSplitAllowed="true" >
+				<line direction="BottomUp">
+					<reportElement
+						x="0"
+						y="1"
+						width="381"
+						height="0"
+						key="line-21"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

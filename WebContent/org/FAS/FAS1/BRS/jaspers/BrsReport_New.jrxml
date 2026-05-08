@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BrsReport_New"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="651"
+		 pageHeight="842"
+		 columnWidth="591"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT DISTINCT o.accounting_unit_id,
+  o.accounting_for_office_id,
+  o.account_no,
+  -- o.cashbook_month,
+  st.cashbook_month,
+  st.cashbook_year,to_char(ob_status.updated_date,'DD/MM/YY') as updated_date,
+  o.pass_book_date,
+  --  o.cashbook_year,
+  o.bank_id,
+  o.branch_id,
+  b.bank_name,
+  br.branch_name,
+  ob_status.ob_status,
+   CASE
+    WHEN ob_status.ob_status='Y'  or ob_status.NIL_OB_STATUS='Y'
+    THEN 'Freezed'
+    WHEN ob_status.ob_status IS NULL or ob_status.NIL_OB_STATUS IS NULL
+    THEN 'Not Freezed'
+  END AS obStatus_view,
+   case when ob_trn.ob_pushed='Y' then 'Pushed' when ob_trn.ob_pushed is null then 'Not Pushed' end as obPushed_view,
+  ob_status.UPDATED_DATE,
+  ob_trn.ob_pushed,
+  ob_trn.OB_PUSHED_DATE,
+  u.accounting_unit_name
+  
+FROM fas_brs_ob o,
+  brs_start_month_and_year st,
+  fas_mst_banks b,
+  FAS_MST_BANK_BRANCHES br,
+  FAS_BRS_OB_STATUS ob_status,
+  FAS_BRS_OB_TRANSACTION ob_trn,
+  fas_mst_acct_units u
+WHERE st.accounting_unit_id     = o.accounting_unit_id
+AND st.accounting_for_office_id = o.accounting_for_office_id
+AND st.account_no               = o.account_no
+AND b.bank_id                   =o.bank_id
+AND br.bank_id                  =o.bank_id
+AND br.branch_id                =o.branch_id
+AND
+  --ob_status.accounting_for_office_id = o.accounting_for_office_id and
+  ob_status.accounting_unit_id = o.accounting_unit_id
+AND ob_status.cashbook_month   = o.cashbook_month
+AND ob_status.cashbook_year    = o.cashbook_year
+AND ob_status.account_no       = o.account_no
+and ob_trn.accounting_for_office_id = o.accounting_for_office_id and
+u.accounting_unit_id=o.accounting_unit_id and
+
+ob_trn.accounting_unit_id = o.accounting_unit_id and
+ob_trn.accounting_for_office_id = o.accounting_for_office_id and
+ob_trn.account_no=o.account_no 
+
+order by o.accounting_unit_id   
+
+--AND o.accounting_unit_id       =182
+  --and
+  --st.cashbook_month = o.cashbook_month and
+  --st.cashbook_year = o.cashbook_year
+  --where]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_NO" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="UPDATED_DATE" class="java.lang.String"/>
+	<field name="PASS_BOOK_DATE" class="java.sql.Timestamp"/>
+	<field name="BANK_ID" class="java.math.BigDecimal"/>
+	<field name="BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+	<field name="BRANCH_NAME" class="java.lang.String"/>
+	<field name="OB_STATUS" class="java.lang.String"/>
+	<field name="OBSTATUS_VIEW" class="java.lang.String"/>
+	<field name="OBPUSHED_VIEW" class="java.lang.String"/>
+	<field name="OB_PUSHED" class="java.lang.String"/>
+	<field name="OB_PUSHED_DATE" class="java.util.Date"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="19"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="19"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BRS OB Entry, Freeze,Push Status]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="423"
+						y="0"
+						width="49"
+						height="15"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[Date]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="453"
+						y="0"
+						width="80"
+						height="15"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="-1"
+						width="591"
+						height="1"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="44"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="1"
+						width="138"
+						height="40"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[ Unit Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="140"
+						y="1"
+						width="78"
+						height="40"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[Bank Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="220"
+						y="1"
+						width="58"
+						height="40"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[Start Month & Year]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="288"
+						y="1"
+						width="57"
+						height="40"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[OB Status/Nil OB Status]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="403"
+						y="1"
+						width="52"
+						height="40"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[OB Satus Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="458"
+						y="1"
+						width="67"
+						height="40"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[OB Pushed]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="527"
+						y="1"
+						width="61"
+						height="40"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[OB Pushed Date]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="43"
+						width="591"
+						height="1"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="348"
+						y="1"
+						width="52"
+						height="40"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font size="9"/>
+					</textElement>
+				<text><![CDATA[Freezed Date]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="2"
+						width="138"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="139"
+						y="2"
+						width="80"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BANK_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="220"
+						y="2"
+						width="65"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CASHBOOK_MONTH}+"/"+$F{CASHBOOK_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="288"
+						y="2"
+						width="57"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OBSTATUS_VIEW}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="403"
+						y="2"
+						width="52"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UPDATED_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="527"
+						y="2"
+						width="61"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{OB_PUSHED_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="458"
+						y="2"
+						width="67"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OBPUSHED_VIEW}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="348"
+						y="2"
+						width="52"
+						height="18"
+						key="textField-2"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UPDATED_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

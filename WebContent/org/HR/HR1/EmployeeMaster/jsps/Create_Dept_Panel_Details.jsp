@@ -1,0 +1,558 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<%@ page contentType="text/html;charset=windows-1252"%>
+<%@ page session="false" contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*,java.util.*,Servlets.Security.classes.UserProfile"%>
+<%@ include file="//org/Security/jsps/Check_SessionJSPF.jspf" %>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
+    <title>Create_Dept_Panel_Details</title>
+     <script type="text/javascript" src="<%=request.getContextPath()%>/org/Library/scripts/comJS.js"></script>
+      <script type="text/javascript" src="../../../../Library/scripts/checkDate.js"></script>
+      <script type="text/javascript"       src="../scripts/CalendarControl.js"></script>
+        <script type="text/javascript" src="../../../../Security/scripts/tabpane.js"></script>
+        <script type="text/javascript" src="../scripts/Create_Dept_Panel_DetailsJS.js"></script>
+        
+        <script language="javascript" type="text/javascript">
+                function closeWindow()
+                {                
+                    window.open('','_parent','');                
+                    window.close(); 
+                    window.opener.focus();
+                    
+                    document.frmTransfer.txthPid.value=0;
+                }
+          </script> 
+             <link href="../../../../../css/CalendarControl.css" rel="stylesheet" media="screen"/> 
+          <link href='../../../../../css/RWS_CSSColour.css' rel='stylesheet' media='screen'/>
+          <link href='../../../../../css/Sample3.css' rel='stylesheet' media='screen'/>
+          
+          <style type="text/css">
+                .divClass{display: none;  }                                
+          </style>
+  </head>
+  <body>
+   <%
+   Connection connection=null;
+   Statement statement=null;
+   ResultSet results=null;   
+   PreparedStatement ps4=null;
+   ResultSet rs4=null;
+
+  try
+  {
+    ResourceBundle rs=ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+    String ConnectionString="";
+   
+    String strDriver=rs.getString("Config.DATA_BASE_DRIVER");
+    String strdsn=rs.getString("Config.DSN");
+    String strhostname=rs.getString("Config.HOST_NAME");
+    String strportno=rs.getString("Config.PORT_NUMBER");
+    String strsid=rs.getString("Config.SID");
+    String strdbusername=rs.getString("Config.USER_NAME");
+    String strdbpassword=rs.getString("Config.PASSWORD");
+      
+   // ConnectionString = strdsn.trim() + "@" + strhostname.trim() + ":" + strportno.trim() + ":" +strsid.trim() ;
+			ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+     Class.forName(strDriver.trim());
+     connection=DriverManager.getConnection(ConnectionString,strdbusername.trim(),strdbpassword.trim());
+
+       
+       try
+       {
+            statement=connection.createStatement();
+            connection.clearWarnings();
+       }
+       catch(SQLException e)
+       {
+              System.out.println("Exception in creating statement:"+e);
+              return;
+       }          
+  }
+  catch(Exception e)
+  {         
+         System.out.println("Exception in openeing connection:"+e);
+         return;
+  }  
+ %>  
+ <%
+          
+          PreparedStatement ps=null;
+          ResultSet rs1=null;
+ 
+          HttpSession session=request.getSession(false);
+          UserProfile empProfile=(UserProfile)session.getAttribute("UserProfile");
+          
+          System.out.println("user id::"+empProfile.getEmployeeId());
+          int empid=empProfile.getEmployeeId();
+          int  oid=0;
+          String oname="",oadd1="",oadd2="",ocity="",odist="",olid="",owid="";
+          String olname=""; 
+          String ownature="";
+          
+           try
+          {
+           
+            ps=connection.prepareStatement("select OFFICE_ID from HRM_EMP_CURRENT_POSTING where EMPLOYEE_ID=?" );
+            ps.setInt(1,empid);
+            rs1=ps.executeQuery();
+                 if(rs1.next()) 
+                 {
+                    oid=rs1.getInt("OFFICE_ID");
+                 
+                 }
+            rs1.close();
+            ps.close();
+            ps=connection.prepareStatement("select a.OFFICE_NAME,a.OFFICE_ADDRESS1,a.OFFICE_ADDRESS2,a.DISTRICT_CODE,a.CITY_TOWN_NAME,a.OFFICE_LEVEL_ID,a.PRIMARY_WORK_ID,b.DISTRICT_NAME from COM_MST_OFFICES a "+
+            " left outer join com_mst_districts b on b.DISTRICT_CODE= a.DISTRICT_CODE where OFFICE_ID=?" );
+            ps.setInt(1,oid);
+            rs1=ps.executeQuery();
+                 if(rs1.next()) 
+                 {
+                    oname=rs1.getString("OFFICE_NAME");
+                    oadd1=rs1.getString("OFFICE_ADDRESS1");
+                    oadd2=rs1.getString("OFFICE_ADDRESS2");
+                    ocity=rs1.getString("CITY_TOWN_NAME");
+                    odist=rs1.getString("DISTRICT_NAME");
+                    
+                  }
+            rs1.close();
+            ps.close();
+       
+                 
+           }
+           catch(Exception e)
+           {
+             System.out.println(e);
+           }
+  
+  %>
+        <table  cellspacing="1" cellpadding="3" width="100%" class="table">
+                    <tr>
+                        <td class="tdH">
+                            <center>                           
+                            <h3>Deputation Panel Details</h3>                            
+                            </center>
+                        </td>
+                    </tr>                    
+        </table>
+        <form name="frmDeptPanel" id="frmDeptPanel">                
+              
+                      
+                            <table  cellspacing="3" cellpadding="1"  width="100%">
+                                  
+                                  <tr class="tdTitle">
+                                    <td colspan="2">
+                                     <div align="left">
+                                       <strong>Office Details</strong>
+                                     </div>
+                                    </td>
+                                   </tr>
+                                   
+                                   <tr class="table">
+                                     <td>
+                                       <div align="left">
+                                             Office ID 
+                                        </div>
+                                       </td>
+                                     <td>
+                                      <div align="left">
+                                     <input type="text" name="txtOffId" id="txtOffId" maxlength="4" value="<%=oid%>"
+                                           size="5" class="disab"  readonly="readonly"/>
+                                           
+                                   </div>
+                                   </td>
+                                   </tr>
+                                  
+                                  
+                                  <tr class="table">
+                                   <td>
+                                     <div align="left">Office Name</div>
+                                   </td>
+                                   <td>
+                                 <div align="left">
+                                  <input type="text" name="txtOffName" id="txtOffName" value="<%=oname%>"
+                        maxlength="60" size="60"
+                       readonly="readonly" class="disab"/>
+                              </div>
+                            </td>
+                                </tr>
+                                
+                                <tr class="table">
+            <td>
+              <div align="left">Office Address</div>
+            </td>
+            <td>
+              <div align="left">
+                <textarea rows="4" cols="40"  name="txtOffAddr" id="txtOffAddr" readonly="readonly"
+                class="disab"><%
+                String s=null;
+                if(oadd1!=null)
+                {
+                    s=oadd1;
+                }
+                if(oadd2!=null)
+                {
+                    s+="\n"+oadd2;
+                }
+                if(ocity!=null)
+                {
+                    s+="\n"+ocity;
+                }
+                if(odist!=null)
+                {
+                    s+="\n"+odist;
+                }
+                if(s!=null)
+                    out.print(s);   
+                                
+                %></textarea>
+             
+              </div>
+            </td>
+          </tr>
+          
+           
+          <tr class="tdTitle">
+            <td colspan="2">
+              <div align="left">
+                <strong>Deputation Post Details</strong>
+              </div>
+            </td>
+          </tr>
+           <tr class="table">
+            <td>
+              <div align="left">
+              Deputation Reference Id
+             <font color="#ff2121">*</font>
+            </div>
+            </td>
+            <td>
+              <div align="left">
+               <select id="dptrefid" name="dptrefid" onchange="doFunction('getDet')">
+              <option value="0">---Select Reference Id---</option>
+                <%
+                   
+                 PreparedStatement ps1=null;
+                 ResultSet rs2=null;
+                 try
+                 {
+                 ps1=connection.prepareStatement("select distinct DPN_REF_ID from HRM_EMP_DPN_WILLINGNESS where OFFICE_ID=? and PROCESS_FLOW_STATUS_ID in ('FR') order by DPN_REF_ID");
+                 ps1.setInt(1,oid);
+                 
+                 rs2=ps1.executeQuery();
+                 
+                 while(rs2.next())
+                 {
+                    out.println("<option value='"+rs2.getInt("DPN_REF_ID")+"'>"+rs2.getInt("DPN_REF_ID")+"</option>");
+                 }
+                 }
+                 catch(Exception e)
+                 {
+                   System.out.println(e.getMessage());
+                 }
+                 finally
+                 {
+                    ps1.close();
+                    rs2.close();
+                 }
+                
+                %>
+                </select>
+              </div>
+            </td>
+          </tr>
+          
+           <tr class="table">
+            <td>
+              <div align="left">Deputation Reference Letter No.
+               </div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtRno" id="txtRno" readonly
+                        maxlength="60" size="60"/>                       
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+           <td>
+              <div align="left">
+                Deputation&nbsp;Reference&nbsp;Letter Date
+            </div>
+            </td>
+          <td>
+              <div align="left">
+               <input type="text" name="txtPDat" id="txtPDat"
+                       maxlength="10" size="11"
+                      readonly>
+                     </div>
+             </td>
+            </tr>
+          
+           <tr class="table">
+          <td>
+          <div align="left">
+           Deputation Department
+           </div>
+          </td>
+          <td>
+          <div align="left">
+           <input type="text" name="txtdept" id="txtdept" size="80" readonly>
+          </div>
+          </td>
+          </tr>
+          
+           <tr class="table">
+          <td>
+          <div align="left">
+           Deputation Department Office 
+           </div>
+          </td>
+          <td>
+          <div align="left">
+          <input type="text" name="txtdeptoff" id="txtdeptoff" size="80" readonly>
+          </div>
+          </td>
+          </tr>
+          
+          
+          <tr class="table">
+          <td>
+          <div align="left">
+          Post Name in the Deputation Department
+           
+          </div>
+          </td>
+          <td>
+          <div align="left">
+          <input type="text" name="txtpostname" id="txtpostname" maxlength="60" size="80" readonly>
+          </div>
+          </td>
+          </tr>       
+          
+          <tr class="table">
+          <td>
+          <div align="left">
+          Pay Scale in the Deputation Department
+       
+          </div>
+          </td>
+          <td>
+          <div align="left">
+          <input type="text" name="txtpayscale" id="txtpayscale" maxlength="100" size="80" readonly>
+          </div>
+          </td>
+          </tr>   
+            
+          <tr class="table">
+          <td>
+          <div align="left">
+          Remarks
+          </div>
+          </td>
+          <td>
+          <div align="left">
+          <textarea cols="20" rows="7" id="txtremark" name="txtremark" readonly></textarea>
+          </div>
+          </td>
+          </tr>       
+          
+          <tr class="tdTitle">
+            <td colspan="2">
+              <div align="left">
+                <strong>Deputation Panel Proceeding Details</strong>
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+            <td>
+              <div align="left">Empanelment Proceeding Id</div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtPid" id="txtPid" 
+                        maxlength="6" size="12" disabled="disabled"/>&nbsp;&nbsp;&nbsp;(Auto Generated)      
+                        
+                <input type="hidden" name="txthPid" id="txthPid"/>        
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+            <td>
+              <div align="left">Empanelment Proceeding No.
+              <font color="#ff2121">*</font>
+              </div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtpno" id="txtpno" onkeypress="return noEnter(event)"
+                        maxlength="60" size="60"/>                       
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+           <td>
+              <div align="left">
+              Empanelment Proceeding Date
+                      <font color="#ff2121">*</font>
+              </div>
+            </td>
+          <td>
+              <div align="left">
+               <input type="text" name="txtEDat" id="txtEDat"
+                       maxlength="10" size="11"
+                       onfocus="javascript:vDateType='3';  "
+                       onkeypress="return calins(event,this);"
+                       onblur="if(checkcurdt(this)==true)return checkdt(this);"/>
+                 
+                <img src="../../../../../images/calendr3.gif"
+                     onclick="showCalendarControl(document.frmDeptPanel.txtEDat);"
+                     alt="Show Calendar"></img>
+                     </div>
+             </td>
+            </tr>
+            
+            <tr class="tdTitle">
+            <td colspan="2">
+              <div align="left">
+                <strong>Employee Details</strong>
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+            <td>
+              <div align="left">
+                Employee ID 
+                <font color="#ff2121">* &nbsp;&nbsp;</font>
+              </div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtEmployeeid" id="txtEmployeeid" readonly/>
+                <select id="cmdempid" name="cmdempid" onchange="doFunction('employee')">
+                <option value="0">--Select Employee--</option>
+                </select>
+               </div>
+           
+            </td>           
+          </tr>
+          
+           <tr class="table">
+            <td>
+              <div align="left">Employee Name</div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtEmpName" id="txtEmpName"
+                       readonly="readonly" class="disab" maxlength="40"
+                       size="40"/>
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+            <td>
+              <div align="left">Designation</div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtEmpDesig" id="txtEmpDesig"
+                       readonly="readonly" class="disab" maxlength="40"
+                       size="40"/>
+                 <input type="hidden" name="txt_desid" id="txt_desid">     
+              </div>
+            </td>
+          </tr>
+          
+          <tr class="table">
+            <td>
+              <div align="left">Current place of Posting</div>
+            </td>
+            <td>
+              <div align="left">
+                <input type="text" name="txtCurOff" id="txtCurOff"
+                       readonly="readonly" class="disab" maxlength="60"
+                       size="60"/>
+              </div>
+            </td>
+          </tr>
+          
+          
+          <tr class="table">
+          <td>
+          <div align="left">
+          Remarks
+                <font color="#ff2121">*</font>
+          </div>
+          </td>
+          <td>
+          <div align="left">
+          <textarea cols="20" rows="7" id="txtrem" name="txtrem"></textarea>
+          </div>
+          </td>
+          </tr>       
+          
+             <tr class="tdTitle">
+                  <td colspan="2">
+                  <div align="center">
+                   <input type="button" name="btadd" id="btadd" value="Add" onclick="funadd()"/>
+                   <input type="button" name="btupdate" id="btupdate" value="Update" disabled onclick="funupdate()"/>
+                   <input type="button" name="btdelete" id="btdelete" value="Delete" disabled onclick="deleterow()"/>
+                   <input type="button" name="btclear" id="btclear" value="Clear" onclick="funclear()"/>                  
+                  </div>
+                  </td>
+                  </tr>
+                </table>
+                  <table cellspacing="3" cellpadding="1" width="100%">
+                            <tr>
+                                <td colspan="2" height="56">
+                                    <table id="mytable" cellspacing="3"
+                                           cellpadding="2" border="1"
+                                           width="100%">
+                                        <tr class="table">
+                                        <th>
+                                                Edit
+                                            </th>
+                                            <th>
+                                                Employee Id
+                                            </th>
+                                            <th>
+                                                Employee Name
+                                            </th>
+                                            <th>
+                                                Designation
+                                            </th>
+                                            <th>
+                                                Current place of Posting
+                                            </th>
+                                            <th>
+                                                Remarks
+                                            </th>
+                                           
+                                        </tr>
+                                           <tbody id="grid_body" class="table" align="left" >
+                       </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                              <tr class="tdTitle">
+                  <td colspan="2">
+                  <div align="center">
+                   <input type="button" name="btsubmit" id="btsubmit" value="Submit" onclick="fnsubmit()"/>
+                   <input type="button" name="btcancel" id="btcancel" value="Cancel" onclick="self.close()"/>
+                             
+                  </div>
+                  </td>
+                  </tr>
+                        </table>
+               
+                        </form>
+                    </body>
+</html>

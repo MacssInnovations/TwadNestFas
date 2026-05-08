@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Miscellaneous_payments"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT F.HR_NOTE_NO, ACCOUNTING_UNIT_ID,
+(SELECT U.ACCOUNTING_UNIT_NAME FROM FAS_MST_ACCT_UNITS U WHERE U.ACCOUNTING_UNIT_ID=F.ACCOUNTING_UNIT_ID) AS UNIT_NAME,
+CASHBOOK_MONTH,CASHBOOK_YEAR,
+CASE WHEN CASHBOOK_MONTH = 1 THEN 'Jan'
+ WHEN CASHBOOK_MONTH = 2 THEN 'Feb'
+  WHEN CASHBOOK_MONTH = 3 THEN 'Mar'
+   WHEN CASHBOOK_MONTH = 4 THEN 'Apr'
+    WHEN CASHBOOK_MONTH = 5 THEN 'May'
+     WHEN CASHBOOK_MONTH = 6 THEN 'Jun'
+      WHEN CASHBOOK_MONTH = 7 THEN 'Jul'
+       WHEN CASHBOOK_MONTH = 8 THEN 'Aug'
+        WHEN CASHBOOK_MONTH = 9 THEN 'Sep'
+         WHEN CASHBOOK_MONTH = 10 THEN 'Oct'
+          WHEN CASHBOOK_MONTH = 11 THEN 'Nov' else 'Dec' end as month,
+
+                    		  TO_CHAR(F.NOTE_DATE,'dd/mm/yyyy') AS NOTE_DATE, 
+                    		  F1.BILL_MAJOR_TYPE_DESC, F.BILL_MAJOR_TYPE_CODE,
+                    		  F2.BILL_MINOR_TYPE_DESC, F.BILL_MINOR_TYPE_CODE,
+                          f.bill_sub_type_code,
+                    		  (SELECT f3.bill_sub_type_desc 
+                    		  FROM FAS_BILL_SUB_TYPES f3 
+                    		  WHERE f.bill_major_type_code =f3.bill_major_type_code 
+                    		  AND f.bill_minor_type_code   =f3.bill_minor_type_code 
+                    		  AND f.bill_sub_type_code     =f3.bill_sub_type_code 
+                    		  ) AS bill_sub_type_desc , 
+                    		  f.NOTE_AMOUNT, 
+                    		  f.NOTE_PREPARED_BY, 
+                    		  f.ACCOUNT_HEAD_CODE 
+                    		 FROM FAS_HR_NOTE_DETAILS f 
+                    		 INNER JOIN FAS_BILL_MAJOR_TYPES f1 
+                    		 ON f.BILL_MAJOR_TYPE_CODE=f1.BILL_MAJOR_TYPE_CODE 
+                    		 INNER JOIN FAS_BILL_MINOR_TYPES_MST f2 
+                    		 ON f.bill_major_type_code  =f2.bill_major_type_code 
+                    		 AND F.BILL_MINOR_TYPE_CODE =F2.BILL_MINOR_TYPE_CODE 
+                    		 AND ACCOUNTING_UNIT_ID     =3
+                    		 AND CASHBOOK_MONTH         =11 
+                    		 AND CASHBOOK_YEAR          =2014]]></queryString>
+
+	<field name="HR_NOTE_NO" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="MONTH" class="java.lang.String"/>
+	<field name="NOTE_DATE" class="java.lang.String"/>
+	<field name="BILL_MAJOR_TYPE_DESC" class="java.lang.String"/>
+	<field name="BILL_MAJOR_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="BILL_MINOR_TYPE_DESC" class="java.lang.String"/>
+	<field name="BILL_MINOR_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="BILL_SUB_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="BILL_SUB_TYPE_DESC" class="java.lang.String"/>
+	<field name="NOTE_AMOUNT" class="java.lang.Double"/>
+	<field name="NOTE_PREPARED_BY" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="168"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="19"
+						width="535"
+						height="19"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<text><![CDATA[M.T.C Form No.40]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="39"
+						width="535"
+						height="14"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[( See Subsidiary Rules 2 (f) and 18 (a) under Treasury Rule 16 )]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="54"
+						width="535"
+						height="13"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<text><![CDATA[BILL FOR MISCELLANEOUS PAYMENTS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="62"
+						y="85"
+						width="121"
+						height="19"
+						key="staticText-13"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Major Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="62"
+						y="104"
+						width="121"
+						height="19"
+						key="staticText-14"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Minor Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="62"
+						y="123"
+						width="121"
+						height="19"
+						key="staticText-15"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sub Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="62"
+						y="142"
+						width="121"
+						height="19"
+						key="staticText-16"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Detailed Account Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="2"
+						y="85"
+						width="58"
+						height="76"
+						key="staticText-17"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Head of Service Chargeble]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="183"
+						y="85"
+						width="347"
+						height="19"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[": "+$F{BILL_MAJOR_TYPE_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="183"
+						y="104"
+						width="347"
+						height="19"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[": "+$F{BILL_MINOR_TYPE_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="183"
+						y="123"
+						width="347"
+						height="19"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[": "+$F{BILL_SUB_TYPE_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="183"
+						y="142"
+						width="347"
+						height="19"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[": "+$F{ACCOUNT_HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement
+						x="496"
+						y="67"
+						width="30"
+						height="50"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="503"
+						y="83"
+						width="15"
+						height="20"
+						key="staticText-18"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[P]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="-101"
+						width="535"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Treasury , month of"+$F{MONTH}+" "+$F{CASHBOOK_YEAR}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="82"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="4"
+						y="8"
+						width="71"
+						height="19"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Voucher No]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="84"
+						y="19"
+						width="90"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="175"
+						y="8"
+						width="21"
+						height="19"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[of ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="195"
+						y="19"
+						width="138"
+						height="1"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="11"
+						y="50"
+						width="101"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="334"
+						y="8"
+						width="93"
+						height="19"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[List of payments]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="112"
+						y="38"
+						width="71"
+						height="19"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Received this]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="184"
+						y="49"
+						width="90"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="347"
+						y="49"
+						width="90"
+						height="0"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="275"
+						y="38"
+						width="71"
+						height="19"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[days of]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="437"
+						y="38"
+						width="93"
+						height="19"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[the sum of rupees]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="4"
+						y="58"
+						width="34"
+						height="19"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Paise]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="36"
+						y="70"
+						width="126"
+						height="0"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="162"
+						y="58"
+						width="250"
+						height="19"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[being the amount payable on account of]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="75"
+						y="8"
+						width="100"
+						height="19"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{HR_NOTE_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="196"
+						y="8"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{NOTE_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="347"
+						y="38"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{NOTE_AMOUNT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="158"  isSplitAllowed="true" >
+				<rectangle>
+					<reportElement
+						x="389"
+						y="8"
+						width="121"
+						height="47"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="406"
+						y="19"
+						width="90"
+						height="27"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Stamp if the amount exceeds]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="4"
+						y="55"
+						width="71"
+						height="19"
+						key="staticText-20"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Rupees]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="242"
+						y="55"
+						width="119"
+						height="43"
+						key="staticText-21"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Passed for payment Designation of Officer Examined and entered]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="389"
+						y="98"
+						width="121"
+						height="19"
+						key="staticText-22"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Claimant's Signature]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="4"
+						y="98"
+						width="71"
+						height="19"
+						key="staticText-23"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Pay Rs.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="104"
+						y="98"
+						width="71"
+						height="19"
+						key="staticText-24"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Rupees]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="361"
+						y="132"
+						width="169"
+						height="19"
+						key="staticText-25"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Officer In-Charge of the Trasury]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="75"
+						y="55"
+						width="100"
+						height="18"
+						key="textField-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{NOTE_AMOUNT}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>

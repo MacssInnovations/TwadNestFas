@@ -1,0 +1,580 @@
+package Servlets.FAS.FAS1.Imprest.Reports;
+
+import java.awt.print.PrinterJob;
+
+import java.io.IOException;
+
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.JasperReport;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.*;
+
+import java.text.SimpleDateFormat;
+
+import javax.print.DocFlavor;
+
+import javax.print.PrintService;
+
+import net.sf.jasperreports.engine.JasperPrintManager;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.HashPrintServiceAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+
+import javax.print.attribute.PrintServiceAttributeSet;
+
+import javax.print.attribute.standard.Copies;
+import javax.print.attribute.standard.JobName;
+import javax.print.attribute.standard.MediaSizeName;
+import javax.print.attribute.standard.PrinterName;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRExporter;
+import net.sf.jasperreports.engine.JRExporterParameter;
+import net.sf.jasperreports.engine.JRRuntimeException;
+import net.sf.jasperreports.engine.JasperExportManager;
+
+import net.sf.jasperreports.engine.JasperPrintManager;
+import net.sf.jasperreports.engine.export.JRHtmlExporter;
+import net.sf.jasperreports.engine.export.JRHtmlExporterParameter;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
+import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
+import net.sf.jasperreports.engine.export.JRTextExporter;
+import net.sf.jasperreports.engine.export.JRTextExporterParameter;
+import net.sf.jasperreports.engine.export.JRXlsExporter;
+import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.view.JasperViewer;
+
+
+public class Imprest_Register_Report extends HttpServlet {
+    private static final String CONTENT_TYPE = 
+        "text/html; charset=windows-1252";
+    Connection connection = null;
+
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    public void doPost(HttpServletRequest request, 
+                       HttpServletResponse response) throws ServletException, 
+                                                            IOException {
+        doGet(request, response);
+    }
+
+    public void doGet(HttpServletRequest request, 
+                      HttpServletResponse response) throws ServletException,  
+                                                           IOException
+    {
+        try
+        {
+            HttpSession session=request.getSession(false);
+            if(session==null)
+            {
+                System.out.println(request.getContextPath()+"/index.jsp");
+                response.sendRedirect(request.getContextPath()+"/index.jsp");
+            
+            }
+            System.out.println(session);
+                
+        }catch(Exception e)
+        {
+        	System.out.println("Redirect Error :"+e);
+        }
+        
+        
+        String type_one=null,sameMonth=null;    
+        String opt="";
+        response.setContentType(CONTENT_TYPE);
+        try 
+        {
+        	ResourceBundle rs = ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString = "";
+
+            String strDriver = rs.getString("Config.DATA_BASE_DRIVER");
+            String strdsn = rs.getString("Config.DSN");
+            String strhostname = rs.getString("Config.HOST_NAME");
+            String strportno = rs.getString("Config.PORT_NUMBER");
+            String strsid = rs.getString("Config.SID");
+            String strdbusername = rs.getString("Config.USER_NAME");
+            String strdbpassword = rs.getString("Config.PASSWORD");
+
+            ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+            Class.forName(strDriver.trim());
+            connection =DriverManager.getConnection(ConnectionString, strdbusername.trim(),strdbpassword.trim());
+        } catch (Exception ex) {
+            String connectMsg ="Could not create the connection" + ex.getMessage() + " " + 
+            ex.getLocalizedMessage();
+            System.out.println(connectMsg);
+        }
+        JasperDesign jasperDesign = null;
+        File reportFile=null;
+        
+        
+        
+        String viewReport= request.getParameter("viewReport");
+        if (viewReport.equalsIgnoreCase("OfficeWise")) 
+        {
+        try 
+        {
+            
+            String txtCB_Year=request.getParameter("txtCB_Year");
+            String txtCB_Month=request.getParameter("txtCB_Month");
+            
+            String txtCB_Year_to=request.getParameter("txtCB_Year_to");
+            String txtCB_Month_to=request.getParameter("txtCB_Month_to");
+                       
+            String rtype= request.getParameter("txtoption");
+            String cmbAcc_UnitCode=request.getParameter("cmbAcc_UnitCode");
+            String cmbOffice_code=request.getParameter("cmbOffice_code");
+            String Advance_Type=request.getParameter("cmbAdvance_type");
+            if(Advance_Type.equalsIgnoreCase("I")) {
+                type_one="Imprest Register";
+            }
+            else {
+                type_one="Temporary.Adv Register";
+            }
+            int accountingunit=Integer.parseInt(cmbAcc_UnitCode);
+            int accountingoffice=Integer.parseInt(cmbOffice_code);
+                
+            int yearfrom=Integer.parseInt(txtCB_Year);
+            int monthfrom=Integer.parseInt(txtCB_Month);
+            
+            int year_to=Integer.parseInt(txtCB_Year_to);
+            int month_to=Integer.parseInt(txtCB_Month_to);
+            
+            String monthInWords = "";
+            if (monthfrom == 1)
+                monthInWords = "January";
+            else if (monthfrom == 2)
+                monthInWords = "February";
+            else if (monthfrom == 3)
+                monthInWords = "March";
+            else if (monthfrom == 4)
+                monthInWords = "April";
+            else if (monthfrom == 5)
+                monthInWords = "May";
+            else if (monthfrom == 6)
+                monthInWords = "June";
+            else if (monthfrom == 7)
+                monthInWords = "July";
+            else if (monthfrom == 8)
+                monthInWords = "August";
+            else if (monthfrom == 9)
+                monthInWords = "September";
+            else if (monthfrom == 10)
+                monthInWords = "October";
+            else if (monthfrom == 11)
+                monthInWords = "November";
+            else if (monthfrom == 12)
+                monthInWords = "December";
+                
+                
+            String monthInWords_to = "";
+            if (month_to == 1)
+                monthInWords_to = "January";
+            else if (month_to == 2)
+                monthInWords_to = "February";
+            else if (month_to == 3)
+                monthInWords_to = "March";
+            else if (month_to == 4)
+                monthInWords_to = "April";
+            else if (month_to == 5)
+                monthInWords_to = "May";
+            else if (month_to == 6)
+                monthInWords_to = "June";
+            else if (month_to == 7)
+                monthInWords_to = "July";
+            else if (month_to == 8)
+                monthInWords_to = "August";
+            else if (month_to == 9)
+                monthInWords_to = "September";
+            else if (month_to == 10)
+                monthInWords_to = "October";
+            else if (month_to == 11)
+                monthInWords_to = "November";
+            else if (month_to == 12)
+                monthInWords_to = "December";
+          
+            if(yearfrom==year_to)
+            {
+                 if(monthfrom==month_to) 
+                 {
+                     sameMonth="For the Period Of "+monthInWords + "/" + yearfrom;
+                 }
+                 else {
+                     sameMonth="During the Period "+ monthInWords + "/" + yearfrom + " to " + monthInWords_to + "/" + year_to;
+                     }
+            }
+            else 
+            {
+                sameMonth="During the Period "+monthInWords + "/" + yearfrom + " to " + monthInWords_to + "/" + year_to;
+            }
+            
+       
+           // reportFile = new File(getServletContext().getRealPath("/org/FAS/FAS1/Reports/Imprest/jasper/Imprest_Register_Rep.jasper")); 
+            reportFile = new File(getServletContext().getRealPath("/org/FAS/FAS1/Reports/Imprest/jasper/Imprest_Register_Rep_imprest.jasper")); 
+                 
+            if (!reportFile.exists())
+            throw new JRRuntimeException("File J not found. The report design must be compiled first.");
+            
+            JasperReport jasperReport = (JasperReport)JRLoader.loadObject(reportFile.getPath());
+           
+            Map map=new HashMap();
+            map.put("accountingunitid",accountingunit);
+            map.put("accountofficeid",accountingoffice);
+            map.put("cashbookmonth",monthfrom);
+            map.put("cashbookyear",yearfrom);        
+            map.put("cashbookmonth_to",month_to);
+            map.put("cashbookyear_to",year_to);
+            map.put("Advance_Type",Advance_Type);
+            map.put("registerName",type_one);
+            map.put("sameMonth",sameMonth);
+                  
+         
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, map, connection);            
+            if (rtype.equalsIgnoreCase("HTML"))   
+            {
+                        response.setContentType("text/html");
+                        response.setHeader ("Content-Disposition", "attachment;filename=\"SubLedgerReport.html\"");
+                        PrintWriter out = response.getWriter();
+                        JRHtmlExporter exporter = new JRHtmlExporter();
+                        // File f=new File(getServletContext().getRealPath("/WEB-INF/Report/"));
+                        //  exporter.setParameter(JRHtmlExporterParameter.IS_OUTPUT_IMAGES_TO_DIR,true);
+                        //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR_NAME,getServletContext().getRealPath("/WEB-INF/Report/"));
+                        //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR,f);
+                        exporter.setParameter(JRHtmlExporterParameter.IS_USING_IMAGES_TO_ALIGN,  false);
+                        exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+                        exporter.setParameter(JRExporterParameter.OUTPUT_WRITER, out);
+                        exporter.exportReport();
+                        out.flush();
+                        out.close();
+            }
+            else      if (rtype.equalsIgnoreCase("PDF"))   
+            {
+                        byte buf[]=JasperExportManager.exportReportToPdf(jasperPrint);
+                        response.setContentType("application/pdf");
+                        response.setContentLength(buf.length);
+                        // response.setHeader("content-disposition", "inline;filename=OpenActionItems.pdf");
+                        //response.setContentType("application/force-download");                    
+                        response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegister.pdf\"");
+                        OutputStream out = response.getOutputStream();
+                        out.write(buf, 0, buf.length);
+                        out.close();
+            }
+            else      if (rtype.equalsIgnoreCase("EXCEL"))   
+            {
+    
+                    	response.setContentType("application/vnd.ms-excel");
+	                    response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegister.xls\"");
+	                    JRXlsExporter exporterXLS = new JRXlsExporter(); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.JASPER_PRINT, jasperPrint); 
+                     
+                        ByteArrayOutputStream xlsReport = new ByteArrayOutputStream();
+                        exporterXLS.setParameter(JRXlsExporterParameter.OUTPUT_STREAM,xlsReport); 
+                        exporterXLS.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE); 
+                        exporterXLS.setParameter(JRXlsExporterParameter.IS_AUTO_DETECT_CELL_TYPE, Boolean.TRUE); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.IS_WHITE_PAGE_BACKGROUND, Boolean.FALSE); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_ROWS, Boolean.TRUE); 
+	                    exporterXLS.exportReport(); 
+	                    byte []bytes;
+	                    bytes = xlsReport.toByteArray();
+	                    ServletOutputStream ouputStream = response.getOutputStream();
+	                    ouputStream.write(bytes, 0, bytes.length);
+	                    ouputStream.flush();
+	                    ouputStream.close();
+
+            }
+            else      if (rtype.equalsIgnoreCase("TXT"))   
+            {
+            
+		                response.setContentType("text/plain");
+		                response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegister.txt\"");
+		                     
+		                JRTextExporter exporter = new JRTextExporter();
+		                exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+		                ByteArrayOutputStream txtReport = new ByteArrayOutputStream();
+		                exporter.setParameter(JRExporterParameter.OUTPUT_STREAM,txtReport); 
+		                exporter.setParameter(JRTextExporterParameter.CHARACTER_WIDTH, new Integer(200));
+		                exporter.setParameter(JRTextExporterParameter.CHARACTER_HEIGHT, new Integer(50));
+		                exporter.exportReport(); 
+		                
+	                    byte []bytes;
+	                    bytes = txtReport.toByteArray();
+	                    ServletOutputStream ouputStream = response.getOutputStream();
+	                    ouputStream.write(bytes, 0, bytes.length);
+	                    ouputStream.flush();
+	                    ouputStream.close();
+
+            }
+     
+        } 
+        catch (Exception ex) 
+        {
+            String connectMsg = 
+            "Could not create the report " + ex.getMessage() + " " + 
+            ex.getLocalizedMessage();
+            System.out.println(connectMsg);
+        }
+    }
+    else  if (viewReport.equalsIgnoreCase("RegionWise")) 
+    {
+    	System.out.println("RegionWise");
+    	try
+    	{
+    		String txtCB_Year=request.getParameter("txtCB_Year");
+            String txtCB_Month=request.getParameter("txtCB_Month");
+            
+            String txtCB_Year_to=request.getParameter("txtCB_Year_to");
+            String txtCB_Month_to=request.getParameter("txtCB_Month_to");
+                       
+            String rtype= request.getParameter("txtoption");
+         
+            String txtRegionId=request.getParameter("txtRegionId");
+            String Advance_Type=request.getParameter("cmbAdvance_type");
+         
+            int txtRegionId1=Integer.parseInt(txtRegionId);
+            int yearfrom=Integer.parseInt(txtCB_Year);
+            int monthfrom=Integer.parseInt(txtCB_Month);
+            int year_to=Integer.parseInt(txtCB_Year_to);
+            int month_to=Integer.parseInt(txtCB_Month_to);	
+    		
+            reportFile = new File(getServletContext().getRealPath("/org/FAS/FAS1/Reports/Imprest/jasper/Imprest_RegionWise_Rep.jasper")); 
+            
+            if (!reportFile.exists())
+            throw new JRRuntimeException("File J not found. The report design must be compiled first.");
+            
+            JasperReport jasperReport = (JasperReport)JRLoader.loadObject(reportFile.getPath());
+           
+            Map map=new HashMap();
+            map.put("accountofficeid",txtRegionId1);
+            map.put("cashbookmonth",monthfrom);
+            map.put("cashbookyear",yearfrom);        
+            map.put("cashbookmonth_to",month_to);
+            map.put("cashbookyear_to",year_to);
+            map.put("Advance_Type",Advance_Type);
+            
+            System.out.println("RegionWise");
+    		
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, map, connection);            
+            if (rtype.equalsIgnoreCase("HTML"))   
+            {
+                        response.setContentType("text/html");
+                        response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.html\"");
+                        PrintWriter out = response.getWriter();
+                        JRHtmlExporter exporter = new JRHtmlExporter();
+                        // File f=new File(getServletContext().getRealPath("/WEB-INF/Report/"));
+                        //  exporter.setParameter(JRHtmlExporterParameter.IS_OUTPUT_IMAGES_TO_DIR,true);
+                        //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR_NAME,getServletContext().getRealPath("/WEB-INF/Report/"));
+                        //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR,f);
+                        exporter.setParameter(JRHtmlExporterParameter.IS_USING_IMAGES_TO_ALIGN,  false);
+                        exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+                        exporter.setParameter(JRExporterParameter.OUTPUT_WRITER, out);
+                        exporter.exportReport();
+                        out.flush();
+                        out.close();
+            }
+            else      if (rtype.equalsIgnoreCase("PDF"))   
+            {
+                        byte buf[]=JasperExportManager.exportReportToPdf(jasperPrint);
+                        response.setContentType("application/pdf");
+                        response.setContentLength(buf.length);
+                        // response.setHeader("content-disposition", "inline;filename=OpenActionItems.pdf");
+                        //response.setContentType("application/force-download");                    
+                        response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.pdf\"");
+                        OutputStream out = response.getOutputStream();
+                        out.write(buf, 0, buf.length);
+                        out.close();
+            }
+            else      if (rtype.equalsIgnoreCase("EXCEL"))   
+            {
+    
+                    	response.setContentType("application/vnd.ms-excel");
+	                    response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.xls\"");
+	                    JRXlsExporter exporterXLS = new JRXlsExporter(); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.JASPER_PRINT, jasperPrint); 
+                     
+                        ByteArrayOutputStream xlsReport = new ByteArrayOutputStream();
+                        exporterXLS.setParameter(JRXlsExporterParameter.OUTPUT_STREAM,xlsReport); 
+                        exporterXLS.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE); 
+                        exporterXLS.setParameter(JRXlsExporterParameter.IS_AUTO_DETECT_CELL_TYPE, Boolean.TRUE); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.IS_WHITE_PAGE_BACKGROUND, Boolean.FALSE); 
+	                    exporterXLS.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_ROWS, Boolean.TRUE); 
+	                    exporterXLS.exportReport(); 
+	                    byte []bytes;
+	                    bytes = xlsReport.toByteArray();
+	                    ServletOutputStream ouputStream = response.getOutputStream();
+	                    ouputStream.write(bytes, 0, bytes.length);
+	                    ouputStream.flush();
+	                    ouputStream.close();
+
+            }
+            else      if (rtype.equalsIgnoreCase("TXT"))   
+            {
+            
+		                response.setContentType("text/plain");
+		                response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.txt\"");
+		                     
+		                JRTextExporter exporter = new JRTextExporter();
+		                exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+		                ByteArrayOutputStream txtReport = new ByteArrayOutputStream();
+		                exporter.setParameter(JRExporterParameter.OUTPUT_STREAM,txtReport); 
+		                exporter.setParameter(JRTextExporterParameter.CHARACTER_WIDTH, new Integer(200));
+		                exporter.setParameter(JRTextExporterParameter.CHARACTER_HEIGHT, new Integer(50));
+		                exporter.exportReport(); 
+		                
+	                    byte []bytes;
+	                    bytes = txtReport.toByteArray();
+	                    ServletOutputStream ouputStream = response.getOutputStream();
+	                    ouputStream.write(bytes, 0, bytes.length);
+	                    ouputStream.flush();
+	                    ouputStream.close();
+
+            }
+    		
+    	}
+    	catch (Exception ex) 
+        {
+            String connectMsg = 
+            "Could not create the report " + ex.getMessage() + " " + 
+            ex.getLocalizedMessage();
+            System.out.println(connectMsg);
+        }
+    }
+    else  if (viewReport.equalsIgnoreCase("All")) 
+    {
+    	System.out.println("all office");
+    	try
+    	{
+    	String txtCB_Year=request.getParameter("txtCB_Year");
+        String txtCB_Month=request.getParameter("txtCB_Month");
+        
+        String txtCB_Year_to=request.getParameter("txtCB_Year_to");
+        String txtCB_Month_to=request.getParameter("txtCB_Month_to");
+                   
+        String rtype= request.getParameter("txtoption");
+        String Advance_Type=request.getParameter("cmbAdvance_type");
+       
+        int yearfrom=Integer.parseInt(txtCB_Year);
+        int monthfrom=Integer.parseInt(txtCB_Month);
+        int year_to=Integer.parseInt(txtCB_Year_to);
+        int month_to=Integer.parseInt(txtCB_Month_to);
+        
+        reportFile = new File(getServletContext().getRealPath("/org/FAS/FAS1/Reports/Imprest/jasper/Imprest_AllOffice.jasper")); 
+        
+        if (!reportFile.exists())
+        throw new JRRuntimeException("File J not found. The report design must be compiled first.");
+        
+        JasperReport jasperReport = (JasperReport)JRLoader.loadObject(reportFile.getPath());
+       
+        Map map=new HashMap();
+        map.put("cashbookmonth",monthfrom);
+        map.put("cashbookyear",yearfrom);        
+        map.put("cashbookmonth_to",month_to);
+        map.put("cashbookyear_to",year_to);
+        map.put("Advance_Type",Advance_Type);
+		
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, map, connection); 
+        
+        if (rtype.equalsIgnoreCase("HTML"))   
+        {
+                    response.setContentType("text/html");
+                    response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.html\"");
+                    PrintWriter out = response.getWriter();
+                    JRHtmlExporter exporter = new JRHtmlExporter();
+                    // File f=new File(getServletContext().getRealPath("/WEB-INF/Report/"));
+                    //  exporter.setParameter(JRHtmlExporterParameter.IS_OUTPUT_IMAGES_TO_DIR,true);
+                    //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR_NAME,getServletContext().getRealPath("/WEB-INF/Report/"));
+                    //  exporter.setParameter(JRHtmlExporterParameter.IMAGES_DIR,f);
+                    exporter.setParameter(JRHtmlExporterParameter.IS_USING_IMAGES_TO_ALIGN,  false);
+                    exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+                    exporter.setParameter(JRExporterParameter.OUTPUT_WRITER, out);
+                    exporter.exportReport();
+                    out.flush();
+                    out.close();
+        }
+        else      if (rtype.equalsIgnoreCase("PDF"))   
+        {
+                    byte buf[]=JasperExportManager.exportReportToPdf(jasperPrint);
+                    response.setContentType("application/pdf");
+                    response.setContentLength(buf.length);
+                    // response.setHeader("content-disposition", "inline;filename=OpenActionItems.pdf");
+                    //response.setContentType("application/force-download");                    
+                    response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.pdf\"");
+                    OutputStream out = response.getOutputStream();
+                    out.write(buf, 0, buf.length);
+                    out.close();
+        }
+        else      if (rtype.equalsIgnoreCase("EXCEL"))   
+        {
+
+                	response.setContentType("application/vnd.ms-excel");
+                    response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.xls\"");
+                    JRXlsExporter exporterXLS = new JRXlsExporter(); 
+                    exporterXLS.setParameter(JRXlsExporterParameter.JASPER_PRINT, jasperPrint); 
+                 
+                    ByteArrayOutputStream xlsReport = new ByteArrayOutputStream();
+                    exporterXLS.setParameter(JRXlsExporterParameter.OUTPUT_STREAM,xlsReport); 
+                    exporterXLS.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, Boolean.FALSE); 
+                    exporterXLS.setParameter(JRXlsExporterParameter.IS_AUTO_DETECT_CELL_TYPE, Boolean.TRUE); 
+                    exporterXLS.setParameter(JRXlsExporterParameter.IS_WHITE_PAGE_BACKGROUND, Boolean.FALSE); 
+                    exporterXLS.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_ROWS, Boolean.TRUE); 
+                    exporterXLS.exportReport(); 
+                    byte []bytes;
+                    bytes = xlsReport.toByteArray();
+                    ServletOutputStream ouputStream = response.getOutputStream();
+                    ouputStream.write(bytes, 0, bytes.length);
+                    ouputStream.flush();
+                    ouputStream.close();
+
+        }
+        else      if (rtype.equalsIgnoreCase("TXT"))   
+        {
+        
+	                response.setContentType("text/plain");
+	                response.setHeader ("Content-Disposition", "attachment;filename=\"ImprestRegisterRegionWise.txt\"");
+	                     
+	                JRTextExporter exporter = new JRTextExporter();
+	                exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+	                ByteArrayOutputStream txtReport = new ByteArrayOutputStream();
+	                exporter.setParameter(JRExporterParameter.OUTPUT_STREAM,txtReport); 
+	                exporter.setParameter(JRTextExporterParameter.CHARACTER_WIDTH, new Integer(200));
+	                exporter.setParameter(JRTextExporterParameter.CHARACTER_HEIGHT, new Integer(50));
+	                exporter.exportReport(); 
+	                
+                    byte []bytes;
+                    bytes = txtReport.toByteArray();
+                    ServletOutputStream ouputStream = response.getOutputStream();
+                    ouputStream.write(bytes, 0, bytes.length);
+                    ouputStream.flush();
+                    ouputStream.close();
+
+        }
+        
+    	}
+    	catch (Exception ex1) 
+        {
+            String connectMsg = 
+            "Could not create the report " + ex1.getMessage() + " " + 
+            ex1.getLocalizedMessage();
+            System.out.println(connectMsg);
+        }
+    }
+
+    }
+}

@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="cash_book_DetailsDate_subreport_pay"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="460"
+		 pageHeight="802"
+		 columnWidth="460"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="main_param" isForPrompting="false" class="java.sql.Timestamp"/>
+	<parameter name="accountingunitid" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="acpara" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="bank_id" isForPrompting="false" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[SELECT b.OFFICE_NAME,
+    a.ACCOUNTING_UNIT_ID,
+    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.CASHBOOK_YEAR,
+    a.CASHBOOK_MONTH,
+    a.vouDate,
+    a.payNo,
+    DECODE(a.payPart,NULL,'-',a.payPart)AS payPart,
+    a.payAcchead,
+    a.payAmt,
+    a.payCheqDD_no,
+    a.paychequedd_date,
+    a.payrefno,
+    DECODE(a.paypaidto,NULL,'-',a.paypaidto)AS paypaidto,
+    a.bid,
+    (SELECT k.bank_name FROM fas_mst_banks k WHERE k.bank_id=a.bid
+    )AS bank_name
+  From
+    (SELECT t.ACCOUNTING_UNIT_ID,
+      t.ACCOUNTING_FOR_OFFICE_ID,
+      t.CASHBOOK_YEAR,
+      t.CASHBOOK_MONTH,
+      M.Payment_Date                                    As Voudate,
+      t.voucher_no                                      AS payNo,
+      t.particulars                                     AS payPart,
+      t.account_head_code                               AS payAcchead,
+      DECODE(t.cr_dr_indicator,'DR',t.amount,-t.amount) AS payAmt,
+      DECODE(t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no,'-',NULL,t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no) AS payCheqDD_no,
+      t.cheque_dd_date  AS payChequeDD_date,
+      TO_CHAR(NULL)     AS payrefno,
+      m.paid_to         AS payPaidto,
+      m.bank_id         AS bid,
+      m.ACCOUNT_NO      AS acno
+    FROM FAS_PAYMENT_MASTER m,
+      FAS_PAYMENT_TRANSACTION t
+    WHERE t.accounting_unit_id     = m.accounting_unit_id
+    AND t.accounting_for_office_id = m.accounting_for_office_id
+    AND t.cashbook_year            = m.cashbook_year
+    AND t.cashbook_month           = m.cashbook_month
+    AND t.voucher_no               = m.voucher_no
+    AND m.PAYMENT_status!          ='C'
+      -- AND m.bank_id                  =2
+    AND m.created_by_module IN ('BPP','BPF','NP')
+    UNION ALL
+    SELECT t.ACCOUNTING_UNIT_ID,
+      t.ACCOUNTING_FOR_OFFICE_ID,
+      t.CASHBOOK_YEAR,
+      t.CASHBOOK_MONTH,
+      m.payment_date                                    AS vouDate,
+      t.voucher_no                                      AS payNo,
+      t.particulars                                     AS payPart,
+      t.account_head_code                               AS payAcchead,
+      DECODE(t.cr_dr_indicator,'DR',t.amount,-t.amount) AS payAmt,
+      DECODE(t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no,'-',NULL,t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no) AS payCheqDD_no,
+      t.cheque_dd_date  AS payChequeDD_date,
+      TO_CHAR(NULL)     AS payrefno,
+      m.paid_to         AS payPaidto,
+      m.bank_id         AS bid,
+      m.ACCOUNT_NO      AS acno
+    FROM FAS_PAYMENT_MASTER m,
+      FAS_PAYMENT_TRANSACTION t
+    WHERE t.accounting_unit_id     = m.accounting_unit_id
+    AND t.accounting_for_office_id = m.accounting_for_office_id
+    AND t.cashbook_year            = m.cashbook_year
+    AND t.cashbook_month           = m.cashbook_month
+    AND t.voucher_no               = m.voucher_no
+    And M.Payment_Status!          ='C'
+    And M.Created_By_Module       In ('SC')
+    Union All
+     SELECT ACCOUNTING_UNIT_ID,
+      ACCOUNTING_FOR_OFFICE_ID,
+      CASHBOOK_YEAR,
+      CASHBOOK_MONTH,
+      DATE_OF_TRANSFER     AS vouDate,
+      voucher_no           AS payNo,
+      particulars          AS payPart,
+      CR_ACCOUNT_HEAD_CODE AS payAcchead,
+      TOTAL_AMOUNT         AS payAmt,
+      DECODE(cheque_or_dd
+      || '-'
+      ||cheque_dd_no,'-',NULL,cheque_or_dd
+      || '-'
+      ||cheque_dd_no)               AS payCheqDD_no,
+      cheque_dd_date                AS payChequeDD_date,
+      TO_CHAR(NULL)                 AS payrefno,
+      TO_CHAR('Interbank Transfer') AS payPaidto,
+      FROM_BANK_ID                  AS bid,
+      FROM_ACCOUNT_NO               AS acno
+    From Fas_Inter_Bank_Trf_At_Ho
+    Where Transfer_Status!='C'
+     UNION ALL
+    SELECT t.ACCOUNTING_UNIT_ID,
+      t.ACCOUNTING_FOR_OFFICE_ID,
+      t.CASHBOOK_YEAR,
+      t.CASHBOOK_MONTH,
+      m.DATE_OF_TRANSFER  AS vouDate,
+      t.voucher_no        AS payNo,
+      t.particulars       AS payPart,
+      t.ACCOUNT_HEAD_CODE AS payAcchead,
+      t.AMOUNT            AS payAmt,
+      DECODE(t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no,'-',NULL,t.cheque_or_dd
+      || '-'
+      ||t.cheque_dd_no) AS payCheqDD_no,
+      t.cheque_dd_date  AS paychequedd_date,
+      TO_CHAR(NULL)     AS payRefno,
+      --to_char('Fund Transfer') as payPaidto
+      (
+      SELECT u.OFFICE_NAME
+      FROM COM_MST_OFFICES u
+      WHERE u.office_id=transfer_to_office_id
+      )             AS payPaidto,
+      HO_BANK_ID    AS bid,
+      HO_ACCOUNT_NO AS acno
+    FROM FAS_FUND_TRF_FROM_HO_MASTER m,
+      FAS_FUND_TRF_FROM_HO_TRN t
+    WHERE t.accounting_unit_id     = m.accounting_unit_id
+    AND t.accounting_for_office_id = m.accounting_for_office_id
+    AND t.cashbook_year            = m.cashbook_year
+    AND t.cashbook_month           = m.cashbook_month
+    And T.Voucher_No               = M.Voucher_No
+    AND TRANSFER_STATUS!           ='C') a ,
+    COM_MST_OFFICES b,
+    FAS_MST_BANK_BALANCE c
+  Where A.Accounting_Unit_Id    =$P{accountingunitid}
+and a.bid=$P{bank_id}
+  and a.voudate=$P{main_param}
+ --And A.Cashbook_Year           =2012
+ -- AND A.Cashbook_Year           between to_char(now(),'yyyy')-5  AND to_char(now(),'yyyy') 
+  --AND a.cashbook_month          =4
+  AND a.accounting_for_office_id=b.office_id
+  AND a.bid                     = c.bank_id
+  AND a.acno                    = c.bank_ac_no
+and c.status='C'
+  ORDER BY a.bid,
+    b.OFFICE_NAME,
+    A.Voudate,
+     a.payNo]]></queryString>
+
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="VOUDATE" class="java.sql.Timestamp"/>
+	<field name="PAYNO" class="java.math.BigDecimal"/>
+	<field name="PAYPART" class="java.lang.String"/>
+	<field name="PAYACCHEAD" class="java.math.BigDecimal"/>
+	<field name="PAYAMT" class="java.math.BigDecimal"/>
+	<field name="PAYCHEQDD_NO" class="java.lang.String"/>
+	<field name="PAYCHEQUEDD_DATE" class="java.sql.Timestamp"/>
+	<field name="PAYREFNO" class="java.lang.String"/>
+	<field name="PAYPAIDTO" class="java.lang.String"/>
+	<field name="BID" class="java.math.BigDecimal"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="18"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="0"
+						width="28"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAYNO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="38"
+						y="0"
+						width="162"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Paid to : "+$F{PAYPAIDTO}+" towards "+$F{PAYPART}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="207"
+						y="0"
+						width="46"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAYACCHEAD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="254"
+						y="0"
+						width="78"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PAYAMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="336"
+						y="0"
+						width="57"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PAYCHEQDD_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="394"
+						y="0"
+						width="64"
+						height="18"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{PAYCHEQUEDD_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

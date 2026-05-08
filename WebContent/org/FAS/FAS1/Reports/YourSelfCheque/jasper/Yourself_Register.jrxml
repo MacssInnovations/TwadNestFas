@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Yourself_Register"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="990"
+		 pageHeight="842"
+		 columnWidth="930"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="vou_no" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[SELECT a.voucher_no,bid,(select bank_name from fas_bank_list where bank_id=bid)bname,
+  remarks,
+  bank_account_no,
+  cheque_number
+  ||'         '
+  ||cheque_date AS cheque,
+  cheque_amount,
+  dd_number,
+  dd_in_favour_of,
+  dd_amount,
+  to_date(dd_date,'dd/mm/yyyy')dd_date,
+  commission_charges
+FROM (
+  (SELECT voucher_no,
+    bank_account_no,
+    cheque_number,
+    cheque_date,
+    cheque_amount,
+    remarks,
+    ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    CASHBOOK_YEAR,
+    CASHBOOK_MONTH
+  FROM FAS_YOURSELF_CHEQUE_MST where
+ACCOUNTING_UNIT_ID=$P{accountingunitid}
+AND ACCOUNTING_FOR_OFFICE_ID=$P{accountofficeid}
+AND CASHBOOK_YEAR=$P{txtCB_Year}
+AND CASHBOOK_MONTH=$P{txtCB_Month}
+AND VOUCHER_NO=$P{vou_no}
+  )a
+LEFT OUTER JOIN
+  (SELECT dd_number,
+    dd_amount,
+    dd_date,
+    commission_charges,
+    dd_in_favour_of,
+    VOUCHER_NO,
+    ACCOUNTING_UNIT_ID,
+    ACCOUNTING_FOR_OFFICE_ID,
+    CASHBOOK_YEAR,(
+
+select distinct bank_id from fas_mst_bank_balance WHERE accounting_unit_id=$P{accountingunitid})bid,
+    CASHBOOK_MONTH
+  FROM FAS_YOURSELF_CHEQUE_TRANS where
+ACCOUNTING_UNIT_ID=$P{accountingunitid}
+AND ACCOUNTING_FOR_OFFICE_ID=$P{accountofficeid}
+AND CASHBOOK_YEAR=$P{txtCB_Year}
+AND CASHBOOK_MONTH=$P{txtCB_Month}
+AND VOUCHER_NO=$P{vou_no}
+  )b
+ON a.ACCOUNTING_UNIT_ID       =b.ACCOUNTING_UNIT_ID
+AND a.ACCOUNTING_FOR_OFFICE_ID=b.ACCOUNTING_FOR_OFFICE_ID
+AND a.CASHBOOK_YEAR           =b.CASHBOOK_YEAR
+AND a.CASHBOOK_MONTH          =b.CASHBOOK_MONTH
+AND a.VOUCHER_NO              =b.VOUCHER_NO )]]></queryString>
+
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="BID" class="java.math.BigDecimal"/>
+	<field name="BNAME" class="java.lang.String"/>
+	<field name="REMARKS" class="java.lang.String"/>
+	<field name="BANK_ACCOUNT_NO" class="java.math.BigDecimal"/>
+	<field name="CHEQUE" class="java.lang.String"/>
+	<field name="CHEQUE_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="DD_NUMBER" class="java.math.BigDecimal"/>
+	<field name="DD_IN_FAVOUR_OF" class="java.lang.String"/>
+	<field name="DD_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="DD_DATE" class="java.sql.Timestamp"/>
+	<field name="COMMISSION_CHARGES" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="23"
+						y="4"
+						width="793"
+						height="42"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Annual Consolidated Register for Yourself Cheques]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="100"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="5"
+						y="3"
+						width="34"
+						height="52"
+						key="staticText-2"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[S.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="39"
+						y="3"
+						width="65"
+						height="52"
+						key="staticText-3"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="111"
+						y="3"
+						width="57"
+						height="52"
+						key="staticText-4"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Voucher No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="172"
+						y="3"
+						width="77"
+						height="52"
+						key="staticText-5"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[    Bank           A/c No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="252"
+						y="3"
+						width="64"
+						height="52"
+						key="staticText-6"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Bank Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="319"
+						y="3"
+						width="73"
+						height="52"
+						key="staticText-7"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Cheque No. &              Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="398"
+						y="0"
+						width="60"
+						height="52"
+						key="staticText-8"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="463"
+						y="1"
+						width="72"
+						height="52"
+						key="staticText-9"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[Particulars]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="539"
+						y="1"
+						width="41"
+						height="52"
+						key="staticText-10"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD          No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="580"
+						y="1"
+						width="66"
+						height="52"
+						key="staticText-11"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD            Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="654"
+						y="1"
+						width="58"
+						height="52"
+						key="staticText-12"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="721"
+						y="1"
+						width="73"
+						height="52"
+						key="staticText-13"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD           in favour of]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="798"
+						y="1"
+						width="62"
+						height="52"
+						key="staticText-14"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD Commission]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="863"
+						y="1"
+						width="65"
+						height="52"
+						key="staticText-15"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="14"/>
+					</textElement>
+				<text><![CDATA[DD Received on]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="111"
+						y="68"
+						width="57"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VOUCHER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="463"
+						y="66"
+						width="72"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{REMARKS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="172"
+						y="67"
+						width="77"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BANK_ACCOUNT_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="319"
+						y="68"
+						width="73"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEQUE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="539"
+						y="66"
+						width="41"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DD_NUMBER}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="721"
+						y="66"
+						width="73"
+						height="31"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{DD_IN_FAVOUR_OF}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="654"
+						y="66"
+						width="58"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DD_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="798"
+						y="66"
+						width="62"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{COMMISSION_CHARGES}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="252"
+						y="68"
+						width="64"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="398"
+						y="65"
+						width="60"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CHEQUE_AMOUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="39"
+						y="68"
+						width="65"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="5"
+						y="68"
+						width="34"
+						height="32"
+						key="textField"
+						isPrintRepeatedValues="false"
+						isPrintInFirstWholeBand="true"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{COLUMN_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="580"
+						y="66"
+						width="66"
+						height="32"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{DD_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

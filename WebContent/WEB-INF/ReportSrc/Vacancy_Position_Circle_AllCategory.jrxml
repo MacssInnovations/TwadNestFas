@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Vacancy_Position_Circle_AllCategory"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="736"
+		 pageHeight="842"
+		 columnWidth="676"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="off_id" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="finyear" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select to_char(division_office_id) as newoffid,post_rank_id,
+total,filledposts,remainingposts,office_name,post_rank_name 
+ from
+ (
+ select region_office_id,circle_office_id,division_office_id ,post_rank_id,sum(filledup_posts) as filledposts,
+ sum(sanctioned_no_of_posts) as sanctioned_no_of_posts,sum(diversion_to_other) as diversion_to_other,
+ sum(diversion_from_other) as diversion_from_other, sum(total) as total,sum(remainingposts) as remainingposts from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id, sanctioned_no_of_posts,
+ filledup_posts,diversion_to_other,
+diversion_from_other,total,(total-filledup_posts) as remainingposts,off_order from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id,sanctioned_no_of_posts,filledup_posts,diversion_to_other,
+diversion_from_other,(sanctioned_no_of_posts-diversion_to_other+diversion_from_other) as total,
+off_order from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id, decode(sanctioned_no_of_posts,null,0,sanctioned_no_of_posts) as sanctioned_no_of_posts,
+ decode(filledup_posts,null,0,filledup_posts) as filledup_posts,
+ decode(diversion_to_other,null,0,diversion_to_other) as diversion_to_other,
+ decode(diversion_from_other,null,0,diversion_from_other) as diversion_from_other,
+ off_order from
+ ( 
+ select * from
+(
+select  office_id,post_rank_id,region_office_id,circle_office_id,division_office_id,off_order from HRM_SANCTION_STRENGTH_VIEW
+where office_id is not null
+union
+select  office_id,post_rank_id,region_office_id,circle_office_id,division_office_id,off_order from hrm_sanction_filled_view
+where office_id is not null
+) aa
+left outer join
+(
+select office_id as offid2, post_rank_id as postid,  filledup_posts
+from HRM_SANCTION_FILLED_VIEW 
+where office_id in (select office_id from com_mst_all_offices_view where 
+circle_office_id in($P!{off_id})) 
+) bb
+on aa.office_id = bb.offid2 and aa.post_rank_id=bb.postid
+left outer join
+(
+select fin_year, office_id as offid, post_rank_id as postrankid, 
+ sanctioned_no_of_posts,diversion_to_other,
+diversion_from_other
+ from HRM_SANCTION_STRENGTH_VIEW
+where office_id in (select office_id from com_mst_all_offices_view where 
+circle_office_id in($P!{off_id}))  and fin_year=$P{finyear}
+)cc
+on aa.office_id=cc.offid and aa.post_rank_id=cc.postrankid 
+)
+)
+)
+)aaa
+where division_office_id in($P!{off_id}) and post_rank_id is not null
+group by region_office_id,circle_office_id,division_office_id,post_rank_id
+)bbb
+left outer join
+(
+select office_id as offid3,office_name,office_level_id from com_mst_offices 
+)ccc
+on bbb.division_office_id=ccc.offid3
+left outer join
+(
+select post_rank_id as psid,post_rank_name from hrm_mst_post_ranks 
+)ddd
+on bbb.post_rank_id=ddd.psid
+left outer join
+(
+select office_id as offid4,off_order from com_mst_all_offices_view
+)eee
+on bbb.division_office_id=eee.offid4
+union
+select to_char(lab_office_id) as newoffid,post_rank_id,
+total,filledposts,remainingposts,office_name,post_rank_name 
+ from
+ (
+ select region_office_id,circle_office_id,lab_office_id ,post_rank_id,sum(filledup_posts) as filledposts,
+ sum(sanctioned_no_of_posts) as sanctioned_no_of_posts,sum(diversion_to_other) as diversion_to_other,
+ sum(diversion_from_other) as diversion_from_other, sum(total) as total,sum(remainingposts) as remainingposts from
+(
+select fin_year,region_office_id,circle_office_id,lab_office_id,offid2,office_id,postid,post_rank_id, sanctioned_no_of_posts,
+ filledup_posts,diversion_to_other,
+diversion_from_other,total,(total-filledup_posts) as remainingposts,off_order from
+(
+select fin_year,region_office_id,circle_office_id,lab_office_id,offid2,office_id,postid,post_rank_id,sanctioned_no_of_posts,filledup_posts,diversion_to_other,
+diversion_from_other,(sanctioned_no_of_posts-diversion_to_other+diversion_from_other) as total,
+off_order from
+(
+select fin_year,region_office_id,circle_office_id,lab_office_id,offid2,office_id,postid,post_rank_id, decode(sanctioned_no_of_posts,null,0,sanctioned_no_of_posts) as sanctioned_no_of_posts,
+ decode(filledup_posts,null,0,filledup_posts) as filledup_posts,
+ decode(diversion_to_other,null,0,diversion_to_other) as diversion_to_other,
+ decode(diversion_from_other,null,0,diversion_from_other) as diversion_from_other,
+ off_order from
+ ( 
+ select * from
+(
+select  office_id,post_rank_id,region_office_id,circle_office_id,lab_office_id,off_order from HRM_SANCTION_STRENGTH_VIEW
+where office_id is not null
+union
+select  office_id,post_rank_id,region_office_id,circle_office_id,lab_office_id,off_order from hrm_sanction_filled_view
+where office_id is not null
+) aa
+left outer join
+(
+select office_id as offid2, post_rank_id as postid,  filledup_posts
+from HRM_SANCTION_FILLED_VIEW 
+where office_id in (select office_id from com_mst_all_offices_view where 
+circle_office_id in($P!{off_id})) 
+) bb
+on aa.office_id = bb.offid2 and aa.post_rank_id=bb.postid
+left outer join
+(
+select fin_year, office_id as offid, post_rank_id as postrankid, 
+ sanctioned_no_of_posts,diversion_to_other,
+diversion_from_other
+ from HRM_SANCTION_STRENGTH_VIEW
+where office_id in (select office_id from com_mst_all_offices_view where 
+circle_office_id in($P!{off_id}))  and fin_year=$P{finyear}
+)cc
+on aa.office_id=cc.offid and aa.post_rank_id=cc.postrankid 
+)
+)
+)
+)aaa
+where lab_office_id in($P!{off_id}) and post_rank_id is not null
+group by region_office_id,circle_office_id,lab_office_id,post_rank_id
+)bbb
+left outer join
+(
+select office_id as offid3,office_name,office_level_id from com_mst_offices 
+)ccc
+on bbb.lab_office_id=ccc.offid3
+left outer join
+(
+select post_rank_id as psid,post_rank_name from hrm_mst_post_ranks 
+)ddd
+on bbb.post_rank_id=ddd.psid
+left outer join
+(
+select office_id as offid4,off_order from com_mst_all_offices_view
+)eee
+on bbb.lab_office_id=eee.offid4
+union
+select to_char(office_id) as newoffid,post_rank_id,
+total,filledposts,remainingposts,office_name,post_rank_name from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id, sanctioned_no_of_posts,
+ filledup_posts as filledposts,diversion_to_other,
+diversion_from_other,total,(total-filledup_posts) as remainingposts,off_order from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id,sanctioned_no_of_posts,filledup_posts,diversion_to_other,
+diversion_from_other,(sanctioned_no_of_posts-diversion_to_other+diversion_from_other) as total,
+off_order from
+(
+select fin_year,region_office_id,circle_office_id,division_office_id,offid2,office_id,postid,post_rank_id, decode(sanctioned_no_of_posts,null,0,sanctioned_no_of_posts) as sanctioned_no_of_posts,
+ decode(filledup_posts,null,0,filledup_posts) as filledup_posts,
+ decode(diversion_to_other,null,0,diversion_to_other) as diversion_to_other,
+ decode(diversion_from_other,null,0,diversion_from_other) as diversion_from_other,
+ off_order from
+ ( 
+ select * from
+(
+select  office_id,post_rank_id,region_office_id,circle_office_id,division_office_id,off_order from HRM_SANCTION_STRENGTH_VIEW
+where office_id is not null
+union
+select  office_id,post_rank_id,region_office_id,circle_office_id,division_office_id,off_order from hrm_sanction_filled_view
+where office_id is not null
+) aa
+left outer join
+(
+select office_id as offid2, post_rank_id as postid,  filledup_posts
+from HRM_SANCTION_FILLED_VIEW 
+
+where office_id in ($P!{off_id}) 
+
+) bb
+on aa.office_id = bb.offid2 and aa.post_rank_id=bb.postid
+left outer join
+(
+select fin_year, office_id as offid, post_rank_id as postrankid, 
+ sanctioned_no_of_posts,diversion_to_other,
+diversion_from_other from HRM_SANCTION_STRENGTH_VIEW
+where office_id in ($P!{off_id}) and fin_year=$P{finyear}
+)cc
+on aa.office_id=cc.offid and aa.post_rank_id=cc.postrankid 
+)
+)
+)
+
+where office_id in ($P!{off_id}) and post_rank_id is not null
+
+)xyz
+left outer join
+(
+select office_id as offid3, office_name,office_level_id from com_mst_offices
+)xyz1
+on xyz.office_id=xyz1.offid3
+left outer join
+(
+select post_rank_id as psid,post_rank_name from hrm_mst_post_ranks 
+)xyz2
+on xyz.post_rank_id=xyz2.psid
+where office_level_id not in('DN','LB')
+order by newoffid,post_rank_id]]></queryString>
+
+	<field name="NEWOFFID" class="java.lang.String"/>
+	<field name="POST_RANK_ID" class="java.math.BigDecimal"/>
+	<field name="TOTAL" class="java.math.BigDecimal"/>
+	<field name="FILLEDPOSTS" class="java.math.BigDecimal"/>
+	<field name="REMAININGPOSTS" class="java.math.BigDecimal"/>
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="POST_RANK_NAME" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="56"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="3"
+						y="9"
+						width="532"
+						height="22"
+						forecolor="#333333"
+						backcolor="#FFFFFF"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Miriam Transparent" pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Tamil Nadu Water Supply and Drainage Board]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="3"
+						y="33"
+						width="532"
+						height="20"
+						forecolor="#333333"
+						backcolor="#FFFFFF"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="Miriam Transparent" pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Vacancy Position Summary Report]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="399"
+						y="35"
+						width="65"
+						height="15"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true" isItalic="false"/>
+					</textElement>
+				<text><![CDATA[Report Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="464"
+						y="35"
+						width="65"
+						height="15"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true" isItalic="false"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+				<crosstab >
+					<reportElement
+						x="3"
+						y="3"
+						width="673"
+						height="43"
+						key="crosstab-1"/>
+					<crosstabHeaderCell>						<cellContents mode="Transparent">
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="1Point" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<staticText>
+					<reportElement
+						x="2"
+						y="37"
+						width="67"
+						height="17"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Name of Post]]></text>
+				</staticText>
+						</cellContents>
+					</crosstabHeaderCell>					<rowGroup name="POST_RANK_NAME" width="79" totalPosition="End">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{POST_RANK_NAME}]]></bucketExpression>
+						</bucket>
+						<crosstabRowHeader>
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="1Point" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="2"
+						y="0"
+						width="76"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{POST_RANK_NAME}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+						</crosstabRowHeader>
+						<crosstabTotalRowHeader>
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="1Point" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<staticText>
+					<reportElement
+						x="2"
+						y="3"
+						width="74"
+						height="16"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="8" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+						</cellContents>
+						</crosstabTotalRowHeader>
+					</rowGroup>
+					<columnGroup name="OFFICE_NAME" height="72" totalPosition="End" headerPosition="Center">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></bucketExpression>
+						</bucket>
+						<crosstabColumnHeader>
+						<cellContents mode="Transparent">
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="71"
+						height="30"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="31"
+						width="24"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Sanctioned Strength]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="26"
+						y="31"
+						width="21"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Utilised]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="49"
+						y="31"
+						width="19"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Vacant]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="31"
+						width="72"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="25"
+						y="31"
+						width="0"
+						height="41"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="48"
+						y="31"
+						width="0"
+						height="41"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+						</crosstabColumnHeader>
+						<crosstabTotalColumnHeader>
+						<cellContents mode="Transparent">
+					<box topBorder="1Point" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<staticText>
+					<reportElement
+						x="1"
+						y="0"
+						width="67"
+						height="30"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="31"
+						width="22"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Sanctioned Strength]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="24"
+						y="31"
+						width="21"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Utilised]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="47"
+						y="31"
+						width="22"
+						height="41"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+						<font size="8"/>
+					</textElement>
+				<text><![CDATA[Vacant]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="31"
+						width="69"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="23"
+						y="31"
+						width="0"
+						height="41"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="46"
+						y="31"
+						width="0"
+						height="41"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+						</crosstabTotalColumnHeader>
+					</columnGroup>
+
+					<measure name="TOTAL_Nothing" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{TOTAL}]]></measureExpression>
+					</measure>
+					<measure name="TOTAL_Sum" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{TOTAL}]]></measureExpression>
+					</measure>
+					<measure name="FILLEDPOSTS_Nothing" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{FILLEDPOSTS}]]></measureExpression>
+					</measure>
+					<measure name="FILLEDPOSTS_Sum" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{FILLEDPOSTS}]]></measureExpression>
+					</measure>
+					<measure name="REMAININGPOSTS_Nothing" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{REMAININGPOSTS}]]></measureExpression>
+					</measure>
+					<measure name="REMAININGPOSTS_Sum" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{REMAININGPOSTS}]]></measureExpression>
+					</measure>
+					<crosstabCell width="72" height="26">
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="24"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_Nothing}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="26"
+						y="0"
+						width="22"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{FILLEDPOSTS_Nothing}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="49"
+						y="0"
+						width="23"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{REMAININGPOSTS_Nothing}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="25"
+						y="0"
+						width="0"
+						height="25"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="48"
+						y="0"
+						width="0"
+						height="25"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="69" height="26" columnTotalGroup="OFFICE_NAME">
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="22"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_Sum}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="24"
+						y="0"
+						width="21"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{FILLEDPOSTS_Sum}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="47"
+						y="0"
+						width="22"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{REMAININGPOSTS_Sum}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="23"
+						y="0"
+						width="0"
+						height="25"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="46"
+						y="0"
+						width="0"
+						height="25"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="72" height="20" rowTotalGroup="POST_RANK_NAME">
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="24"
+						height="19"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_Sum}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="26"
+						y="0"
+						width="22"
+						height="19"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{FILLEDPOSTS_Sum}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="49"
+						y="0"
+						width="23"
+						height="19"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{REMAININGPOSTS_Sum}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="25"
+						y="0"
+						width="0"
+						height="20"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="48"
+						y="0"
+						width="0"
+						height="20"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="69" height="20" rowTotalGroup="POST_RANK_NAME" columnTotalGroup="OFFICE_NAME">
+						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="22"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{TOTAL_Sum_OFFICE_NAME_ALL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="24"
+						y="0"
+						width="21"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{FILLEDPOSTS_Sum_OFFICE_NAME_ALL}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="47"
+						y="0"
+						width="22"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{REMAININGPOSTS_Sum_OFFICE_NAME_ALL}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="23"
+						y="0"
+						width="0"
+						height="20"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="46"
+						y="0"
+						width="0"
+						height="20"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+					</crosstabCell>
+					<whenNoDataCell>						<cellContents mode="Transparent">
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="1Point" rightBorderColor="#000000" bottomBorder="1Point" bottomBorderColor="#000000"/>
+						</cellContents>
+					</whenNoDataCell>					</crosstab>
+			</band>
+		</summary>
+</jasperReport>

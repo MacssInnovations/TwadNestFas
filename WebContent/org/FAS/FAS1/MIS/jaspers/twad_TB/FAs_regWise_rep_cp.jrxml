@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="FAs_regWise_rep_cp"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="1102"
+		 pageHeight="842"
+		 columnWidth="1102"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="sup_query" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="head" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="head1" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT 1 as t_data,t.account_head_code,
+  t.Account_Head_Desc,
+  SUM(t.DR_AMOUNT) DR_AMOUNT,
+  SUM(t.CR_AMOUNT) CR_AMOUNT,
+  SUM(t.Dr_vel_6868) Dr_vel_6868,
+  SUM(t.Cr_vel_6868) Cr_vel_6868,
+  SUM(t.Dr_coim_6869) Dr_coim_6869,
+  SUM(t.Cr_coim_6869) Cr_coim_6869,
+  SUM(t.Dr_Mad_6870) Dr_Mad_6870,
+  SUM(t.Cr_Mad_6870) Cr_Mad_6870,
+  SUM(t.Dr_Thj_6871) Dr_Thj_6871,
+  SUM(t.Cr_Thj_6871) Cr_Thj_6871,
+  SUM(t.Dr_Hog_6777) Dr_Hog_6777,
+  SUM(t.Cr_Hog_6777) Cr_Hog_6777,
+  t.fin_year
+FROM
+  (SELECT v.account_head_code,
+    C.Account_Head_Desc,
+    SUM(dr_amt)DR_AMOUNT,
+    SUM(CR_AMT)CR_AMOUNT,
+    SUM(Dr_Amt)-SUM(Cr_Amt) AS Net_Amt ,
+    rv.REGID,
+    CASE
+      WHEN rv.REGID=6868
+      THEN SUM(dr_amt)
+      ELSE 0
+    END Dr_vel_6868,
+    CASE
+      WHEN rv.REGID=6868
+      THEN SUM(cr_amt)
+      ELSE 0
+    END Cr_vel_6868,
+    CASE
+      WHEN rv.REGID=6869
+      THEN SUM(dr_amt)
+      ELSE 0
+    END Dr_coim_6869,
+    CASE
+      WHEN rv.REGID=6869
+      THEN SUM(cr_amt)
+      ELSE 0
+    END Cr_coim_6869,
+    CASE
+      WHEN rv.REGID=6870
+      THEN SUM(dr_amt)
+      ELSE 0
+    END Dr_Mad_6870,
+    CASE
+      WHEN rv.REGID=6870
+      THEN SUM(cr_amt)
+      ELSE 0
+    END Cr_Mad_6870,
+    CASE
+      WHEN rv.REGID=6871
+      THEN SUM(dr_amt)
+      ELSE 0
+    END Dr_Thj_6871,
+    CASE
+      WHEN rv.REGID=6871
+      THEN SUM(cr_amt)
+      ELSE 0
+    END Cr_Thj_6871,
+    CASE
+      WHEN rv.REGID=6777
+      THEN SUM(dr_amt)
+      ELSE 0
+    END Dr_Hog_6777,
+    CASE
+      WHEN rv.REGID=6777
+      THEN SUM(cr_amt)
+      ELSE 0
+    END Cr_Hog_6777,
+    fin_year
+  FROM FAS_REGTB_VIEW V
+  INNER JOIN com_mst_account_heads c
+  ON V.Account_Head_Code=C.Account_Head_Code
+  INNER JOIN fas_headofaccounts hh
+  ON V.Account_Head_Code=Hh.Accountcode
+  INNER JOIN region_cir_div_view RV
+  ON rv.didid=v.accounting_for_office_id
+$P!{sup_query}    
+  GROUP BY v.account_head_code,
+    C.Account_Head_Desc,
+    rv.REGID,
+    fin_year
+  )t
+GROUP BY t.account_head_code,
+  t.Account_Head_Desc,
+  t.fin_year
+ORDER BY t.account_head_code]]></queryString>
+
+	<field name="T_DATA" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="DR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CR_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="DR_VEL_6868" class="java.math.BigDecimal"/>
+	<field name="CR_VEL_6868" class="java.math.BigDecimal"/>
+	<field name="DR_COIM_6869" class="java.math.BigDecimal"/>
+	<field name="CR_COIM_6869" class="java.math.BigDecimal"/>
+	<field name="DR_MAD_6870" class="java.math.BigDecimal"/>
+	<field name="CR_MAD_6870" class="java.math.BigDecimal"/>
+	<field name="DR_THJ_6871" class="java.math.BigDecimal"/>
+	<field name="CR_THJ_6871" class="java.math.BigDecimal"/>
+	<field name="DR_HOG_6777" class="java.math.BigDecimal"/>
+	<field name="CR_HOG_6777" class="java.math.BigDecimal"/>
+	<field name="FIN_YEAR" class="java.lang.String"/>
+
+	<variable name="6869_D" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_COIM_6869}]]></variableExpression>
+	</variable>
+	<variable name="6869_C" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_COIM_6869}]]></variableExpression>
+	</variable>
+	<variable name="6868_D" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_VEL_6868}]]></variableExpression>
+	</variable>
+	<variable name="6868_C" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_VEL_6868}]]></variableExpression>
+	</variable>
+	<variable name="6870_D" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_MAD_6870}]]></variableExpression>
+	</variable>
+	<variable name="6870_C" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_MAD_6870}]]></variableExpression>
+	</variable>
+	<variable name="6871_D" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_THJ_6871}]]></variableExpression>
+	</variable>
+	<variable name="6871_C" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_THJ_6871}]]></variableExpression>
+	</variable>
+	<variable name="6777_D" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_HOG_6777}]]></variableExpression>
+	</variable>
+	<variable name="6777_C" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_HOG_6777}]]></variableExpression>
+	</variable>
+	<variable name="net_Sum" class="java.math.BigDecimal" resetType="Group" resetGroup="Grp_t" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_AMOUNT}.subtract($F{CR_AMOUNT})]]></variableExpression>
+	</variable>
+
+		<group  name="Grp_t" >
+			<groupExpression><![CDATA[$F{T_DATA}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="225"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-10"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6869_D}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="308"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-11"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6869_C}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="383"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-12"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6870_D}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="466"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-13"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6870_C}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="541"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-14"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6871_D}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="624"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-15"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6871_C}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="699"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-16"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6868_D}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="782"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-17"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6868_C}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="857"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-18"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6777_D}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="940"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-19"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{6777_C}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1015"
+						y="0"
+						width="87"
+						height="20"
+						key="textField-20"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{net_Sum}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="27"
+						y="0"
+						width="198"
+						height="20"
+						key="textField-21"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="26"
+						height="20"
+						key="textField-22"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="91"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="1102"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{head}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="1"
+						y="36"
+						width="24"
+						height="55"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl No ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="59"
+						y="36"
+						width="166"
+						height="55"
+						key="staticText-9"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Head Description]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="225"
+						y="36"
+						width="158"
+						height="26"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Chief Engineer  TWAD Board Coimbatore]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="383"
+						y="36"
+						width="158"
+						height="26"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Chief Engineer  TWAD Board Madurai]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="541"
+						y="36"
+						width="158"
+						height="26"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Chief Engineer TWAD Board Thanjavur]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="699"
+						y="36"
+						width="158"
+						height="26"
+						key="staticText-13"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Chief Engineer TWAD Board Vellore]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="857"
+						y="36"
+						width="158"
+						height="26"
+						key="staticText-14"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Hogenakkal WS and  FM Project]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="225"
+						y="62"
+						width="83"
+						height="29"
+						key="staticText-15"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="308"
+						y="62"
+						width="75"
+						height="29"
+						key="staticText-16"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="383"
+						y="62"
+						width="83"
+						height="29"
+						key="staticText-17"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="466"
+						y="62"
+						width="75"
+						height="29"
+						key="staticText-18"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="541"
+						y="62"
+						width="83"
+						height="29"
+						key="staticText-19"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="624"
+						y="62"
+						width="75"
+						height="29"
+						key="staticText-20"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="699"
+						y="62"
+						width="83"
+						height="29"
+						key="staticText-21"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="782"
+						y="62"
+						width="75"
+						height="29"
+						key="staticText-22"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="857"
+						y="62"
+						width="83"
+						height="29"
+						key="staticText-23"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Dr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="940"
+						y="62"
+						width="75"
+						height="29"
+						key="staticText-24"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Cr]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="1015"
+						y="36"
+						width="87"
+						height="55"
+						key="staticText-25"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Total]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="18"
+						width="1102"
+						height="18"
+						key="textField-23"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{head1}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="25"
+						y="36"
+						width="34"
+						height="55"
+						key="staticText-26"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Head code]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="24"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="59"
+						y="0"
+						width="166"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="225"
+						y="0"
+						width="83"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_COIM_6869}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="308"
+						y="0"
+						width="75"
+						height="20"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_COIM_6869}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="383"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-1"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_MAD_6870}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="466"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_MAD_6870}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="541"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_THJ_6871}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="624"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_THJ_6871}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="699"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-5"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_VEL_6868}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="782"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_VEL_6868}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="857"
+						y="0"
+						width="83"
+						height="20"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_HOG_6777}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="940"
+						y="0"
+						width="75"
+						height="20"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_HOG_6777}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1015"
+						y="0"
+						width="87"
+						height="20"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_AMOUNT}.subtract( $F{CR_AMOUNT} )]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="25"
+						y="0"
+						width="34"
+						height="20"
+						key="textField-24"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNT_HEAD_CODE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

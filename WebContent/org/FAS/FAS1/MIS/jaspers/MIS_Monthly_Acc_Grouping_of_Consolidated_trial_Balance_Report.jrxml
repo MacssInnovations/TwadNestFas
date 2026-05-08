@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="MIS_Monthly_Acc_Grouping_of_Consolidated_trial_Balance_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="821"
+		 pageHeight="842"
+		 columnWidth="761"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="cbmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cbyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="year" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT MAJOR_HEAD_DESC,
+  GROUP_HEAD_DESC,
+  MINOR_HEAD_DESC,
+  ACCOUNT_HEAD_CODE ,
+  ACCOUNT_HEAD_DESC,
+  DECODE(Debit_for_Month,NULL,0,Debit_for_Month)                      AS Debit_for_Month,
+  DECODE(Credit_for_Month,NULL,0,Credit_for_Month)                    AS Credit_for_Month,
+  DECODE(Net_for_Month,NULL,0,Net_for_Month)                          AS Net_for_Month,
+  DECODE(Debit_for_Year,NULL,0,Debit_for_Year)                        AS Debit_for_Year,
+  DECODE(Credit_for_Year,NULL,0,Credit_for_Year)                      AS Credit_for_Year,
+  DECODE(Net_for_Year,NULL,0,Net_for_Year)                            AS Net_for_Year,
+  DECODE(cr_dr_indicator_for_month,NULL,'',cr_dr_indicator_for_month) AS cr_dr_indicator_for_month,
+  DECODE(cr_dr_indicator_for_Year,NULL,'',cr_dr_indicator_for_Year)   AS cr_dr_indicator_for_Year
+FROM
+  (SELECT MAJOR_HEAD_DESC,
+    GROUP_HEAD_DESC,
+    MINOR_HEAD_DESC,
+    ACCOUNT_HEAD_CODE,
+    ACCOUNT_HEAD_DESC
+  FROM
+    (SELECT MAJOR_HEAD_CODE,
+      GROUP_HEAD_CODE,
+      MINOR_HEAD_CODE,
+      ACCOUNT_HEAD_CODE
+    FROM FAS_MIS_GROUP_ACC_HD_MAPPING
+    ORDER BY GROUP_HEAD_CODE,
+      MINOR_HEAD_CODE,
+      ACCOUNT_HEAD_CODE
+    )a
+  LEFT OUTER JOIN
+    (SELECT GROUP_HEAD_CODE AS grp_hd_cde,
+      GROUP_HEAD_DESC
+    FROM FAS_MIS_GROUP_MASTER
+    ORDER BY GROUP_HEAD_CODE
+    )b
+  ON a.GROUP_HEAD_CODE =b.grp_hd_cde
+  LEFT OUTER JOIN
+    (SELECT MAJOR_HEAD_CODE AS maj_hd_cde,
+      MAJOR_HEAD_DESC
+    FROM COM_MST_MAJOR_HEADS
+    ORDER BY MAJOR_HEAD_DESC
+    )c
+  ON a.MAJOR_HEAD_CODE =c.maj_hd_cde
+  LEFT OUTER JOIN
+    (SELECT MAJOR_HEAD_CODE AS maj_hd_cde1,
+      MINOR_HEAD_CODE       AS min_hd_cde ,
+      MINOR_HEAD_DESC
+    FROM COM_MST_MINOR_HEADS
+    ORDER BY MINOR_HEAD_DESC
+    )d
+  ON a.MAJOR_HEAD_CODE  =d.maj_hd_cde1
+  AND a.MINOR_HEAD_CODE =d.min_hd_cde
+  LEFT OUTER JOIN
+    (SELECT ACCOUNT_HEAD_CODE AS ac_head_cd,
+      ACCOUNT_HEAD_DESC,
+      MAJOR_HEAD_CODE AS m_h_c,
+      MINOR_HEAD_CODE AS mi_h_c
+    FROM COM_MST_ACCOUNT_HEADS
+    )e
+  ON a.MAJOR_HEAD_CODE    =e.m_h_c
+  AND a.MINOR_HEAD_CODE   =e.mi_h_c
+  AND a.ACCOUNT_HEAD_CODE =e.ac_head_cd
+  ORDER BY GROUP_HEAD_CODE,
+    MINOR_HEAD_CODE,
+    ACCOUNT_HEAD_CODE
+  )X
+LEFT OUTER JOIN
+  (SELECT ACCOUNT_HEAD_CODE AS acc_hd_cde,
+    Debit_for_Month,
+    Credit_for_Month,
+    Net_for_Month,
+    CASE
+      WHEN (net_for_month < 0)
+      THEN 'DR'
+      WHEN (net_for_month > 0)
+      THEN 'CR'
+      WHEN (Net_for_Month = 0)
+      THEN ''
+    END AS cr_dr_indicator_for_month,
+    Debit_for_Year,
+    Credit_for_Year,
+    Net_for_Year,
+    CASE
+      WHEN (net_for_year < 0)
+      THEN 'DR'
+      when (net_for_year > 0)
+      THEN 'CR'
+      WHEN (Net_for_Year = 0)
+      THEN ''
+    END AS cr_dr_indicator_for_Year
+  FROM
+    (SELECT ACCOUNT_HEAD_CODE                                       AS acc_hd_code,
+      SUM(CURRENT_MONTH_DEBIT)                                      AS Debit_for_Month,
+      SUM(current_month_credit)                                     AS credit_for_month,
+      (-((SUM(CURRENT_MONTH_DEBIT)) - (SUM(CURRENT_MONTH_CREDIT))) )AS Net_for_Month
+    FROM fas_trial_balance_cmp
+    WHERE cashbook_year =$P{cbyear}
+    AND CASHBOOK_MONTH  =$P{cbmonth}
+    GROUP BY ACCOUNT_HEAD_CODE
+    )b
+  LEFT OUTER JOIN
+    (SELECT ACCOUNT_HEAD_CODE,
+      SUM(CURRENT_MONTH_DEBIT)                                       AS Debit_for_Year,
+      SUM(current_month_credit)                                      AS credit_for_year,
+      ( -((SUM(CURRENT_MONTH_DEBIT)) - (SUM(CURRENT_MONTH_CREDIT))) )AS Net_for_Year
+    FROM fas_trial_balance_cmp
+    WHERE to_date(cashbook_month
+      ||'-'
+      || + cashbook_year, 'mm-yyyy') BETWEEN
+      CASE
+        WHEN $P{cbmonth} <=3
+        THEN to_date( '04'
+          || '-'
+          || ( $P{cbyear} -1) , 'mm-yyyy')
+        ELSE to_date( '04'
+          || '-'
+          || $P{cbyear} , 'mm-yyyy')
+      END
+    AND to_date ( $P{cbmonth}
+      ||'-'
+      || $P{cbyear} , 'mm-yyyy')
+    GROUP BY ACCOUNT_HEAD_CODE
+    )c
+  ON b.acc_hd_code          =c.account_head_code
+  )Y ON X.ACCOUNT_HEAD_CODE =Y.acc_hd_cde]]></queryString>
+
+	<field name="MAJOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="GROUP_HEAD_DESC" class="java.lang.String"/>
+	<field name="MINOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="DEBIT_FOR_MONTH" class="java.math.BigDecimal"/>
+	<field name="CREDIT_FOR_MONTH" class="java.math.BigDecimal"/>
+	<field name="NET_FOR_MONTH" class="java.math.BigDecimal"/>
+	<field name="DEBIT_FOR_YEAR" class="java.math.BigDecimal"/>
+	<field name="CREDIT_FOR_YEAR" class="java.math.BigDecimal"/>
+	<field name="NET_FOR_YEAR" class="java.math.BigDecimal"/>
+	<field name="CR_DR_INDICATOR_FOR_MONTH" class="java.lang.String"/>
+	<field name="CR_DR_INDICATOR_FOR_YEAR" class="java.lang.String"/>
+
+
+		<group  name="major_hd_desc" >
+			<groupExpression><![CDATA[$F{MAJOR_HEAD_DESC}]]></groupExpression>
+			<groupHeader>
+			<band height="50"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="353"
+						y="0"
+						width="283"
+						height="19"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MAJOR_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="13"
+						width="189"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{GROUP_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="minor_hd_desc" >
+			<groupExpression><![CDATA[$F{MINOR_HEAD_DESC}]]></groupExpression>
+			<groupHeader>
+			<band height="25"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="5"
+						y="5"
+						width="189"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Oblique" isItalic="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MINOR_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="93"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="165"
+						y="31"
+						width="560"
+						height="29"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font size="18"/>
+					</textElement>
+				<text><![CDATA[Monthly Account Grouping of Consolidated Trial Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="45"
+						y="66"
+						width="36"
+						height="19"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Year :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="578"
+						y="66"
+						width="45"
+						height="19"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Month :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="612"
+						y="68"
+						width="53"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{month}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="677"
+						y="68"
+						width="53"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{cbyear}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="667"
+						y="67"
+						width="9"
+						height="19"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[/]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="84"
+						y="68"
+						width="83"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{year}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="33"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="52"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="761"
+						height="1"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="51"
+						width="761"
+						height="1"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="71"
+						y="7"
+						width="108"
+						height="32"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Code Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="196"
+						y="7"
+						width="95"
+						height="32"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Debit for Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="291"
+						y="7"
+						width="99"
+						height="32"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Credit for Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="401"
+						y="7"
+						width="86"
+						height="32"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Net for Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="495"
+						y="7"
+						width="83"
+						height="32"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Debit for Year]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="580"
+						y="7"
+						width="85"
+						height="32"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Credit for Year]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="682"
+						y="7"
+						width="79"
+						height="32"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Net for Year]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="5"
+						y="1"
+						width="59"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNT_HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="195"
+						y="1"
+						width="65"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEBIT_FOR_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="0"
+						width="69"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CREDIT_FOR_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="390"
+						y="0"
+						width="58"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_FOR_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="461"
+						y="0"
+						width="23"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_DR_INDICATOR_FOR_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="495"
+						y="0"
+						width="59"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEBIT_FOR_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="580"
+						y="0"
+						width="56"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CREDIT_FOR_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="663"
+						y="0"
+						width="62"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{NET_FOR_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="732"
+						y="0"
+						width="26"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CR_DR_INDICATOR_FOR_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="71"
+						y="1"
+						width="118"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="-30"
+						width="761"
+						height="1"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

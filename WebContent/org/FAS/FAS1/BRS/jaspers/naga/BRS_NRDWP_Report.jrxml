@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BRS_NRDWP_Report"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="Sl.No" isForPrompting="false" class="java.lang.Integer"/>
+	<queryString><![CDATA[select A.status,to_char(A.Accounting_Unit_Id,'000')as Unit_Id,A.AC_OPERATIONAL_MODE_ID,(SELECT BANK_SHORT_NAME
+  FROM fas_mst_banks bank
+  WHERE bank.bank_id=A.bank_id
+  )AS Bankname,
+  U.ACCOUNTING_UNIT_NAME,
+  A.BANK_AC_NO,B.status as status1 from 
+(SELECT distinct Balnce.Accounting_Unit_Id,
+BALNCE.BANK_AC_NO,BALNCE.BANK_ID,
+BALNCE.STATUS,BALNCE.AC_OPERATIONAL_MODE_ID 
+FROM FAS_MST_BANK_BALANCE balnce
+INNER JOIN brs_start_month_and_year c
+ON Balnce.Accounting_Unit_Id=C.Accounting_Unit_Id
+AND Balnce.Bank_Ac_No =C.Account_No
+INNER JOIN Fas_Brs_Transaction T
+ON Balnce.Accounting_Unit_Id =t.Accounting_Unit_Id
+AND BALNCE.BANK_AC_NO =T.ACCOUNT_NO
+AND BALNCE.AC_OPERATIONAL_MODE_ID LIKE '%Main%')  A
+left join 
+(SELECT distinct Balnce.Accounting_Unit_Id,
+BALNCE.BANK_AC_NO,
+d.STATUS,
+ D.CASHBOOK_MONTH,D.CASHBOOK_YEAR ,
+TO_CHAR(D.FREEZED_DATE,'DD/MM/YY')AS updated_date
+FROM FAS_MST_BANK_BALANCE balnce
+INNER JOIN brs_start_month_and_year c
+ON Balnce.Accounting_Unit_Id=C.Accounting_Unit_Id
+AND Balnce.Bank_Ac_No =C.Account_No
+INNER JOIN Fas_Brs_Transaction T
+ON Balnce.Accounting_Unit_Id =t.Accounting_Unit_Id
+AND BALNCE.BANK_AC_NO =T.ACCOUNT_NO
+AND BALNCE.AC_OPERATIONAL_MODE_ID LIKE '%Main%'
+inner JOIN Fas_Brs_Monthly_Closure D
+ON BALNCE.ACCOUNTING_UNIT_ID=D.ACCOUNTING_UNIT_ID
+AND BALNCE.BANK_AC_NO = D.ACCOUNT_NO
+and d.STATUS='Y') B
+on A.Accounting_Unit_Id=B.Accounting_Unit_Id
+and A.BANK_AC_NO=B.BANK_AC_NO
+INNER JOIN Fas_Mst_Acct_Units U
+ON A.ACCOUNTING_UNIT_ID=U.ACCOUNTING_UNIT_ID
+
+ORDER BY A.Ac_Operational_Mode_Id,
+  A.ACCOUNTING_UNIT_ID,
+  A.Bank_Ac_No
+]]></queryString>
+
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="UNIT_ID" class="java.lang.String"/>
+	<field name="AC_OPERATIONAL_MODE_ID" class="java.lang.String"/>
+	<field name="BANKNAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="STATUS1" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="25"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="89"
+						y="1"
+						width="333"
+						height="17"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[BANK RECONCIALAIATION ONLINE PROGRESS STATUS REPORT AS ON ]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="38"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="17"
+						y="10"
+						width="122"
+						height="18"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[NRDWP -MAIN ACTIVITY]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="10"
+						y="8"
+						width="25"
+						height="16"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl.No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="40"
+						y="8"
+						width="43"
+						height="16"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Unit_Id]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="89"
+						y="8"
+						width="59"
+						height="16"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Unit_Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="164"
+						y="8"
+						width="55"
+						height="16"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[BankName]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="226"
+						y="8"
+						width="77"
+						height="16"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Account Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="313"
+						y="8"
+						width="59"
+						height="16"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[AccountNo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="382"
+						y="8"
+						width="63"
+						height="16"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[SSWBfreezed
+
+]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="451"
+						y="8"
+						width="70"
+						height="16"
+						key="staticText-10"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[SSWBProgress
+
+]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="100"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="5"
+						y="9"
+						width="30"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{Sl.No}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="40"
+						y="9"
+						width="43"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNIT_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="83"
+						y="9"
+						width="81"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="164"
+						y="9"
+						width="55"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BANKNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="226"
+						y="9"
+						width="77"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{AC_OPERATIONAL_MODE_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="303"
+						y="9"
+						width="89"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BANK_AC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="397"
+						y="9"
+						width="59"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{STATUS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="456"
+						y="9"
+						width="72"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{STATUS1}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

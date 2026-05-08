@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Expend_Report_Count_1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="878"
+		 pageHeight="842"
+		 columnWidth="818"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT DISTINCT a.accounting_unit_id,
+  a.unitdesc,
+  a.offc,
+  a.account_head_code,
+  a.Headdesc,
+  a.Cashbook_Month
+FROM
+  (SELECT t.accounting_unit_id,
+    (SELECT acc.accounting_unit_name
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS unitdesc,
+    (SELECT acc.accounting_unit_office_id
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS offc,
+    T.Account_Head_Code,
+    (SELECT S.Account_Head_Desc
+    FROM Com_Mst_Account_Heads S
+    WHERE s.account_head_code=t.account_head_code
+    )AS Headdesc,
+    Cashbook_Month
+  FROM FAS_TRIAL_BALANCE_CMP t
+  WHERE To_Date((Cashbook_Month
+    ||'-'
+    || Cashbook_Year),'mm-yyyy') BETWEEN To_Date(4
+    ||'-'
+    ||2020,'mm-yyyy')
+  AND to_date(3
+    ||'-'
+    ||2021,'mm-yyyy')
+  UNION ALL
+  SELECT t.accounting_unit_id,
+    (SELECT acc.accounting_unit_name
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS unitdesc,
+    (SELECT acc.accounting_unit_office_id
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS offc,
+    T.Account_Head_Code,
+    (SELECT S.Account_Head_Desc
+    FROM Com_Mst_Account_Heads S
+    WHERE s.account_head_code=t.account_head_code
+    )AS Headdesc,
+    Cashbook_Month
+  FROM fas_trial_balance_sjv_cmp t
+  WHERE Cashbook_Year=2021
+  AND cashbook_month =3
+  AND supplement_no <=1
+  )a
+JOIN
+  (SELECT account_head_code,
+    ACCOUNT_HEAD_DESC,
+    major_head_code
+  FROM com_mst_account_heads
+  WHERE major_head_code='E'
+  ORDER BY account_head_code
+  )b
+ON a.account_head_code=b.account_head_code
+AND a.offc            =5000
+UNION ALL
+SELECT DISTINCT a.accounting_unit_id,
+  a.unitdesc,
+  a.offc,
+  a.account_head_code,
+  a.Headdesc,Cashbook_Month
+FROM
+  (SELECT t.accounting_unit_id,
+    (SELECT acc.accounting_unit_name
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS unitdesc,
+    (SELECT acc.accounting_unit_office_id
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS offc,
+    T.Account_Head_Code,
+    (SELECT S.Account_Head_Desc
+    FROM Com_Mst_Account_Heads S
+    WHERE s.account_head_code=t.account_head_code
+    )AS Headdesc,
+    Cashbook_Month
+  FROM FAS_TRIAL_BALANCE_CMP t
+  WHERE To_Date((Cashbook_Month
+    ||'-'
+    || Cashbook_Year),'mm-yyyy') BETWEEN To_Date(4
+    ||'-'
+    ||2020,'mm-yyyy')
+  AND to_date(3
+    ||'-'
+    ||2021,'mm-yyyy')
+  UNION ALL
+  SELECT t.accounting_unit_id,
+    (SELECT acc.accounting_unit_name
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS unitdesc,
+    (SELECT acc.accounting_unit_office_id
+    FROM fas_mst_acct_units acc
+    WHERE acc.accounting_unit_id=t.accounting_unit_id
+    ) AS offc,
+    T.Account_Head_Code,
+    (SELECT S.Account_Head_Desc
+    FROM Com_Mst_Account_Heads S
+    WHERE s.account_head_code=t.account_head_code
+    )AS Headdesc,
+    Cashbook_Month
+  FROM fas_trial_balance_sjv_cmp t
+  WHERE Cashbook_Year=2021
+  AND cashbook_month =3
+  AND supplement_no <=1
+  )a
+JOIN
+  (SELECT account_head_code,
+    ACCOUNT_HEAD_DESC,
+    major_head_code
+  FROM com_mst_account_heads
+  WHERE major_head_code='E'
+  ORDER BY account_head_code
+  )b
+ON a.account_head_code   =b.account_head_code
+AND a.offc!              =5000
+AND a.account_head_code IN (201525,201325,201367,201510)
+ORDER BY accounting_unit_id,
+  account_head_code]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNITDESC" class="java.lang.String"/>
+	<field name="OFFC" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="HEADDESC" class="java.lang.String"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+
+	<variable name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[$F{ACCOUNT_HEAD_CODE}]]></variableExpression>
+	</variable>
+
+		<group  name="units" >
+			<groupExpression><![CDATA[$F{ACCOUNTING_UNIT_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="148"
+						y="2"
+						width="242"
+						height="20"
+						key="textField-5"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Report for the Financial year - (2020-21)"]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="50"  isSplitAllowed="true" >
+				<crosstab >
+					<reportElement
+						x="0"
+						y="0"
+						width="818"
+						height="50"
+						key="crosstab-1"/>
+					<crosstabDataset>
+						<dataset resetGroup="units" >
+						</dataset>
+					</crosstabDataset>
+					<crosstabHeaderCell>						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabHeaderCell>					<rowGroup name="UNITDESC" width="154">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{UNITDESC}]]></bucketExpression>
+						</bucket>
+						<crosstabRowHeader>
+						<cellContents mode="Opaque">
+					<box></box>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="152"
+						height="30"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{UNITDESC}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+						</crosstabRowHeader>
+						<crosstabTotalRowHeader>
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+						</crosstabTotalRowHeader>
+					</rowGroup>
+					<columnGroup name="CASHBOOK_MONTH" height="25" headerPosition="Center">
+						<bucket>
+							<bucketExpression class="java.math.BigDecimal"><![CDATA[$F{CASHBOOK_MONTH}]]></bucketExpression>
+						</bucket>
+						<crosstabColumnHeader>
+						<cellContents mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="50"
+						height="25"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{CASHBOOK_MONTH}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+						</crosstabColumnHeader>
+					</columnGroup>
+
+					<measure name="Account_head" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{ACCOUNT_HEAD_CODE}]]></measureExpression>
+					</measure>
+					<crosstabCell width="50" height="30">
+						<cellContents mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="50"
+						height="30"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Account_head}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="30" columnTotalGroup="CASHBOOK_MONTH">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="50" height="30" rowTotalGroup="UNITDESC">
+						<cellContents mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="50"
+						height="30"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{Account_head}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="30" rowTotalGroup="UNITDESC" columnTotalGroup="CASHBOOK_MONTH">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<whenNoDataCell>						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</whenNoDataCell>					</crosstab>
+			</band>
+		</summary>
+</jasperReport>

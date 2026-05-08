@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BRS_NRDWP_MainNew_subreport1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="310"
+		 pageHeight="802"
+		 columnWidth="310"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="unit_id" isForPrompting="false" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[SELECT F.ACCOUNTING_UNIT_ID,
+F.BANK_AC_NO,
+F.BANK_ID,(select B.BANK_SHORT_NAME from FAS_MST_BANKS b where B.BANK_ID=f.BANK_ID) bank_name ,
+F.AC_OPERATIONAL_MODE_ID,
+F.CLO_MON,
+f.ope_YR 
+FROM
+  ( SELECT DISTINCT Balnce.Accounting_Unit_Id,
+    BALNCE.BANK_AC_NO,
+    BALNCE.BANK_ID,
+    BALNCE.AC_OPERATIONAL_MODE_ID,
+    MAX(D.CASHBOOK_MONTH)
+    ||'/'
+    || MAX(D.CASHBOOK_YEAR) AS Clo_MON,
+     CASE WHEN (MAX(D.CASHBOOK_YEAR)=MIN(D.CASHBOOK_YEAR)) and  (MAX(D.CASHBOOK_MONTH)=MIN(D.CASHBOOK_MONTH))
+    then   MIN(D.CASHBOOK_MONTH-1)
+    ||'/'
+    || MIN(D.CASHBOOK_YEAR) else MIN(D.CASHBOOK_MONTH)
+    ||'/'
+    || MIN(D.CASHBOOK_YEAR) end AS OPE_YR,
+    BALNCE.STATUS
+  FROM FAS_MST_BANK_BALANCE balnce
+  INNER JOIN brs_start_month_and_year c
+  ON Balnce.Accounting_Unit_Id=C.Accounting_Unit_Id
+  AND Balnce.Bank_Ac_No       =C.Account_No
+  INNER JOIN Fas_Brs_Transaction T
+  ON Balnce.Accounting_Unit_Id =t.Accounting_Unit_Id
+  AND BALNCE.BANK_AC_NO        =T.ACCOUNT_NO
+  AND BALNCE.AC_OPERATIONAL_MODE_ID LIKE '%Support%'
+  INNER JOIN Fas_Brs_Monthly_Closure D
+  ON BALNCE.ACCOUNTING_UNIT_ID=D.ACCOUNTING_UNIT_ID
+  AND BALNCE.BANK_AC_NO       = D.ACCOUNT_NO
+  AND D.STATUS                ='Y'
+ AND Balnce.ACCOUNTING_UNIT_ID=$P{unit_id}
+  AND Balnce.STATUS           ='Y'
+  GROUP BY Balnce.Accounting_Unit_Id,
+    BALNCE.BANK_AC_NO,
+    BALNCE.BANK_ID,
+    BALNCE.AC_OPERATIONAL_MODE_ID,
+    BALNCE.STATUS
+  UNION ALL
+  SELECT *
+  FROM
+    (SELECT DISTINCT Balnce.Accounting_Unit_Id,
+      BALNCE.BANK_AC_NO,
+      BALNCE.BANK_ID,
+      BALNCE.AC_OPERATIONAL_MODE_ID,
+      NULL AS CLO_MON,
+      DECODE(MIN(C.CASHBOOK_MONTH)
+      ||'/'
+      || MIN(C.CASHBOOK_YEAR),'/','',MIN(C.CASHBOOK_MONTH)
+      ||'/'
+      || MIN(C.CASHBOOK_YEAR)) AS ope_YR,
+      BALNCE.STATUS
+    FROM FAS_MST_BANK_BALANCE BALNCE
+    LEFT OUTER JOIN brs_start_month_and_year c
+    ON Balnce.Accounting_Unit_Id=C.Accounting_Unit_Id
+    AND Balnce.Bank_Ac_No       =C.Account_No
+ AND Balnce.ACCOUNTING_UNIT_ID=$P{unit_id}
+    AND BALNCE.STATUS           ='Y'
+    GROUP BY Balnce.Accounting_Unit_Id,
+      BALNCE.BANK_AC_NO,
+      BALNCE.BANK_ID,
+      BALNCE.AC_OPERATIONAL_MODE_ID,
+      NULL,
+      BALNCE.STATUS
+    )X
+  WHERE AC_OPERATIONAL_MODE_ID LIKE '%Support%'
+  AND STATUS          ='Y'
+  AND BANK_AC_NO NOT IN
+    (SELECT D.ACCOUNT_NO
+    FROM Fas_Brs_Monthly_Closure D
+    WHERE x.ACCOUNTING_UNIT_ID=D.ACCOUNTING_UNIT_ID
+    AND x.BANK_AC_NO          = D.ACCOUNT_NO
+    AND D.STATUS              ='Y'
+    )
+  ORDER BY ACCOUNTING_UNIT_ID,
+    BANK_AC_NO
+  )f  where ACCOUNTING_UNIT_ID=$P{unit_id}]]></queryString>
+
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="BANK_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+	<field name="AC_OPERATIONAL_MODE_ID" class="java.lang.String"/>
+	<field name="CLO_MON" class="java.lang.String"/>
+	<field name="OPE_YR" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="19"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="1"
+						width="112"
+						height="18"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BANK_AC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="113"
+						y="1"
+						width="52"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BANK_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="239"
+						y="1"
+						width="68"
+						height="18"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CLO_MON}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="171"
+						y="1"
+						width="64"
+						height="18"
+						key="textField-4"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OPE_YR}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

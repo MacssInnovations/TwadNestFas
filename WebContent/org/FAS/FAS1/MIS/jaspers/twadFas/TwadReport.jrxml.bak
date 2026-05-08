@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="TwadReport"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT bb.categry_id,
+  (SELECT CATEGORYNAME FROM CATEGORY WHERE CATEGORYID='0'||bb.categry_id
+  )AS category_name,
+--  aa.ACCOUNTING_UNIT_ID,
+--  aa.ACCOUNTING_FOR_OFFICE_ID,
+  aa.head_code
+  ,AA.Debit,AA.Credit,
+  aa. NET,
+  bb.*,(select mst.ACCOUNT_HEAD_DESC from COM_MST_ACCOUNT_HEADS mst where mst.ACCOUNT_HEAD_CODE=aa.head_code)as head_desc
+FROM
+  (SELECT 
+--  a.ACCOUNTING_UNIT_ID,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT 
+--    ACCOUNTING_UNIT_ID,
+--      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM FAS_JOURNAL_TRANSACTION
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY 
+--  a.accounting_unit_id,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code union all
+    SELECT
+--    a.ACCOUNTING_UNIT_ID,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT 
+--    ACCOUNTING_UNIT_ID,
+--      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM fas_payment_transaction
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY 
+--  a.accounting_unit_id,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code
+    union all
+    SELECT
+--    a.ACCOUNTING_UNIT_ID,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code,
+    SUM(a.Debit) AS Debit,
+    SUM(a.Credit)AS Credit,
+    CASE
+      WHEN (SUM(a.Debit) -SUM(a.Credit))>=0
+      THEN (SUM(a.Debit) -SUM(a.Credit))
+      WHEN (SUM(a.Debit) -SUM(a.Credit))<0
+      THEN (SUM(a.Credit)-SUM(a.Debit))
+    END AS NET
+  FROM
+    (SELECT 
+--    ACCOUNTING_UNIT_ID,
+--      ACCOUNTING_FOR_OFFICE_ID,
+      ACCOUNT_HEAD_CODE AS head_code,
+      CASE CR_DR_INDICATOR
+        WHEN 'DR'
+        THEN amount
+        ELSE 0
+      END AS Debit,
+      CASE CR_DR_INDICATOR
+        WHEN 'CR'
+        THEN amount
+        ELSE 0
+      END AS Credit
+    FROM fas_receipt_transaction
+    WHERE to_date((cashbook_month
+      ||'-'
+      ||cashbook_year),'mm-yyyy') BETWEEN to_date(4
+      ||'-'
+      ||2011,'mm-yyyy')
+    AND to_date(3
+      ||'-'
+      ||2012,'mm-yyyy')
+    ) a
+  GROUP BY 
+--  a.accounting_unit_id,
+--    a.ACCOUNTING_FOR_OFFICE_ID,
+    a.head_code
+  )aa
+LEFT JOIN
+  (SELECT head.ACCOUNTCODE,
+    head.HEADOFACCOUNT,
+    head.annualgroupingid,
+    (SELECT ANNUALGROUPINGNAME
+    FROM ANNUALGROUPING
+    WHERE ANNUALGROUPINGID=head.annualgroupingid
+    )AS annualgrp_name,
+    (SELECT CATEGORYID
+    FROM ANNUALGROUPING
+    WHERE ANNUALGROUPINGID=head.annualgroupingid
+    )AS categry_id,
+    head.MONTHLYGROUPINGID,
+    (SELECT monthlygroupingname
+    FROM MONTHLYGROUPING
+    WHERE monthlygroupingid=head.MONTHLYGROUPINGID
+    )AS mnthlyGid_name,
+    head.SCHEMEID,
+    (SELECT schemename FROM SCHEMES WHERE schemeid=head.SCHEMEID
+    )AS scheme_Name,
+    head.PROJECTID,
+    (SELECT PROJECTNAME FROM PROJECT WHERE PROJECTID=head.PROJECTID
+    )AS project_name,
+    head.PROGRAMID,
+    (SELECT PROGRAMNAME FROM PROGRAM WHERE PROGRAMID=head.programid
+    )AS progarm_name
+  FROM headofaccountcp head
+  )bb
+ON aa.head_code=bb.ACCOUNTCODE
+ORDER BY bb.categry_id
+--, aa.accounting_unit_id,
+--  aa.ACCOUNTING_FOR_OFFICE_ID,
+--  aa.head_code]]></queryString>
+
+	<field name="CATEGRY_ID" class="java.lang.String"/>
+	<field name="CATEGORY_NAME" class="java.lang.String"/>
+	<field name="HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="DEBIT" class="java.math.BigDecimal"/>
+	<field name="CREDIT" class="java.math.BigDecimal"/>
+	<field name="NET" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTCODE" class="java.lang.String"/>
+	<field name="HEADOFACCOUNT" class="java.lang.String"/>
+	<field name="ANNUALGROUPINGID" class="java.lang.String"/>
+	<field name="ANNUALGRP_NAME" class="java.lang.String"/>
+	<field name="MONTHLYGROUPINGID" class="java.lang.String"/>
+	<field name="MNTHLYGID_NAME" class="java.lang.String"/>
+	<field name="SCHEMEID" class="java.lang.String"/>
+	<field name="SCHEME_NAME" class="java.lang.String"/>
+	<field name="PROJECTID" class="java.lang.String"/>
+	<field name="PROJECT_NAME" class="java.lang.String"/>
+	<field name="PROGRAMID" class="java.lang.String"/>
+	<field name="PROGARM_NAME" class="java.lang.String"/>
+	<field name="HEAD_DESC" class="java.lang.String"/>
+
+	<variable name="sum(credit)" class="java.math.BigDecimal" resetType="Group" resetGroup="catgory" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT}]]></variableExpression>
+	</variable>
+	<variable name="sum(debit)" class="java.math.BigDecimal" resetType="Group" resetGroup="catgory" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT}]]></variableExpression>
+	</variable>
+	<variable name="sum(net)" class="java.math.BigDecimal" resetType="Group" resetGroup="catgory" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET}]]></variableExpression>
+	</variable>
+	<variable name="tot(debit)" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT}]]></variableExpression>
+	</variable>
+	<variable name="tot(credit)" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT}]]></variableExpression>
+	</variable>
+	<variable name="tot_net" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{NET}]]></variableExpression>
+	</variable>
+
+		<group  name="catgory" >
+			<groupExpression><![CDATA[$F{CATEGRY_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="17"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="100"
+						height="17"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CATEGRY_ID}+" "+$F{CATEGORY_NAME}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="17"
+						key="line-13"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="17"
+						key="line-14"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="372"
+						y="3"
+						width="78"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum(credit)}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="3"
+						width="77"
+						height="18"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum(debit)}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="20"
+						width="535"
+						height="0"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="455"
+						y="3"
+						width="78"
+						height="18"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{sum(debit)}.subtract( $V{sum(credit)} )]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="21"
+						key="line-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="21"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="18"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="53"
+						y="0"
+						width="466"
+						height="18"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true" isUnderline="true"/>
+					</textElement>
+				<text><![CDATA[Trial Balance]]></text>
+				</staticText>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="18"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="291"
+						y="3"
+						width="77"
+						height="15"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="372"
+						y="3"
+						width="78"
+						height="15"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Credit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="455"
+						y="3"
+						width="78"
+						height="15"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="11"
+						y="3"
+						width="61"
+						height="15"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Head Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="75"
+						y="3"
+						width="200"
+						height="15"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="11" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Head Of Account]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="535"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="17"
+						width="535"
+						height="1"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="18"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="18"
+						key="line-16"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="18"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="455"
+						y="0"
+						width="78"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[ $F{DEBIT}.subtract( $F{CREDIT})]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="0"
+						width="77"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DEBIT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="372"
+						y="0"
+						width="78"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CREDIT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="75"
+						y="0"
+						width="213"
+						height="18"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="11"
+						y="0"
+						width="61"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="18"
+						key="line-9"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="0"
+						width="0"
+						height="18"
+						key="line-10"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="17"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="16"
+						width="535"
+						height="0"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="0"
+						width="77"
+						height="16"
+						key="textField-5"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot(debit)}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="372"
+						y="0"
+						width="78"
+						height="16"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot(credit)}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="455"
+						y="0"
+						width="78"
+						height="16"
+						key="textField-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot(debit)}.subtract($V{tot(credit)} )]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="17"
+						key="line-11"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="535"
+						y="-1"
+						width="0"
+						height="17"
+						key="line-12"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</summary>
+</jasperReport>

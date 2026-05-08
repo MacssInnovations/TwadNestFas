@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="A52_Verified_List_New"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="623"
+		 pageHeight="842"
+		 columnWidth="563"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<style 
+		name="statusFreeze"
+		isDefault="true"
+	>
+
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($F{STATUS}.equalsIgnoreCase("Completed") == true)]]></conditionExpression>
+			<style 
+				name="statusFreeze"
+				isDefault="false"
+				mode="Opaque"
+				forecolor="#215326"
+			>
+			</style>
+		</conditionalStyle>
+			<conditionalStyle>
+				<conditionExpression><![CDATA[new Boolean($F{STATUS}.equalsIgnoreCase("Pending") == true)]]></conditionExpression>
+				<style 
+					name="statusFreeze"
+					isDefault="false"
+					mode="Opaque"
+					forecolor="#F92301"
+				>
+				</style>
+			</conditionalStyle>
+	</style>
+	<style 
+		name="Column"
+		isDefault="false"
+		forecolor="#0E0404"
+		backcolor="#FFFFFF"
+	>
+	</style>
+
+	<parameter name="finyear" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select rownum as slno,ver_unit,ver_off,status,unitid,officeid,officename,circleid,circle_name from 
+(select 
+rownum as slno,
+  a.accounting_unit_id ver_unit,
+  a.accounting_for_office_id ver_off,
+  decode(a.accounting_for_office_id,null,'Pending','Completed') as status,
+   b.acct_unit_id_rendered_for as unitid,
+  b.rendering_unit_office_id as officeid,
+  (select s.office_name from com_mst_offices s where s.office_id=b.rendering_unit_office_id)as officename,
+  b.acct_rendering_unit_id   as circleid,
+  (select u.accounting_unit_name from fas_mst_acct_units u where u.accounting_unit_id=b.acct_rendering_unit_id)as circle_name
+from fas_a52_aa52_verify_status a
+right outer JOIN fas_asset_val_ac_render_units b
+on (a.accounting_for_office_id=b.rendering_unit_office_id
+and a.accounting_unit_id      =b.acct_unit_id_rendered_for and a.financial_year        =$P{finyear} and a.a52_status_qty          ='Y')
+order by circleid,officeid)]]></queryString>
+
+	<field name="SLNO" class="java.math.BigDecimal"/>
+	<field name="VER_UNIT" class="java.math.BigDecimal"/>
+	<field name="VER_OFF" class="java.math.BigDecimal"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="UNITID" class="java.math.BigDecimal"/>
+	<field name="OFFICEID" class="java.math.BigDecimal"/>
+	<field name="OFFICENAME" class="java.lang.String"/>
+	<field name="CIRCLEID" class="java.math.BigDecimal"/>
+	<field name="CIRCLE_NAME" class="java.lang.String"/>
+
+
+		<group  name="UnitID" >
+			<groupExpression><![CDATA[$F{CIRCLEID}]]></groupExpression>
+			<groupHeader>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="statusFreeze"
+						x="13"
+						y="0"
+						width="25"
+						height="13"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CIRCLEID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="statusFreeze"
+						x="47"
+						y="0"
+						width="179"
+						height="13"
+						key="textField"
+						isPrintRepeatedValues="false"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CIRCLE_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="6"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						style="Column"
+						x="0"
+						y="3"
+						width="563"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<break>
+					<reportElement
+						style="statusFreeze"
+						x="0"
+						y="4"
+						width="563"
+						height="0"
+						key="element-1"/>
+				</break>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="40"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						style="Column"
+						x="393"
+						y="26"
+						width="60"
+						height="13"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Print Date :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="Column"
+						x="453"
+						y="26"
+						width="73"
+						height="12"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="75"
+						y="4"
+						width="295"
+						height="19"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[List of Units(A52 Register Verified (Qty)) for the year ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="Column"
+						x="370"
+						y="4"
+						width="78"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{finyear}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="38"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						style="Column"
+						x="3"
+						y="3"
+						width="210"
+						height="17"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Value Account Rendering Unit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="221"
+						y="3"
+						width="255"
+						height="17"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Numerical Accounting Unit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="510"
+						y="3"
+						width="53"
+						height="27"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Freeze status]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						style="Column"
+						x="0"
+						y="1"
+						width="563"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						style="Column"
+						x="0"
+						y="36"
+						width="563"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="3"
+						y="20"
+						width="46"
+						height="16"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Unit ID ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="49"
+						y="20"
+						width="164"
+						height="16"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Unit Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="213"
+						y="20"
+						width="60"
+						height="16"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Office ID ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						style="Column"
+						x="273"
+						y="20"
+						width="164"
+						height="16"
+						key="staticText-10"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Office Name]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="23"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="statusFreeze"
+						x="223"
+						y="0"
+						width="29"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{OFFICEID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="statusFreeze"
+						x="252"
+						y="0"
+						width="258"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICENAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						style="statusFreeze"
+						x="513"
+						y="0"
+						width="50"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{STATUS}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Works_Expenditure_new_UnitWise_SJV"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="monthvalue" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="cashbookmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cashbookyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountingofficecode" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[select 
+
+subacheadcode as subaccheadcode,
+subacheadcode || '31' as account_head_code1, 
+accounting_unit_id,
+accounting_unit_name,
+accounting_for_office_id,
+cashbook_year,
+cashbook_month,
+sub2_desc, 
+sub2_code, 
+work_amt1 as w_amt,  
+centage_amt1 as c_amt,
+(work_amt1 + centage_amt1) as amount,
+account_head_desc
+
+from 
+(
+
+select 
+
+subacheadcode,
+accounting_unit_id,
+accounting_unit_name,
+accounting_for_office_id,
+cashbook_year,
+cashbook_month,
+sub2_desc, 
+sub2_code, 
+sum(work_amt1) as work_amt1,  
+sum(centage_amt1) as centage_amt1
+
+
+from 
+(
+
+
+select 
+acc,
+substr(acc,0,4) as subacheadcode,
+accounting_unit_id,
+accounting_unit_name,
+accounting_for_office_id,
+cashbook_year,
+cashbook_month,
+sub2_desc , 
+sub2_code, 
+(w_dr_amt - w_cr_amt) as work_amt1  ,  
+(c_dr_amt - c_cr_amt) as centage_amt1 
+
+from 
+(
+
+
+select 
+acc,
+accounting_unit_id,
+accounting_unit_name,
+accounting_for_office_id,
+cashbook_year,
+cashbook_month,
+ident,
+cr_dr_indicator, 
+sub2_desc , 
+sub2_code, 
+
+sum(case when ident='W' and cr_dr_indicator='CR' then amount else 0 end ) as w_cr_amt, 
+sum(case when ident='W' and cr_dr_indicator='DR' then amount else 0 end ) as w_dr_amt, 
+sum(case when ident='C' and cr_dr_indicator='CR' then amount else 0 end ) as c_cr_amt, 
+sum(case when ident='C' and cr_dr_indicator='DR' then amount else 0 end ) as c_dr_amt 
+
+from 
+( -- 1 
+
+
+
+SELECT 
+  a.ACCOUNT_HEAD_CODE as acc,
+  a.accounting_unit_id,
+  b.accounting_unit_name,
+  a.accounting_for_office_id,
+  a.cashbook_year,
+  a.cashbook_month,
+  a.amount,
+  a.cr_dr_indicator, 
+  'W' AS ident,
+  (
+   SELECT 
+         d.sub_head_desc
+   FROM 
+       com_mst_account_heads c,
+       com_mst_sub_heads d
+   WHERE 
+       d.sub_head_code = c.sub_head2_code
+   AND c.major_head_code = 'L'
+   AND c.minor_head_code = 183
+   AND c.sub_head1_code = 31
+   AND c.account_head_code = a.account_head_code)AS sub2_desc,
+   (
+   SELECT 
+         d.sub_head_code
+   FROM 
+       com_mst_account_heads c,
+       com_mst_sub_heads d
+   WHERE 
+       d.sub_head_code = c.sub_head2_code
+   AND c.major_head_code = 'L'
+   AND c.minor_head_code = 183
+   AND c.sub_head1_code = 31
+   AND c.account_head_code = a.account_head_code)AS sub2_code
+
+FROM 
+     fas_journal_transaction a,
+     fas_mst_acct_units b, 
+     fas_journal_master c 
+WHERE
+    b.accounting_unit_id = a.accounting_unit_id and 
+    a.accounting_unit_id = c.accounting_unit_id and 
+    a.ACCOUNTING_FOR_OFFICE_ID = c.ACCOUNTING_FOR_OFFICE_ID and 
+    a.cashbook_year = c.cashbook_year and 
+    a.cashbook_month = c.cashbook_month and 
+    a.voucher_no = c.voucher_no and 
+    c.created_by_module ='SJV'  
+ AND a.cashbook_year = $P{cashbookyear}
+ and a.cashbook_month= $P{cashbookmonth} 
+ and a.accounting_unit_id=$P{accountingunitid}
+ and a.ACCOUNTING_FOR_OFFICE_ID=$P{accountingofficecode} 
+ AND 
+   a.account_head_code IN
+  (SELECT account_head_code
+   FROM com_mst_account_heads
+   WHERE major_head_code = 'L'
+   AND minor_head_code = 183
+   AND sub_head1_code = 31
+   AND sub_head2_code > 0)
+
+UNION ALL
+
+SELECT 
+  a.ACCOUNT_HEAD_CODE as acc,
+  a.accounting_unit_id,
+  b.accounting_unit_name,
+  a.accounting_for_office_id,
+  a.cashbook_year,
+  a.cashbook_month,
+  a.amount,
+  a.cr_dr_indicator, 
+  'C' ident,
+    (SELECT d.sub_head_desc
+   FROM com_mst_account_heads c,
+     com_mst_sub_heads d
+   WHERE d.sub_head_code = c.sub_head2_code
+   AND c.major_head_code = 'L'
+   AND c.minor_head_code = 183
+   AND c.sub_head1_code = 32
+   AND c.account_head_code = a.account_head_code) AS sub2_desc,
+   
+   (SELECT d.sub_head_code
+   FROM com_mst_account_heads c,
+     com_mst_sub_heads d
+   WHERE d.sub_head_code = c.sub_head2_code
+   AND c.major_head_code = 'L'
+   AND c.minor_head_code = 183
+   AND c.sub_head1_code = 32
+   AND c.account_head_code = a.account_head_code) AS sub2_code
+
+FROM 
+    fas_journal_transaction a,
+    FAS_MST_ACCT_UNITS b,
+     fas_journal_master c
+  WHERE
+    b.accounting_unit_id = a.accounting_unit_id and 
+    a.accounting_unit_id = c.accounting_unit_id and 
+    a.ACCOUNTING_FOR_OFFICE_ID = c.ACCOUNTING_FOR_OFFICE_ID and 
+    a.cashbook_year = c.cashbook_year and 
+    a.cashbook_month = c.cashbook_month and 
+    a.voucher_no = c.voucher_no and 
+    c.created_by_module ='SJV'  
+ and a.cashbook_year = $P{cashbookyear}
+ and a.cashbook_month= $P{cashbookmonth}
+ and a.accounting_unit_id=$P{accountingunitid}
+ and a.ACCOUNTING_FOR_OFFICE_ID=$P{accountingofficecode} 
+ 
+ AND
+   a.account_head_code IN
+  (SELECT account_head_code
+   FROM com_mst_account_heads
+   WHERE major_head_code = 'L'
+   AND minor_head_code = 183
+   AND sub_head1_code = 32
+   AND sub_head2_code > 0)
+   
+  ) -- 1 
+group by 
+
+  acc,
+  accounting_unit_id,
+  accounting_unit_name,
+  accounting_for_office_id,
+  cashbook_year,
+  cashbook_month,  
+  ident,
+  sub2_desc , 
+  sub2_code, 
+  cr_dr_indicator 
+)
+)
+
+group by 
+subacheadcode,
+accounting_unit_id,
+accounting_unit_name,
+accounting_for_office_id,
+cashbook_year,
+cashbook_month,
+sub2_desc , 
+sub2_code 
+
+
+) a
+
+left outer join  
+com_mst_account_heads on com_mst_account_heads.ACCOUNT_HEAD_CODE= (subacheadcode || '31') 
+
+order by  sub2_code, account_head_code1, accounting_unit_id]]></queryString>
+
+	<field name="SUBACCHEADCODE" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE1" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_NAME" class="java.lang.String"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="W_AMT" class="java.lang.Integer"/>
+	<field name="C_AMT" class="java.lang.Integer"/>
+	<field name="AMOUNT" class="java.lang.Integer"/>
+	<field name="SUB2_DESC" class="java.lang.String"/>
+	<field name="SUB2_CODE" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+
+	<variable name="acc_total" class="java.lang.Integer" resetType="Report" calculation="Nothing">
+		<variableExpression><![CDATA[new java.lang.Integer ($F{C_AMT}.intValue() + $F{W_AMT}.intValue())]]></variableExpression>
+	</variable>
+	<variable name="SUM_W_AMT_2" class="java.lang.Integer" resetType="Group" resetGroup="accountheadcode" calculation="Sum">
+		<variableExpression><![CDATA[$F{W_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_C_AMT_3" class="java.lang.Integer" resetType="Group" resetGroup="accountheadcode" calculation="Sum">
+		<variableExpression><![CDATA[$F{C_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_AMOUNT_1" class="java.lang.Integer" resetType="Group" resetGroup="accountheadcode" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_AMOUNT_2" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_C_AMT_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{C_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_W_AMT_1" class="java.lang.Integer" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{W_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_W_AMT_3" class="java.lang.Integer" resetType="Group" resetGroup="subgrp" calculation="Sum">
+		<variableExpression><![CDATA[$F{W_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_C_AMT_2" class="java.lang.Integer" resetType="Group" resetGroup="subgrp" calculation="Sum">
+		<variableExpression><![CDATA[$F{C_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_W_AMT_4" class="java.lang.Integer" resetType="Group" resetGroup="subgrp" calculation="Sum">
+		<variableExpression><![CDATA[$F{W_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_C_AMT_4" class="java.lang.Integer" resetType="Group" resetGroup="subgrp" calculation="Sum">
+		<variableExpression><![CDATA[$F{C_AMT}]]></variableExpression>
+	</variable>
+	<variable name="SUM_AMOUNT_3" class="java.lang.Integer" resetType="Group" resetGroup="subgrp" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+
+		<group  name="accountheadcode" >
+			<groupExpression><![CDATA[$F{SUB2_CODE}]]></groupExpression>
+			<groupHeader>
+			<band height="28"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="5"
+						width="94"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true" isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SUB2_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="24"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="275"
+						y="3"
+						width="91"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_W_AMT_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="365"
+						y="3"
+						width="76"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_C_AMT_3}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="440"
+						y="3"
+						width="86"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_AMOUNT_1}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="3"
+						width="534"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="23"
+						width="534"
+						height="0"
+						key="line-5"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="subgrp" >
+			<groupExpression><![CDATA[$F{SUBACCHEADCODE}]]></groupExpression>
+			<groupHeader>
+			<band height="19"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="81"
+						y="0"
+						width="444"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_DESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="41"
+						y="0"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNT_HEAD_CODE1}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="80"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="2"
+						y="0"
+						width="363"
+						height="31"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Supplement Works Expenditure for the Month of ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="2"
+						y="35"
+						width="140"
+						height="20"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Accounting Unit Name :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="40"
+						y="59"
+						width="126"
+						height="18"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[A/C Unit Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="279"
+						y="59"
+						width="94"
+						height="18"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Works Outlay]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="373"
+						y="59"
+						width="77"
+						height="18"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Centage]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="450"
+						y="59"
+						width="85"
+						height="17"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Works Exp]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="57"
+						width="534"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="1"
+						y="78"
+						width="534"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="365"
+						y="0"
+						width="85"
+						height="31"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{monthvalue}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="450"
+						y="5"
+						width="76"
+						height="25"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CASHBOOK_YEAR}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="144"
+						y="36"
+						width="351"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ACCOUNTING_UNIT_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="275"
+						y="1"
+						width="91"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{W_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="365"
+						y="1"
+						width="73"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{C_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="1"
+						width="85"
+						height="18"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[new java.lang.Integer ($F{C_AMT}.intValue() + $F{W_AMT}.intValue())]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="20"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="28"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="441"
+						y="4"
+						width="86"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_AMOUNT_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="368"
+						y="4"
+						width="73"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_C_AMT_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="276"
+						y="4"
+						width="91"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_W_AMT_1}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="143"
+						y="5"
+						width="122"
+						height="17"
+						key="staticText-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-BoldOblique" isBold="true" isItalic="true"/>
+					</textElement>
+				<text><![CDATA[Grand Total: ]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="25"
+						width="534"
+						height="0"
+						key="line-6"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="534"
+						height="0"
+						key="line-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</summary>
+</jasperReport>

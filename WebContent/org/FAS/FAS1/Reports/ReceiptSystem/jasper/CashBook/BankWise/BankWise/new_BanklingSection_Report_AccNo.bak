@@ -1,0 +1,912 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="new_BanklingSection_Report_AccNo"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="878"
+		 pageHeight="842"
+		 columnWidth="818"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="txtCB_Year" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="txtCB_Month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountingofficeid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="Str_dt" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="acpara" isForPrompting="true" class="java.lang.String"/>
+	<parameter name="txtfrom" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="txtto" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select * from ((SELECT 1                      AS type,
+  'Fund Transfer Data from HO' AS head,
+  M.Accounting_Unit_Id ,
+  M.Accounting_For_Office_Id,
+  M.Cashbook_Year ,
+  M.Cashbook_Month ,
+  T.Voucher_No Vrno,
+  T.Sl_No Slno,
+  m.TOTAL_TRN_RECORDS as no_rec,
+  T.Transfer_To_Office_Id Off_Id,
+  O.Office_Name Off_Name ,
+  T.Account_Head_Code Head_Code,
+   m.HO_ACCOUNT_NO Acc_No,
+  M.Total_Amount,
+  t.AMOUNT amount,
+  T.Cheque_Dd_No ,
+  t.CHEQUE_OR_DD
+  ||'-'
+  || T.Cheque_Dd_No                      AS Chedd,
+  TO_CHAR(t.CHEQUE_DD_DATE,'DD/MM/YYYY') AS cheDDdate,
+  DECODE(T.Particulars,NULL,'--',T.Particulars)Particulars
+FROM FAS_FUND_TRF_FROM_HO_MASTER m,
+  FAS_FUND_TRF_FROM_HO_TRN t,
+  Com_Mst_Offices O
+WHERE M.Accounting_Unit_Id    =T.Accounting_Unit_Id
+AND M.Accounting_For_Office_Id=T.Accounting_For_Office_Id
+AND M.Cashbook_Year           =T.Cashbook_Year
+AND M.Cashbook_Month          =T.Cashbook_Month
+AND M.VOUCHER_NO              =T.VOUCHER_NO
+AND t.ACCOUNTING_UNIT_ID      =$P{accountingunitid}
+AND T.Transfer_To_Office_Id   =O.Office_Id
+AND T.Accounting_For_Office_Id=$P{accountingofficeid}
+AND T.Cashbook_Year           =$P{txtCB_Year}
+AND T.Cashbook_Month          =$P{txtCB_Month}
+)
+UNION ALL
+  (SELECT 2                       AS type,
+    'Inter Bank Transfer from HO' AS head,
+    M.Accounting_Unit_Id ,
+    M.Accounting_For_Office_Id,
+    M.Cashbook_Year ,
+    M.Cashbook_Month ,
+    m.VOUCHER_NO Vrno,
+    0 Slno,
+     1 As No_Rec,
+   CAST(M.From_Bank_Id||m.FROM_ACCOUNT_NO AS NUMBER(25))as    Off_Id,
+    bk.BANK_NAME
+    ||'-'
+    ||'-'
+    || m.FROM_ACCOUNT_NO Off_NAME,
+    M.Dr_Account_Head_Code Head_Code,
+    M.From_Account_No AS Acc_No,
+    M.Total_Amount    AS Total_Amount,
+    m.TOTAL_AMOUNT    AS AMOUNT,
+    M.Cheque_Dd_No ,
+    M.CHEQUE_OR_DD
+    ||'-'
+    || M.Cheque_Dd_No                      AS Chedd,
+    TO_CHAR(M.CHEQUE_DD_DATE,'DD/MM/YYYY') AS cheDDdate,
+    m.PARTICULARS
+  FROM FAS_INTER_BANK_TRF_AT_HO m,
+    FAS_MST_BANKS bk,
+    FAS_MST_BANK_BRANCHES br
+  WHERE M.Accounting_Unit_Id    =$P{accountingunitid}
+  AND m.ACCOUNTING_FOR_OFFICE_ID=$P{accountingofficeid}
+  AND M.Cashbook_Year           =$P{txtCB_Year}
+  AND M.Cashbook_Month          =$P{txtCB_Month}
+  AND m.TRANSFER_STATUS         ='L'
+  AND m.FROM_BANK_ID            =br.BANK_ID
+  AND m.FROM_BRANCH_ID          =br.BRANCH_ID
+  AND M.From_Bank_Id            =Bk.Bank_Id
+  )
+UNION ALL
+  (SELECT 3                  AS type,
+    'Final Payments from HO' AS head,
+    M.Accounting_Unit_Id ,
+    M.Accounting_For_Office_Id,
+    M.Cashbook_Year ,
+    M.Cashbook_Month ,
+    T.Voucher_No Vrno ,
+    T.Sl_No Slno ,
+     m.TOTAL_TRN_RECORDS as no_rec,
+    0 AS off_id,
+    M.Paid_To Off_Name,
+    T.Account_Head_Code AS Head_Code,
+    t.account_no        AS Acc_No,
+    M.Total_Amount      AS Total_Amount,
+    T.Amount,
+    T.Cheque_Dd_No ,
+    t.CHEQUE_OR_DD
+    ||'-'
+    || T.Cheque_Dd_No                      AS Chedd,
+    TO_CHAR(T.Cheque_Dd_Date,'DD/MM/YYYY') AS Chedddate,
+    T.Particulars
+  FROM Fas_Payment_Master M,
+    Fas_Payment_Transaction T
+  WHERE M.Accounting_Unit_Id    =T.Accounting_Unit_Id
+  AND M.Accounting_For_Office_Id=T.Accounting_For_Office_Id
+  AND M.Cashbook_Year           =T.Cashbook_Year
+  AND M.Cashbook_Month          =T.Cashbook_Month
+  AND M.Voucher_No              =T.Voucher_No
+  AND M.Accounting_Unit_Id      =$P{accountingunitid}
+  AND M.Accounting_For_Office_Id=$P{accountingofficeid}
+  AND M.Cashbook_Year           =$P{txtCB_Year}
+  AND M.Cashbook_Month          =$P{txtCB_Month}
+  AND Payment_Status            ='L'
+  AND M.Created_By_Module       ='BPF'
+  )
+UNION ALL
+  (SELECT 4       AS type,
+    'Fund Receipt Data from HO' AS head,
+    M.Accounting_Unit_Id ,
+    M.Accounting_For_Office_Id,
+    M.Cashbook_Year ,
+    M.Cashbook_Month ,
+    t.receipt_no Vrno,
+    T.Sl_No Slno,
+      m.TOTAL_TRN_RECORDS as no_rec,
+    --  SUB_LEDGER_TYPE_CODE ,
+    --  (SELECT SL_CODENAME
+    --  FROM SL_TYPE_CODE_NAME_VIEW_M
+    --  WHERE SL_TYPE=SUB_LEDGER_TYPE_CODE
+    --  AND SL_CODE  =SUB_LEDGER_CODE
+    --  ) AS SLNAME ,
+    0 AS Off_Id,
+    M.Received_From Off_Name,
+    T.Account_Head_Code Head_Code,
+    M.Account_No   AS Acc_No,
+    M.Total_Amount AS Total_Amount,
+    T.Amount,
+    T.Cheque_Dd_No,
+    t.CHEQUE_OR_DD
+    ||'-'
+    || T.Cheque_Dd_No                      AS Chedd,
+    TO_CHAR(T.Cheque_Dd_Date,'DD/MM/YYYY') AS Chedddate,
+    T.Particulars
+  FROM Fas_Receipt_Master m,
+    FAS_RECEIPT_TRANSACTION t
+  WHERE M.Accounting_Unit_Id    =T.Accounting_Unit_Id
+  AND M.Accounting_For_Office_Id=T.Accounting_For_Office_Id
+  AND M.Cashbook_Year           =T.Cashbook_Year
+  AND M.Cashbook_Month          =T.Cashbook_Month
+  AND m.receipt_no              =t.receipt_no
+  AND M.Accounting_Unit_Id      =$P{accountingunitid}
+  AND M.Accounting_For_Office_Id=$P{accountingofficeid}
+  AND M.Cashbook_Year           =$P{txtCB_Year}
+  AND M.Cashbook_Month          =$P{txtCB_Month}
+  AND M.Created_By_Module       ='BR'
+  AND m.Receipt_Status          ='L'
+  )
+UNION ALL
+  (SELECT 5    AS type,
+    'Inter Bank Transfer from HO' AS head,
+    M.Accounting_Unit_Id ,
+    M.Accounting_For_Office_Id,
+    M.Cashbook_Year ,
+    M.Cashbook_Month ,
+    m.VOUCHER_NO Vrno,
+   0 Slno,
+     1 As No_Rec,
+    CAST(M.To_Bank_Id||m.to_account_no AS NUMBER(25)) as Off_Id,
+   trim(bk.BANK_NAME)||'-'||'-'|| m.to_account_no as Off_NAME,
+    m.cr_account_head_code Head_Code,
+    m.to_account_no AS Acc_No,
+    M.Total_Amount  AS Total_Amount,
+0  AS AMOUNT,
+   -- m.TOTAL_AMOUNT  AS AMOUNT,
+    M.Cheque_Dd_No,
+    M.CHEQUE_OR_DD
+    ||'-'
+    || M.Cheque_Dd_No                      AS Chedd,
+    TO_CHAR(M.CHEQUE_DD_DATE,'DD/MM/YYYY') AS cheDDdate,
+    m.PARTICULARS
+  FROM FAS_INTER_BANK_TRF_AT_HO m,
+    FAS_MST_BANKS bk,
+    FAS_MST_BANK_BRANCHES br
+  WHERE M.Accounting_Unit_Id    =$P{accountingunitid}
+  AND m.ACCOUNTING_FOR_OFFICE_ID=$P{accountingofficeid}
+  AND M.Cashbook_Year           =$P{txtCB_Year}
+  AND M.Cashbook_Month          =$P{txtCB_Month}
+  AND m.TRANSFER_STATUS         ='L'
+  AND M.To_Bank_Id              =Br.Bank_Id
+  AND M.To_Branch_Id            =Br.Branch_Id
+  AND M.To_Bank_Id              =Bk.Bank_Id
+  )
+UNION ALL
+  (SELECT 6                AS type,
+    'Fund Receipt from HO' AS head,
+    M.Accounting_Unit_Id ,
+    M.Accounting_For_Office_Id,
+    M.Cashbook_Year ,
+    M.Cashbook_Month ,
+    M.Receipt_No Vrno,
+    0 Slno,
+     1 as no_rec,
+    m.received_from_office_id Off_Id,
+    bk.BANK_NAME
+    ||'-'
+    ||'-'
+    || M.Office_Account_No Off_Name,
+    m.cr_account_head_code Head_Code,
+    M.OFFICE_ACCOUNT_NO AS Acc_No,
+    M.Total_Amount      AS Total_Amount,
+    m.TOTAL_AMOUNT      AS AMOUNT,
+    M.Cheque_Dd_No ,
+    M.CHEQUE_OR_DD
+    ||'-'
+    || M.Cheque_Dd_No                    AS Chedd,
+    TO_CHAR(M.RECEIPT_DATE,'DD/MM/YYYY') AS cheDDdate,
+    m.PARTICULARS
+  FROM FAS_FUND_RECEIPT_BY_HO m,
+    FAS_MST_BANKS bk,
+    FAS_MST_BANK_BRANCHES br
+  WHERE M.Accounting_Unit_Id    =$P{accountingunitid}
+  AND m.ACCOUNTING_FOR_OFFICE_ID=$P{accountingofficeid}
+  AND M.Cashbook_Year           =$P{txtCB_Year}
+  AND M.Cashbook_Month          =$P{txtCB_Month}
+  AND m.RECEIPT_STATUS          ='L'
+  AND m.HO_BANK_ID              =br.BANK_ID
+  AND M.Ho_Branch_Id            =Br.Branch_Id
+  And M.Ho_Bank_Id              =Bk.Bank_Id
+  ))F right outer join	(																		
+			select																
+				bank_id,														
+				BRANCH_ID,														
+				bank_ac_no, accounting_unit_id		,											
+				AC_OPERATIONAL_MODE_ID,                                         
+				trim(AC_OPERATIONAL_MODE_ID)||'-'||trim(bank_ac_no) as acc_no			    
+			from																
+				fas_mst_bank_balance		where bank_ac_no=$P{acpara} and 		status='Y'  										
+						
+		)X	on  
+    																	
+				f.accounting_unit_id = x.Accounting_Unit_Id and f.acc_no=$P{acpara}		
+    left outer join															
+		(																		
+				select bank_id as y_bank_id ,trim(BANK_SHORT_NAME) as y_bank_name from fas_bank_list	
+		)Y																		
+    on 																		
+      X.bank_id  = Y.y_bank_id													
+    left outer join 															
+    (																			
+      select  BANK_ID as z_bank_id, BRANCH_ID as z_BRANCH_ID ,trim(BRANCH_NAME) as z_BRANCH_NAME from fas_mst_bank_branches	
+    )Z                                    										
+	 on  																		
+      X.bank_id  = Z.z_bank_id  and											
+      X.BRANCH_ID = Z.z_branch_id	
+ 	
+
+Order By F.Cheque_Dd_No ,cheDDdate,
+  F.Vrno,
+  
+  f.Slno]]></queryString>
+
+	<field name="TYPE" class="java.math.BigDecimal"/>
+	<field name="HEAD" class="java.lang.String"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_FOR_OFFICE_ID" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_YEAR" class="java.math.BigDecimal"/>
+	<field name="CASHBOOK_MONTH" class="java.math.BigDecimal"/>
+	<field name="VRNO" class="java.math.BigDecimal"/>
+	<field name="SLNO" class="java.math.BigDecimal"/>
+	<field name="NO_REC" class="java.math.BigDecimal"/>
+	<field name="OFF_ID" class="java.math.BigDecimal"/>
+	<field name="OFF_NAME" class="java.lang.String"/>
+	<field name="HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="ACC_NO" class="java.math.BigDecimal"/>
+	<field name="TOTAL_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CHEQUE_DD_NO" class="java.lang.String"/>
+	<field name="CHEDD" class="java.lang.String"/>
+	<field name="CHEDDDATE" class="java.lang.String"/>
+	<field name="PARTICULARS" class="java.lang.String"/>
+	<field name="BANK_ID" class="java.math.BigDecimal"/>
+	<field name="BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="AC_OPERATIONAL_MODE_ID" class="java.lang.String"/>
+	<field name="Y_BANK_ID" class="java.math.BigDecimal"/>
+	<field name="Y_BANK_NAME" class="java.lang.String"/>
+	<field name="Z_BANK_ID" class="java.math.BigDecimal"/>
+	<field name="Z_BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="Z_BRANCH_NAME" class="java.lang.String"/>
+
+	<variable name="particulr_sum" class="java.math.BigDecimal" resetType="Group" resetGroup="off_id_group" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="VOU_SUM" class="java.math.BigDecimal" resetType="Group" resetGroup="Cheque_type" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+
+		<group  name="Cheque_type" >
+			<groupExpression><![CDATA[$F{CHEQUE_DD_NO}]]></groupExpression>
+			<groupHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="2"
+						width="102"
+						height="13"
+						key="textField-1"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{VOU_SUM}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="716"
+						y="2"
+						width="102"
+						height="13"
+						key="textField-2"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{VOU_SUM}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="608"
+						y="2"
+						width="49"
+						height="13"
+						key="textField-3"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEDD}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="818"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="15"
+						key="line-16"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="15"
+						key="line-17"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="14"
+						width="818"
+						height="0"
+						key="line-18"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="voucher_grp" >
+			<groupExpression><![CDATA[$F{VRNO}]]></groupExpression>
+			<groupHeader>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="88"
+						y="0"
+						width="295"
+						height="15"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{HEAD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="64"
+						y="0"
+						width="23"
+						height="15"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VRNO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="2"
+						y="0"
+						width="59"
+						height="15"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CHEDDDATE}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="15"
+						key="line-5"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="15"
+						key="line-6"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<group  name="off_id_group" >
+			<groupExpression><![CDATA[$F{OFF_ID}]]></groupExpression>
+			<groupHeader>
+			<band height="15"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="88"
+						y="0"
+						width="295"
+						height="15"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font isUnderline="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFF_NAME}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="15"
+						key="line-9"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="15"
+						key="line-14"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="12"  isSplitAllowed="true" >
+				<printWhenExpression><![CDATA[new Boolean($V{off_id_group_COUNT}.intValue()!=1)]]></printWhenExpression>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="12"
+						key="line-11"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="12"
+						key="line-12"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="0"
+						width="102"
+						height="12"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{particulr_sum}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="63"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="2"
+						width="818"
+						height="17"
+						key="staticText-8"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Times New Roman" pdfFontName="Helvetica-Bold" size="13" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TAMILNADU WATER SUPPLY AND DRAINAGE BOARD]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="19"
+						width="818"
+						height="16"
+						key="textField-6"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["CASH BOOK FOR THE MONTH OF "+$P{monthInWords}+" "+$P{txtCB_Year}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="638"
+						y="19"
+						width="77"
+						height="16"
+						key="staticText-9"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Print Date]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="717"
+						y="19"
+						width="100"
+						height="16"
+						key="textField-7"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="38"
+						width="253"
+						height="12"
+						key="textField-8"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Account No : "+$F{ACC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="36"
+						width="318"
+						height="12"
+						key="textField-9"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bank Name    : "+$F{Y_BANK_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="49"
+						width="318"
+						height="12"
+						key="textField-10"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Branch Name : "+$F{Z_BRANCH_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="2"
+						y="2"
+						width="59"
+						height="27"
+						key="staticText-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="64"
+						y="2"
+						width="23"
+						height="27"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Vr No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="88"
+						y="2"
+						width="159"
+						height="27"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Particulars]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="608"
+						y="2"
+						width="49"
+						height="27"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Cheque No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="383"
+						y="2"
+						width="48"
+						height="27"
+						key="staticText-5"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Account Head]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="731"
+						y="1"
+						width="85"
+						height="27"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Payment]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="658"
+						y="2"
+						width="71"
+						height="27"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font/>
+					</textElement>
+				<text><![CDATA[Receipt]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="29"
+						key="line-7"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="29"
+						key="line-8"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="818"
+						height="0"
+						key="line-15"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="29"
+						width="818"
+						height="0"
+						key="line-19"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="383"
+						y="0"
+						width="50"
+						height="14"
+						key="textField-4"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="88"
+						y="0"
+						width="295"
+						height="14"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PARTICULARS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="437"
+						y="0"
+						width="80"
+						height="14"
+						key="textField"
+						stretchType="RelativeToTallestObject"
+						isPrintWhenDetailOverflows="true"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="0"
+						height="14"
+						key="line-10"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="818"
+						y="0"
+						width="0"
+						height="14"
+						key="line-13"
+						stretchType="RelativeToTallestObject"/>
+					<graphicElement stretchType="RelativeToTallestObject"/>
+				</line>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

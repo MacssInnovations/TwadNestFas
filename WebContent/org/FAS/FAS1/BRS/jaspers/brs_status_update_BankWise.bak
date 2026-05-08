@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="brs_status_update_BankWise"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="680"
+		 pageHeight="842"
+		 columnWidth="620"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="cashbookmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cashbookyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="heading" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="txtBankName" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[Select B.Accounting_Unit_Id As Unitid,ba.bank_ac_no,ba.bank_id,ba.BRANCH_ID,
+(select BANK_NAME from fas_mst_banks where BANK_ID=ba.bank_id )as bank_name,
+Ba.Bank_Ac_Type_Id,
+(select BRANCH_NAME from FAS_MST_BANK_BRANCHES where BANK_ID=ba.bank_id and BRANCH_ID=ba.BRANCH_ID)as bank_branch_name,
+(Select U.Accounting_Unit_Name From Fas_Mst_Acct_Units U Where U.Accounting_Unit_Id=B.Accounting_Unit_Id) As Unitname,
+Brs_Year AS manual_year,
+Brs_Month     As Manual_Month,
+Case When Brs_Month=1 Then 'January' 
+  When Brs_Month=2 Then 'February' 
+  When Brs_Month=3 Then 'March' 
+  When Brs_Month=4 Then 'April' 
+  When Brs_Month=5 Then 'May' 
+  When Brs_Month=6 Then 'June' 
+  When Brs_Month=7 Then 'July' 
+  When Brs_Month=8 Then 'August' 
+  When Brs_Month=9 Then 'September' 
+  When Brs_Month=10 Then 'October' 
+  When Brs_Month=11 Then 'November' 
+  When Brs_Month=12 Then 'December'
+  When Brs_Month is null Then '--'
+  End As Manual_Monthdesc,
+  decode(Brs_Online_Year,null,'--',Brs_Online_Year)as Brs_Online_Year,
+  decode(Brs_Online_Month,null,'--',Brs_Online_Month)as Brs_Online_Month,
+  Case When Brs_Online_Month=1 Then 'January' 
+  When Brs_Online_Month=2 Then 'February' 
+  When Brs_Online_Month=3 Then 'March' 
+  When Brs_Online_Month=4 Then 'April' 
+  When Brs_Online_Month=5 Then 'May' 
+  When Brs_Online_Month=6 Then 'June' 
+  When Brs_Online_Month=7 Then 'July' 
+  When Brs_Online_Month=8 Then 'August' 
+  When Brs_Online_Month=9 Then 'September' 
+  When Brs_Online_Month=10 Then 'October' 
+  When Brs_Online_Month=11 Then 'November' 
+  When Brs_Online_Month=12 Then 'December'
+    When Brs_Online_Month is null Then '--'
+  end as online_monthDesc
+  
+FROM BRS_STATUS_UPDATE b inner join
+
+FAS_MST_BANK_BALANCE ba  
+on
+b.accounting_unit_id=ba.accounting_unit_id and
+ba.bank_id=$P{txtBankName} and
+ Tb_Year=$P{cashbookyear}
+AND TB_MONTH =$P{cashbookmonth}
+
+]]></queryString>
+
+	<field name="UNITID" class="java.math.BigDecimal"/>
+	<field name="BANK_AC_NO" class="java.math.BigDecimal"/>
+	<field name="BANK_ID" class="java.math.BigDecimal"/>
+	<field name="BRANCH_ID" class="java.math.BigDecimal"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+	<field name="BANK_AC_TYPE_ID" class="java.lang.String"/>
+	<field name="BANK_BRANCH_NAME" class="java.lang.String"/>
+	<field name="UNITNAME" class="java.lang.String"/>
+	<field name="MANUAL_YEAR" class="java.math.BigDecimal"/>
+	<field name="MANUAL_MONTH" class="java.lang.String"/>
+	<field name="MANUAL_MONTHDESC" class="java.lang.String"/>
+	<field name="BRS_ONLINE_YEAR" class="java.lang.String"/>
+	<field name="BRS_ONLINE_MONTH" class="java.lang.String"/>
+	<field name="ONLINE_MONTHDESC" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="54"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="518"
+						y="0"
+						width="30"
+						height="18"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="549"
+						y="0"
+						width="69"
+						height="18"
+						key="textField-2"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="53"
+						width="620"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="4"
+						y="17"
+						width="614"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{heading}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="35"
+						width="523"
+						height="18"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Bank Name : "+$F{BANK_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="26"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="31"
+						y="0"
+						width="220"
+						height="24"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+				<text><![CDATA[Unit Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="439"
+						y="0"
+						width="91"
+						height="24"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[BRS Manually upto Year/Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="535"
+						y="0"
+						width="81"
+						height="24"
+						key="staticText-4"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[BRS Online from Year / Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="21"
+						height="24"
+						key="staticText-7"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl.No]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="25"
+						width="620"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="348"
+						y="1"
+						width="63"
+						height="24"
+						key="staticText-8"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Account No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="253"
+						y="1"
+						width="89"
+						height="24"
+						key="staticText-9"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Branch Name]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="24"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="31"
+						y="1"
+						width="220"
+						height="23"
+						key="textField-4"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNITNAME}.trim()+"( "+$F{UNITID}+" )"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="439"
+						y="1"
+						width="91"
+						height="23"
+						key="textField-5"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{MANUAL_YEAR}+" / "+$F{MANUAL_MONTHDESC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="535"
+						y="1"
+						width="81"
+						height="23"
+						key="textField-6"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BRS_ONLINE_YEAR}+" / "+$F{BRS_ONLINE_MONTH}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="1"
+						width="25"
+						height="23"
+						key="textField-7"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="348"
+						y="1"
+						width="87"
+						height="23"
+						key="textField-8"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{BANK_AC_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="253"
+						y="1"
+						width="91"
+						height="23"
+						key="textField-9"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{BANK_BRANCH_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="1"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="0"
+						width="620"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

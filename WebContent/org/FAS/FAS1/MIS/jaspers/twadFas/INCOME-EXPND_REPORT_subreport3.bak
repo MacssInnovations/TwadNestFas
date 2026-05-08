@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="INCOME-EXPND_REPORT_subreport3"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="353"
+		 pageHeight="802"
+		 columnWidth="353"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="pre_year" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="cur_year" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[Select T.Annualgroupingid,T.Annualgroupingname,
+  Sum(T.Net)PREv_Net,
+  SUM(x.net)Curr_Net
+FROM
+  (Select V.Account_Head_Code,
+    Fh.Annualgroupingid,Ag.Annualgroupingname,
+    Fin_Year,
+    SUM(Dr_Amt)Dr,
+    SUM(Cr_Amt)Cr,
+    SUM(Dr_Amt)-SUM(Cr_Amt) net
+  FROM View_Fas_Trial V
+  INNER JOIN Fas_Headofaccounts Fh
+  ON V.Account_Head_Code=Fh.Accountcode
+  INNER JOIN Annualgrouping Ag
+  On Ag.Annualgroupingid=Fh.Annualgroupingid
+  And Fin_Year         ='2011-2012'
+  AND Ag.Categoryid     =1
+  Group By V.Account_Head_Code,
+    Fh.Annualgroupingid,Ag.Annualgroupingname,
+    Fin_Year
+  )T left outer join
+  (Select V.Account_Head_Code,
+    Fh.Annualgroupingid,Ag.Annualgroupingname,
+    Fin_Year,
+    SUM(Dr_Amt)Dr,
+    SUM(Cr_Amt)Cr,
+    SUM(Dr_Amt)-SUM(Cr_Amt) net
+  FROM View_Fas_Trial V
+  INNER JOIN Fas_Headofaccounts Fh
+  ON V.Account_Head_Code=Fh.Accountcode
+  INNER JOIN Annualgrouping Ag
+  On Ag.Annualgroupingid=Fh.Annualgroupingid
+  And Fin_Year          ='2012-2013'
+  AND Ag.Categoryid     =1 
+  Group By V.Account_Head_Code,
+    Fh.Annualgroupingid,Ag.Annualgroupingname,
+    Fin_Year
+ )X  
+ on T.Annualgroupingid=X.Annualgroupingid
+Group By T.Annualgroupingid,T.Annualgroupingname,X.Annualgroupingid,X.Annualgroupingname
+ORDER BY t.Annualgroupingid,x.Annualgroupingid]]></queryString>
+
+	<field name="ANNUALGROUPINGID" class="java.lang.String"/>
+	<field name="ANNUALGROUPINGNAME" class="java.lang.String"/>
+	<field name="PREV_NET" class="java.math.BigDecimal"/>
+	<field name="CURR_NET" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="12"  isSplitAllowed="false" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="81"
+						y="0"
+						width="189"
+						height="12"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="element-90"/>
+					<box leftPadding="2" rightPadding="2">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font fontName="" size="8"/>
+					</textElement>
+				<text><![CDATA[INCOME]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="81"
+						y="0"
+						width="191"
+						height="14"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="2" rightPadding="2">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font fontName="Times-Roman" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ANNUALGROUPINGNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="0"
+						width="80"
+						height="14"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="2" rightPadding="2">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font fontName="Times-Roman" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{PREV_NET}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="272"
+						y="0"
+						width="80"
+						height="14"
+						key="textField"
+						isPrintWhenDetailOverflows="true"/>
+					<box leftPadding="2" rightPadding="2">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font fontName="Times-Roman" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CURR_NET}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

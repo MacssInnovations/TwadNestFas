@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="BRS_PassSheet_Tally_subreport1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="623"
+		 pageHeight="802"
+		 columnWidth="623"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="UnitId" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="OfficeId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="cbyear" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="cbmonth" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="accNo" isForPrompting="false" class="java.lang.Long"/>
+	<queryString><![CDATA[SELECT DECODE(SUM(t.dr_amount),NULL,0,SUM(t.dr_amount)) AS trn_dr_amt,
+      DECODE(SUM(t.cr_amount),NULL,0,SUM(t.cr_amount))       AS trn_cr_amt,
+      t.transaction_type,
+     (SELECT y.trans_short_desc FROM FAS_BRS_TRANSACTION_TYPE y WHERE y.trans_code=t.transaction_type)as tran_desc,
+      t.accounting_unit_id       AS auid,
+      t.accounting_for_office_id AS aoid,
+      t.cashbook_month           AS cbm,
+      t.cashbook_year            AS cby,
+      t.ACCOUNT_NO               AS ano
+    FROM fas_brs_transaction t
+     WHERE t.accounting_unit_id      =$P{UnitId}
+    AND t.accounting_for_office_id=$P{OfficeId}
+    AND t.Cashbook_Year           =$P{cbyear}
+    AND t.cashbook_month          =$P{cbmonth}
+    AND t.ACCOUNT_NO              =$P{accNo}
+    AND t.twad_or_non_twad        = 'NT'
+    GROUP BY t.accounting_unit_id,
+      t.accounting_for_office_id,
+      t.cashbook_month,t.transaction_type,
+      t.cashbook_year,
+      t.ACCOUNT_NO]]></queryString>
+
+	<field name="TRN_DR_AMT" class="java.math.BigDecimal"/>
+	<field name="TRN_CR_AMT" class="java.math.BigDecimal"/>
+	<field name="TRANSACTION_TYPE" class="java.lang.String"/>
+	<field name="TRAN_DESC" class="java.lang.String"/>
+	<field name="AUID" class="java.math.BigDecimal"/>
+	<field name="AOID" class="java.math.BigDecimal"/>
+	<field name="CBM" class="java.math.BigDecimal"/>
+	<field name="CBY" class="java.math.BigDecimal"/>
+	<field name="ANO" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="21"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="###0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="275"
+						y="2"
+						width="196"
+						height="16"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Right">
+						<font fontName="Helvetica" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{TRN_DR_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="3"
+						y="2"
+						width="148"
+						height="16"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement>
+						<font fontName="Helvetica" size="10"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TRAN_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

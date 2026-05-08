@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ListofEmp_ValidationALL_New_Sum"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="842"
+		 pageHeight="595"
+		 columnWidth="782"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="offids" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[select office_id as controlling_office_id,employee_id,employee_name,office_name,off_order,
+   decode(sr_control_available,'YES',1,0) as sr_control_available,
+   decode(addl_available,'YES',1,0) as addl_available,
+   decode(addl_validated,'YES',1,0) as addl_validated,
+   decode(current_posting_validated,'YES',1,0) as current_posting_validated,
+   decode(sr_validated,'YES',1,0) as sr_validated,
+   decode(photo_validated,'YES',1,0) as photo_validated,
+   decode(photo_uploaded,'YES',1,0) as photo_uploaded,
+
+   decode(sr_control_available,'YES','YES','NO') as sr_control_available_disp,
+   decode(addl_available,'YES','YES','NO') as addl_available_disp,
+   decode(addl_validated,'YES','YES','NO') as addl_validated_disp,
+   decode(current_posting_validated,'YES','YES','NO') as current_posting_validated_disp,
+   decode(sr_validated,'YES','YES','NO') as sr_validated_disp,
+   decode(photo_validated,'YES','YES','NO') as photo_validated_disp,
+   decode(photo_uploaded,'YES','YES','NO') as photo_uploaded_disp
+
+from
+(
+select office_id,employee_id,office_name,
+   decode(sr_control_available,null,'NO',sr_control_available) as sr_control_available,
+   decode(addl_available,null,'NO',addl_available) as addl_available,
+   decode(addl_validated,null,'NO',addl_validated) as addl_validated,
+   decode(current_posting_validated,null,'NO',current_posting_validated) as current_posting_validated,
+   decode(sr_validated,null,'NO',sr_validated) as sr_validated,
+   decode(photo_validated,null,'NO',photo_validated) as photo_validated,
+   decode(photo_uploaded,null,'NO',photo_uploaded) as photo_uploaded
+ from
+(
+select office_id, office_name from com_mst_offices 
+where office_status_id not in ('CL','RD','NC') and office_level_id not in ('SD')
+and office_id in ($P!{offids})
+) a1
+left outer join
+(
+select controlling_office_id,employee_id,'YES' as sr_control_available from hrm_emp_controlling_office
+where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) a
+on a1.office_id=a.controlling_office_id
+left outer join
+(
+select employee_id as emp_id1,'YES' as addl_available  from hrm_mst_emp_addl_tmp where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) b
+on a.employee_id=b.emp_id1
+left outer join
+(
+select employee_id as emp_id2,decode(process_flow_status_id,null,'NO','FR','YES','NO') as addl_validated
+from hrm_mst_emp_addl_tmp where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) c
+on a.employee_id=c.emp_id2
+left outer join
+(
+select employee_id as emp_id3,decode(employee_status_id,'TRT','NO','YES') as current_posting_validated
+from hrm_emp_current_posting 
+where employee_status_id not in ('SAN', 'VRS') and employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) d
+on a.employee_id=d.emp_id3
+left outer join
+(
+select emp1 as emp_id4,  decode(cnt1-cnt2,null,'NO',0,'YES','NO') as sr_validated from
+    (
+    select EMPLOYEE_ID  as emp1,  COUNT(*) as cnt1 FROM HRM_EMP_SERVICE_DATA where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+    group by EMPLOYEE_ID
+    ) x1
+    left outer join
+   (
+    select EMPLOYEE_ID as emp2,  COUNT(*) as cnt2 FROM HRM_EMP_SERVICE_DATA where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+    and process_flow_status_id='FR' 
+    group by EMPLOYEE_ID
+    ) y1
+    on x1.emp1 = y1.emp2
+) e
+on a.employee_id=e.emp_id4
+left outer join
+(
+select employee_id as emp_id5,decode(process_flow_status_id,'FR','YES','NO') as photo_validated,
+decode(process_flow_status_id,NULL,'NO','YES') as photo_uploaded from hrm_emp_addl_photo_new_tmp where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) f
+on a.employee_id=f.emp_id5
+) y
+left outer join
+(
+select employee_id as emp_id6, ( employee_name || ' ' || employee_initial ) as employee_name
+from hrm_mst_employees where employee_id in (select employee_id from hrm_mst_employees where is_consolidate='N')
+) z
+on y.employee_id = z.emp_id6
+left outer join
+(
+select office_id as off_id, off_order from com_mst_all_offices_view
+)z1
+on y.office_id = z1.off_id
+order by off_order,employee_name]]></queryString>
+
+	<field name="CONTROLLING_OFFICE_ID" class="java.lang.String"/>
+	<field name="EMPLOYEE_ID" class="java.lang.Integer"/>
+	<field name="EMPLOYEE_NAME" class="java.lang.String"/>
+	<field name="OFFICE_NAME" class="java.lang.String"/>
+	<field name="OFF_ORDER" class="java.lang.String"/>
+	<field name="SR_CONTROL_AVAILABLE" class="java.lang.Integer"/>
+	<field name="ADDL_AVAILABLE" class="java.lang.Integer"/>
+	<field name="ADDL_VALIDATED" class="java.lang.Integer"/>
+	<field name="CURRENT_POSTING_VALIDATED" class="java.lang.Integer"/>
+	<field name="SR_VALIDATED" class="java.lang.Integer"/>
+	<field name="PHOTO_VALIDATED" class="java.lang.Integer"/>
+	<field name="PHOTO_UPLOADED" class="java.lang.Integer"/>
+	<field name="SR_CONTROL_AVAILABLE_DISP" class="java.lang.String"/>
+	<field name="ADDL_AVAILABLE_DISP" class="java.lang.String"/>
+	<field name="ADDL_VALIDATED_DISP" class="java.lang.String"/>
+	<field name="CURRENT_POSTING_VALIDATED_DISP" class="java.lang.String"/>
+	<field name="SR_VALIDATED_DISP" class="java.lang.String"/>
+	<field name="PHOTO_VALIDATED_DISP" class="java.lang.String"/>
+	<field name="PHOTO_UPLOADED_DISP" class="java.lang.String"/>
+
+	<variable name="SUM_SR_CONTROL_AVAILABLE_1" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{SR_CONTROL_AVAILABLE}]]></variableExpression>
+	</variable>
+	<variable name="SUM_ADDL_VALIDATED_1" class="java.lang.Integer" resetType="Page" calculation="Sum">
+		<variableExpression><![CDATA[$F{ADDL_VALIDATED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_CURRENT_POSTING_VALIDATED_1" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{CURRENT_POSTING_VALIDATED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_SR_VALIDATED_1" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{SR_VALIDATED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_PHOTO_VALIDATED_1" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{PHOTO_VALIDATED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_ADDL_VALIDATED_2" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{ADDL_VALIDATED}]]></variableExpression>
+	</variable>
+	<variable name="SUM_PHOTO_UPLOADED_DISP_1" class="java.lang.String" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{PHOTO_UPLOADED_DISP}]]></variableExpression>
+	</variable>
+	<variable name="SUM_PHOTO_UPLOADED_1" class="java.lang.Integer" resetType="Group" resetGroup="sr_ctrl_office" calculation="Sum">
+		<variableExpression><![CDATA[$F{PHOTO_UPLOADED}]]></variableExpression>
+	</variable>
+
+		<group  name="sr_ctrl_office" isStartNewPage="true" >
+			<groupExpression><![CDATA[$F{OFFICE_NAME}]]></groupExpression>
+			<groupHeader>
+			<band height="23"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="0"
+						y="0"
+						width="150"
+						height="20"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[SR Controlling Office Name :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="150"
+						y="1"
+						width="327"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{OFFICE_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="41"  isSplitAllowed="true" >
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="5"
+						width="771"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="8"
+						y="36"
+						width="771"
+						height="0"
+						key="line-4"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="239"
+						y="11"
+						width="36"
+						height="19"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="297"
+						y="12"
+						width="35"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_SR_CONTROL_AVAILABLE_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="462"
+						y="13"
+						width="38"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_CURRENT_POSTING_VALIDATED_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="557"
+						y="10"
+						width="41"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_SR_VALIDATED_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="683"
+						y="9"
+						width="36"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_PHOTO_VALIDATED_1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="378"
+						y="11"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_ADDL_VALIDATED_2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="624"
+						y="11"
+						width="27"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{SUM_PHOTO_UPLOADED_1}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="53"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="29"
+						width="780"
+						height="20"
+						forecolor="#FFFFFF"
+						backcolor="#0000CC"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Employees Records Validation Status - Detailed Report]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="0"
+						y="0"
+						width="778"
+						height="23"
+						forecolor="#FFFFFF"
+						backcolor="#3300CC"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="14" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Tamil Nadu Water Supply and Drainage Board]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="25"
+						width="778"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="52"
+						width="778"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="2"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="64"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="-1"
+						y="1"
+						width="780"
+						height="18"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[Sl.No     Emp. Id                   Employee Name                          SR. Controlling          Additional            Current Posting          SR Particulars                 Photo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="-1"
+						y="17"
+						width="780"
+						height="20"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[                                                                                                      Office                      Details                     Details]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						mode="Opaque"
+						x="-1"
+						y="36"
+						width="780"
+						height="20"
+						forecolor="#FFFFFF"
+						backcolor="#0033CC"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[                                                                                                  Validated                   Validated               Validated                  Validated         Uploaded   Validated]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="30"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="11"
+						y="4"
+						width="25"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="42"
+						y="4"
+						width="61"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{EMPLOYEE_ID}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="110"
+						y="3"
+						width="156"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{EMPLOYEE_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="292"
+						y="6"
+						width="42"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SR_CONTROL_AVAILABLE_DISP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="377"
+						y="5"
+						width="39"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ADDL_VALIDATED_DISP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="460"
+						y="6"
+						width="41"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{CURRENT_POSTING_VALIDATED_DISP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="554"
+						y="5"
+						width="40"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{SR_VALIDATED_DISP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="676"
+						y="5"
+						width="42"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PHOTO_VALIDATED_DISP}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="621"
+						y="4"
+						width="33"
+						height="18"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{PHOTO_UPLOADED_DISP}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="35"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="570"
+						y="8"
+						width="100"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="683"
+						y="8"
+						width="80"
+						height="20"
+						key="textField"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="3"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

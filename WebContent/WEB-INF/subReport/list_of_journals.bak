@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="list_of_journals"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="737"
+		 pageHeight="842"
+		 columnWidth="677"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="unitId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="officeId" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="year1" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month1" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="voucherNo" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA["/root/home1/twadonline/public_html/org/FAS/FAS1/Reports/JournalSystem/jasper/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="type_year" isForPrompting="true" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT mas.VOUCHER_NO,mas.ACCOUNTING_UNIT_ID,
+  (SELECT ACCOUNTING_UNIT_NAME
+  FROM FAS_MST_ACCT_UNITS unit
+  WHERE unit.ACCOUNTING_UNIT_ID=mas.ACCOUNTING_UNIT_ID
+  )AS unit_name,
+  mas.VOUCHER_DATE,
+  mas.JOURNAL_TYPE_CODE,
+  (SELECT type.JOURNAL_TYPE_DESC
+  FROM FAS_MST_JOURNAL_TYPE type
+  WHERE type.JOURNAL_TYPE_CODE=mas.JOURNAL_TYPE_CODE) as type_desc
+  FROM fas_journal_master mas
+  WHERE mas.ACCOUNTING_UNIT_ID    =$P{unitId}
+  AND mas.ACCOUNTING_FOR_OFFICE_ID=$P{officeId}
+  AND mas.CASHBOOK_YEAR           =$P{year1}
+  AND mas.CASHBOOK_MONTH          =$P{month1}
+  AND mas.VOUCHER_NO              =$P{voucherNo}
+  AND mas.JOURNAL_STATUS          ='L']]></queryString>
+
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTING_UNIT_ID" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="VOUCHER_DATE" class="java.sql.Timestamp"/>
+	<field name="JOURNAL_TYPE_CODE" class="java.math.BigDecimal"/>
+	<field name="TYPE_DESC" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="45"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="558"
+						y="25"
+						width="117"
+						height="18"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="490"
+						y="24"
+						width="72"
+						height="18"
+						key="staticText-6"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Print Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="80"
+						y="0"
+						width="453"
+						height="21"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{type_year}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="225"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="3"
+						y="1"
+						width="139"
+						height="31"
+						key="staticText-2"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Unit Name:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="3"
+						y="62"
+						width="139"
+						height="23"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Journal Type Code:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="3"
+						y="33"
+						width="139"
+						height="27"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Voucher No & Date:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="142"
+						y="1"
+						width="459"
+						height="31"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica" size="12" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<subreport  isUsingCache="true">
+					<reportElement
+						x="2"
+						y="108"
+						width="605"
+						height="17"
+						key="subreport-1"/>
+					<subreportParameter  name="unitId">
+						<subreportParameterExpression><![CDATA[$P{unitId}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="officeId">
+						<subreportParameterExpression><![CDATA[$P{officeId}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="year1">
+						<subreportParameterExpression><![CDATA[$P{year1}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="month1">
+						<subreportParameterExpression><![CDATA[$P{month1}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="voucherNo">
+						<subreportParameterExpression><![CDATA[$P{voucherNo}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="SUBREPORT_DIR">
+						<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression  class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "subreport_journals.jasper"]]></subreportExpression>
+				</subreport>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="143"
+						y="62"
+						width="281"
+						height="22"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica" size="12" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{TYPE_DESC}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="233"
+						y="83"
+						width="233"
+						height="22"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Transaction Details]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="140"
+						y="34"
+						width="60"
+						height="26"
+						key="textField-2"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{VOUCHER_NO}+" & "]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="200"
+						y="36"
+						width="103"
+						height="25"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.sql.Timestamp"><![CDATA[$F{VOUCHER_DATE}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

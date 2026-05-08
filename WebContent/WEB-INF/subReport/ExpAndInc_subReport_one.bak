@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ExpAndInc_subReport_one"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="2" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<queryString><![CDATA[SELECT
+  CASE
+    WHEN total1 IS NULL
+    THEN 0
+    ELSE total1
+  END AS total1_before,
+  CASE
+    WHEN total1_next IS NULL
+    THEN 0
+    ELSE total1_next
+  END AS total1_after,
+  fin.*
+FROM
+  (SELECT aa.ORDER_NO,
+    aa.minor_head_code,
+    (SELECT MINOR_HEAD_DESC
+    FROM COM_MST_MINOR_HEADS min1
+    WHERE min1.MINOR_HEAD_CODE=aa.MINOR_HEAD_CODE
+    )AS MINOR_HEAD_DESC,
+    aa.major_head_code,
+    (SELECT MAJOR_HEAD_DESC
+    FROM com_mst_major_heads maj
+    WHERE MAJ.MAJOR_HEAD_CODE= aa.major_head_code
+    )AS MAJOR_HEAD_DESC,
+    aa.GROUP_HEAD_CODE,
+    (SELECT GROUP_HEAD_DESC
+    FROM FAS_MIS_GROUP_MASTER gp
+    WHERE gp.group_head_code= aa.GROUP_HEAD_CODE
+    )AS GROUP_HEAD_DESC,
+    hc.ACCOUNT_HEAD_CODE,
+    (SELECT ACCOUNT_HEAD_DESC
+    FROM COM_MST_ACCOUNT_HEADS heads
+    WHERE heads.account_head_code= hc.ACCOUNT_HEAD_CODE
+    )AS ACCOUNT_HEAD_DESC,
+    (SELECT SUM(trial.DEBIT_CLOSING_BALANCE+trial.CREDIT_CLOSING_BALANCE)
+    FROM FAS_TRIAL_BALANCE trial
+    WHERE trial.ACCOUNT_HEAD_CODE=hc.ACCOUNT_HEAD_CODE
+    AND trial.CASHBOOK_YEAR      =2010
+    AND trial.CASHBOOK_MONTH     =3
+    )AS total1,
+    (SELECT SUM(trial.DEBIT_CLOSING_BALANCE+trial.CREDIT_CLOSING_BALANCE)
+    FROM FAS_TRIAL_BALANCE trial
+    WHERE trial.ACCOUNT_HEAD_CODE=hc.ACCOUNT_HEAD_CODE
+    AND trial.CASHBOOK_YEAR      =2011
+    AND trial.CASHBOOK_MONTH     =3
+    GROUP BY trial.ACCOUNT_HEAD_CODE
+    )AS total1_next
+  FROM ANNUAL_ACCOUNT_SUB_GROUP aa,
+    com_mst_account_heads hc
+  WHERE aa.MINOR_HEAD_CODE= hc.MINOR_HEAD_CODE
+  AND aa.MAJOR_HEAD_CODE  = hc.MAJOR_HEAD_CODE
+  AND hc.MAJOR_HEAD_CODE  ='E'
+  GROUP BY aa.ORDER_NO,
+    aa.minor_head_code,
+    aa.major_head_code,
+    aa.GROUP_HEAD_CODE,
+    hc.ACCOUNT_HEAD_CODE
+  ORDER BY aa.GROUP_HEAD_CODE,
+    aa.ORDER_NO
+  )fin]]></queryString>
+
+	<field name="TOTAL1_BEFORE" class="java.math.BigDecimal"/>
+	<field name="TOTAL1_AFTER" class="java.math.BigDecimal"/>
+	<field name="ORDER_NO" class="java.lang.String"/>
+	<field name="MINOR_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="MINOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="MAJOR_HEAD_CODE" class="java.lang.String"/>
+	<field name="MAJOR_HEAD_DESC" class="java.lang.String"/>
+	<field name="GROUP_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="GROUP_HEAD_DESC" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNT_HEAD_DESC" class="java.lang.String"/>
+	<field name="TOTAL1" class="java.math.BigDecimal"/>
+	<field name="TOTAL1_NEXT" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="100"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="30"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+			</band>
+		</lastPageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

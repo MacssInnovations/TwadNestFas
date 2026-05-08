@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="ReportList_Pay"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="to_cashbookyear" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="to_cashbookmonth" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="accountingunitid" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="monthInWords" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="cmb_unit_name" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="qry" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[SELECT voucher_no as "VOUCHER_NO",
+  voucher_date as "VOUCHER_DATE",
+  SUM(cr_amt)               AS "CR_AMT",
+  SUM(dr_amt)               AS "DR_AMT",
+  SUM(cr_amt) - SUM(dr_amt) AS "DIFF"
+from
+(select s.voucher_date,
+s.voucher_no,
+'DR' as CR_DR_INDICATOR,
+sum(s.dr_amt)-sum(s.cr_amt) as dr_amt,
+0 as cr_amt,
+s.amount
+from
+(SELECT 
+      b.payment_date AS voucher_date,
+    
+      b.voucher_no AS voucher_no ,
+     
+      a.CR_DR_INDICATOR,
+      CASE
+        WHEN a.CR_DR_INDICATOR = 'DR'
+        THEN a.amount
+        ELSE 0
+      END AS dr_amt,
+      CASE
+        WHEN a.CR_DR_INDICATOR = 'CR'
+        THEN a.amount
+        ELSE 0
+      END      AS cr_amt,
+      a.amount AS amount
+  
+     
+    FROM fas_Payment_transaction a,
+      fas_Payment_master b
+    WHERE a.accounting_unit_id     = b.accounting_unit_id
+    AND a.accounting_for_office_id = b.accounting_for_office_id
+    AND a.cashbook_year            = b.cashbook_year
+    AND a.cashbook_month           = b.cashbook_month
+    AND a.voucher_no               = b.voucher_no
+    
+    AND b.payment_status          <>'C'
+    AND b.accounting_unit_id::varchar      =$P{accountingunitid}::varchar
+  --AND b.accounting_for_office_id=6869
+  AND b.cashbook_month::varchar          =$P{to_cashbookmonth}::varchar
+  AND b.cashbook_year::varchar           =$P{to_cashbookyear}::varchar )
+  s
+ GROUP BY s.voucher_date, s.voucher_no,s.amount
+
+  
+  union all
+  SELECT 
+      b.payment_date AS datevalue,
+     
+      b.voucher_no AS voucher_no ,
+    
+      b.CR_DR_INDICATOR,
+      CASE
+        WHEN b.CR_DR_INDICATOR = 'DR'
+        THEN b.TOTAL_AMOUNT
+        ELSE 0
+      END AS dr_amt,
+      CASE
+        WHEN b.CR_DR_INDICATOR = 'CR'
+        THEN b.TOTAL_AMOUNT
+        ELSE 0
+      END            AS cr_amt,
+      B.Total_Amount AS Amount
+  
+    FROM fas_payment_master b
+    WHERE b.payment_status <>'C'
+    
+        AND b.accounting_unit_id::varchar      =$P{accountingunitid}::varchar
+  --AND b.accounting_for_office_id=6869
+  AND b.cashbook_month::varchar          =$P{to_cashbookmonth}::varchar
+  AND b.cashbook_year::varchar           =$P{to_cashbookyear}::varchar 
+ ) as faspayrprt
+
+   
+  GROUP BY voucher_no,
+  voucher_date
+ORDER BY voucher_no,
+  voucher_date]]></queryString>
+
+	<field name="VOUCHER_NO" class="java.math.BigDecimal"/>
+	<field name="VOUCHER_DATE" class="java.sql.Date"/>
+	<field name="CR_AMT" class="java.math.BigDecimal"/>
+	<field name="DR_AMT" class="java.math.BigDecimal"/>
+	<field name="DIFF" class="java.math.BigDecimal"/>
+
+	<variable name="tot_dr" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DR_AMT}]]></variableExpression>
+	</variable>
+	<variable name="tot_cr" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CR_AMT}]]></variableExpression>
+	</variable>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="54"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="405"
+						y="2"
+						width="54"
+						height="17"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Date : ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="459"
+						y="2"
+						width="71"
+						height="17"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="14"
+						width="535"
+						height="19"
+						key="textField-2"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" Payment List For The Month of " +$P{monthInWords} +" "+$P{to_cashbookyear}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="34"
+						width="535"
+						height="19"
+						key="textField-6"/>
+					<box></box>
+					<textElement textAlignment="Left">
+						<font pdfFontName="Helvetica-Bold" size="11" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[" Accounting Unit Name : " +$P{cmb_unit_name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="22"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="3"
+						y="2"
+						width="58"
+						height="20"
+						key="staticText-2"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[ Vou No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="77"
+						y="2"
+						width="78"
+						height="20"
+						key="staticText-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<text><![CDATA[ Vou Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="207"
+						y="2"
+						width="60"
+						height="20"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Total Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="338"
+						y="2"
+						width="61"
+						height="20"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Total Credit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="477"
+						y="2"
+						width="53"
+						height="20"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<text><![CDATA[Difference]]></text>
+				</staticText>
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="23"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="11"
+						y="3"
+						width="36"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{VOUCHER_NO}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="77"
+						y="3"
+						width="78"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[$F{VOUCHER_DATE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="290"
+						y="3"
+						width="110"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{CR_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="167"
+						y="3"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DR_AMT}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="430"
+						y="3"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{DIFF}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="20"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="206"
+						y="2"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Page No "+$V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="22"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="167"
+						y="4"
+						width="100"
+						height="18"
+						key="textField-3"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_dr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="290"
+						y="4"
+						width="110"
+						height="18"
+						key="textField-4"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_cr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="430"
+						y="4"
+						width="100"
+						height="18"
+						key="textField-5"/>
+					<box></box>
+					<textElement textAlignment="Right">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{tot_dr}.subtract($V{tot_cr})]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="535"
+						height="1"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+			</band>
+		</summary>
+</jasperReport>

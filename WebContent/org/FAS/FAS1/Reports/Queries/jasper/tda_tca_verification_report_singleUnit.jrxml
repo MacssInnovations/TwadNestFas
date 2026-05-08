@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="tda_tca_verification_report_singleUnit"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Landscape"
+		 pageWidth="850"
+		 pageHeight="842"
+		 columnWidth="790"
+		 columnSpacing="0"
+		 leftMargin="30"
+		 rightMargin="30"
+		 topMargin="20"
+		 bottomMargin="20"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="year1" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="month" isForPrompting="true" class="java.lang.Integer"/>
+	<parameter name="unitId" isForPrompting="true" class="java.lang.Integer"/>
+	<queryString><![CDATA[select * from (Select Unit_Id,
+(select U.Accounting_Unit_Name from Fas_Mst_Acct_Units u where U.Accounting_Unit_Id=unit_id)as "UNIT_NAME",
+Cashbook_Month,
+Case When Cashbook_Month=1 Then 'January' 
+      When Cashbook_Month=2 Then 'February' 
+      When Cashbook_Month=3 Then 'March' 
+      When Cashbook_Month=4 Then 'April' 
+      When Cashbook_Month=5 Then 'May' 
+      When Cashbook_Month=6 Then 'June' 
+      When Cashbook_Month=7 Then 'July' 
+      When Cashbook_Month=8 Then 'August' 
+      When Cashbook_Month=9 Then 'September' 
+      When Cashbook_Month=10 Then 'October' 
+      When Cashbook_Month=11 Then 'November' 
+      When Cashbook_Month=12 Then 'December' 
+      end as "MONTH_DESC",
+  Account_Head_Code as "ACCOUNT_HEAD_CODE",
+  Trn_Dr,
+  Trn_Cr,
+  Tda_Dr,
+  Tda_Cr,
+  Trn_Net,
+  Tda_Net,
+  (Trn_Net-tda_net)AS difference
+From
+  (SELECT aaa.Accounting_Unit_Id as unit_id,Aaa.Cashbook_Month,
+    Aaa.Account_Head_Code,
+    Aaa.Trn_Dr,
+    Aaa.Trn_Cr,
+    Bbb.Tda_Dr,
+    Bbb.Tda_Cr,
+    CASE
+      WHEN Aaa.Trn_Dr>Aaa.Trn_Cr
+      THEN (Aaa.Trn_Dr-Aaa.Trn_Cr)
+      WHEN Aaa.Trn_Cr>Aaa.Trn_Dr
+      THEN (Aaa.Trn_Cr-Aaa.Trn_Dr)
+      ELSE 0
+    END AS Trn_Net,
+    CASE
+      WHEN Bbb.Tda_Dr>Bbb.Tda_Cr
+      THEN (Bbb.Tda_Dr-Bbb.Tda_Cr)
+      WHEN Bbb.Tda_Cr>Bbb.Tda_Dr
+      THEN (Bbb.Tda_Cr-Bbb.Tda_Dr)
+      ELSE 0
+    END AS Tda_Net
+  From
+    (SELECT Accounting_Unit_Id,Cashbook_Month,
+      Account_Head_Code,
+      SUM(dr_Amount)AS trn_dr,
+      SUM(cr_amount)AS trn_cr
+    FROM
+      (SELECT Accounting_Unit_Id,Cashbook_Month,
+        Account_Head_Code,
+        SUM(dr_Amount)AS dr_Amount,
+        SUM(cr_amount)AS cr_amount
+      FROM
+        (Select B.Cashbook_Month,
+          B.Account_Head_Code,B.Accounting_Unit_Id,
+          CASE
+            WHEN B.Cr_Dr_Indicator='DR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS dr_Amount,
+          CASE
+            WHEN b.Cr_Dr_Indicator='CR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS cr_amount
+        FROM fas_journal_master a,
+          Fas_Journal_Transaction b
+        WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        AND A.Voucher_No              =B.Voucher_No
+        AND A.Journal_Status          ='L'
+	and A.Accounting_Unit_Id=$P{unitId}::int
+        AND A.Journal_Type_Code      IN (62,63,65,66)
+        And A.Mode_Of_Creation        ='A'
+        AND B.Cashbook_Year           = $P{year1}::int
+        And B.Account_Head_Code      In (900108,900109,901001,901002)
+        GROUP BY B.Accounting_Unit_Id,B.Cashbook_Month,
+          B.Account_Head_Code,
+          B.Cr_Dr_Indicator
+        UNION ALL
+        Select B.Cashbook_Month,
+          B.Account_Head_Code,B.Accounting_Unit_Id,
+          CASE
+            WHEN B.Cr_Dr_Indicator='DR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS dr_Amount,
+          CASE
+            WHEN b.Cr_Dr_Indicator='CR'
+            THEN SUM(B.Amount)
+            ELSE 0
+          END AS cr_amount
+        FROM fas_journal_master a,
+          Fas_Journal_Transaction b
+        WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+        AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+        AND A.Cashbook_Year           =B.Cashbook_Year
+        AND A.Cashbook_Month          =B.Cashbook_Month
+        AND A.Voucher_No              =B.Voucher_No
+        AND A.Journal_Status          ='L'
+	and A.Accounting_Unit_Id=$P{unitId}::int
+        And A.Journal_Type_Code      In (54)
+        AND B.Cashbook_Year           = $P{year1}::int
+        And B.Account_Head_Code      In (900108,900109,901001,901002)
+        GROUP BY B.Accounting_Unit_Id,B.Cashbook_Month,
+          B.Account_Head_Code,
+          B.Cr_Dr_Indicator
+        ) as opt1 Group By Accounting_Unit_Id,Cashbook_Month,
+        Account_Head_Code
+        --Order By Accounting_Unit_Id,Cashbook_Month,Account_Head_Code
+      Union All
+      SELECT B.Accounting_Unit_Id,B.Cashbook_Month,
+        B.Account_Head_Code,
+        CASE
+          WHEN B.Cr_Dr_Indicator='DR'
+          THEN SUM(B.Amount)
+          ELSE 0
+        END AS dr_Amount,
+        CASE
+          WHEN b.Cr_Dr_Indicator='CR'
+          THEN SUM(B.Amount)
+          ELSE 0
+        END AS cr_amount
+      FROM FAS_PAYMENT_MASTER a,
+        FAS_PAYMENT_TRANSACTION b
+      WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+      AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+      AND A.Cashbook_Year           =B.Cashbook_Year
+      AND A.Cashbook_Month          =B.Cashbook_Month
+      AND A.Voucher_No              =B.Voucher_No
+      And A.Payment_Status          ='L'
+      and A.Accounting_Unit_Id=$P{unitId}::int
+      AND B.Cashbook_Year           =$P{year1}::int
+      And B.Account_Head_Code      In (900108,900109,901001,901002)
+      GROUP BY B.Accounting_Unit_Id,B.Cashbook_Month,
+        B.Account_Head_Code,
+        B.Cr_Dr_Indicator
+      Union All
+      SELECT B.Accounting_Unit_Id,B.Cashbook_Month,
+        B.Account_Head_Code,
+        CASE
+          WHEN B.Cr_Dr_Indicator='DR'
+          THEN SUM(B.Amount)
+          ELSE 0
+        END AS dr_Amount,
+        CASE
+          WHEN b.Cr_Dr_Indicator='CR'
+          THEN SUM(B.Amount)
+          ELSE 0
+        END AS cr_amount
+      FROM FAS_RECEIPT_MASTER a,
+        FAS_RECEIPT_TRANSACTION b
+      WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+      AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+      AND A.Cashbook_Year           =B.Cashbook_Year
+      AND A.Cashbook_Month          =B.Cashbook_Month
+      AND A.RECEIPT_NO              =B.RECEIPT_NO
+      And A.Receipt_Status          ='L'
+	and A.Accounting_Unit_Id=$P{unitId}::int
+      AND B.Cashbook_Year           =$P{year1}::int
+      And B.Account_Head_Code      In (900108,900109,901001,901002)
+      GROUP BY B.Accounting_Unit_Id,B.Cashbook_Month,
+        B.Account_Head_Code,
+        B.Cr_Dr_Indicator 
+      ) as opt2
+    GROUP BY Accounting_Unit_Id,Cashbook_Month,
+      Account_Head_Code
+    ORDER BY Accounting_Unit_Id,Cashbook_Month,
+      Account_Head_Code
+    )aaa
+  Left Outer Join
+    (SELECT Accounting_Unit_Id,Cashbook_Month,
+      Account_Head_Code,
+      SUM(dr_Amount)AS tda_dr,
+      SUM(cr_amount)AS tda_cr
+    FROM
+      (
+      SELECT B.Accounting_Unit_Id,B.Cashbook_Month,
+  B.Account_Head_Code,
+  CASE
+    WHEN B.Cr_Dr_Indicator='DR'
+    THEN SUM(B.Amount)
+    ELSE 0
+  END AS dr_Amount,
+  CASE
+    WHEN b.Cr_Dr_Indicator='CR'
+    THEN SUM(B.Amount)
+    ELSE 0
+  END AS cr_amount
+FROM Fas_Tda_Tca_Raised_Mst A,
+  Fas_Tda_Tca_Raised_Trn B
+WHERE A.Accounting_Unit_Id    =b.Accounting_Unit_Id
+AND A.Accounting_For_Office_Id=B.Accounting_For_Office_Id
+AND A.Cashbook_Year           =B.Cashbook_Year
+AND A.Cashbook_Month          =B.Cashbook_Month
+AND A.Voucher_No              =B.Voucher_No
+And A.Status                  ='L' 
+and A.Accounting_Unit_Id=$P{unitId}::int
+AND B.Cashbook_Year           =$P{year1}::int
+And B.Account_Head_Code      In (900108,900109,901001,901002)
+GROUP BY B.Accounting_Unit_Id,B.Cashbook_Month,
+  B.Account_Head_Code,
+  B.Cr_Dr_Indicator 
+Order By B.Accounting_Unit_Id,B.Cashbook_Month,
+  b.Account_Head_Code
+      ) as opt3
+    GROUP BY Accounting_Unit_Id,Cashbook_Month, 
+      Account_Head_Code
+    ORDER BY Accounting_Unit_Id,Cashbook_Month, 
+      Account_Head_Code
+    )Bbb
+  On aaa.Accounting_Unit_Id=bbb.Accounting_Unit_Id
+  and Aaa.Cashbook_Month    =Bbb.Cashbook_Month
+  And Aaa.Account_Head_Code=Bbb.Account_Head_Code
+  ) as opt4 ) as opt41 where difference!=0 and Cashbook_Month >$P{month}::int
+order by Unit_Id,Cashbook_Month]]></queryString>
+
+	<field name="unit_id" class="java.math.BigDecimal"/>
+	<field name="UNIT_NAME" class="java.lang.String"/>
+	<field name="cashbook_month" class="java.math.BigDecimal"/>
+	<field name="MONTH_DESC" class="java.lang.String"/>
+	<field name="ACCOUNT_HEAD_CODE" class="java.math.BigDecimal"/>
+	<field name="trn_dr" class="java.math.BigDecimal"/>
+	<field name="trn_cr" class="java.math.BigDecimal"/>
+	<field name="tda_dr" class="java.math.BigDecimal"/>
+	<field name="tda_cr" class="java.math.BigDecimal"/>
+	<field name="trn_net" class="java.math.BigDecimal"/>
+	<field name="tda_net" class="java.math.BigDecimal"/>
+	<field name="difference" class="java.math.BigDecimal"/>
+
+
+		<group  name="unitname" >
+			<groupExpression><![CDATA[$F{UNIT_NAME}]]></groupExpression>
+			<groupHeader>
+			<band height="27"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="2"
+						width="586"
+						height="22"
+						key="textField-3"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{unit_id}+" - "+$F{UNIT_NAME}]]></textFieldExpression>
+				</textField>
+			</band>
+			</groupHeader>
+			<groupFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+			</groupFooter>
+		</group>
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="82"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="83"
+						y="49"
+						width="82"
+						height="33"
+						key="staticText-2"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Month]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="49"
+						width="83"
+						height="33"
+						key="staticText-3"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Unit Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="240"
+						y="49"
+						width="77"
+						height="33"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Transaction DR Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="319"
+						y="49"
+						width="70"
+						height="33"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TDA/TCA DR Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="389"
+						y="49"
+						width="80"
+						height="33"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Transaction CR Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="469"
+						y="49"
+						width="61"
+						height="33"
+						key="staticText-7"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TDA/TCA CR Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="531"
+						y="49"
+						width="99"
+						height="33"
+						key="staticText-8"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Transaction  NET Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="643"
+						y="49"
+						width="73"
+						height="33"
+						key="staticText-9"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[TDA/TCA NET Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="716"
+						y="49"
+						width="72"
+						height="33"
+						key="staticText-10"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Difference]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="165"
+						y="49"
+						width="75"
+						height="33"
+						key="staticText-11"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Account  Head Code]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="184"
+						y="10"
+						width="401"
+						height="23"
+						key="textField-4"/>
+					<box></box>
+					<textElement>
+						<font pdfFontName="Helvetica-Bold" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["TDA/TCA Verification Report For  "+$F{UNIT_NAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="dd/MM/yyyy" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="680"
+						y="3"
+						width="108"
+						height="21"
+						key="textField-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="643"
+						y="3"
+						width="38"
+						height="20"
+						key="staticText-12"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<text><![CDATA[Date:]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="28"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="###0" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="164"
+						y="1"
+						width="76"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{ACCOUNT_HEAD_CODE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="240"
+						y="2"
+						width="77"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{trn_dr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="315"
+						y="2"
+						width="80"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{tda_dr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="395"
+						y="2"
+						width="63"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{trn_cr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="458"
+						y="1"
+						width="72"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{tda_cr}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="530"
+						y="1"
+						width="100"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{trn_net}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="630"
+						y="1"
+						width="86"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{tda_net}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="716"
+						y="1"
+						width="74"
+						height="18"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{difference}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="44"
+						y="1"
+						width="121"
+						height="20"
+						key="textField-1"/>
+					<box></box>
+					<textElement>
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{year1}+" / "+$F{MONTH_DESC}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

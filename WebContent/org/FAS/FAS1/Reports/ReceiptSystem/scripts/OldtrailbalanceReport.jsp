@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<%@ page session="false"  contentType="text/html;charset=windows-1252"%>
+<%@ page import="java.sql.*,java.util.*,Servlets.Security.classes.UserProfile"%>
+<%@ include file="//org/Security/jsps/Check_SessionJSPF.jspf" %>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>     <meta http-equiv="cache-control" content="no-cache">
+    <title>Old TrailBalance Report</title>
+     <script type="text/javascript" src="<%=request.getContextPath()%>/org/Library/scripts/comJS.js"></script>
+     <script type="text/javascript" src="../../../../../../org/Library/scripts/checkDate.js"></script>
+    
+    <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/FAS/FAS1/CommonControls/scripts/Common_Load_Accounting_Unit_ID_4Rpt.js"></script>
+    <script type="text/javascript"
+            src="<%=request.getContextPath()%>/org/FAS/FAS1/CommonControls/scripts/Common_Load_Accounting_office_4Rpt.js"></script>
+    
+    
+    <script language="javascript" type="text/javascript" src="../scripts/OldtrailbalanceReport.js"></script>
+    <link href="../../../../../../css/CalendarControl.css" rel="stylesheet"  media="screen"/>
+    <link href="../../../../../../css/Sample3.css" rel="stylesheet" media="screen"/>
+    <script type="text/javascript" src="../../../../../../org/HR/HR1/EmployeeMaster/scripts/CalendarControl.js"></script> 
+    <script type="text/javascript" src="<%=request.getContextPath()%>/org/FAS/FAS1/Reports/Unitwise_Office_Report.js"></script> 
+    <script type="text/javascript" language="javascript">
+     function loadyear_month()
+        {
+       
+         var today= new Date(); 
+         var day=today.getDate();
+         var month=today.getMonth();
+         month=month+1;
+         var year=today.getYear();
+         if(year < 1900) year += 1900;
+       
+        /** Load Cash Book Month and Cash Book Year during Form Load */
+    //    document.frmOldTrailbalanceReport.txtCB_Year.value=year
+    //    document.frmOldTrailbalanceReport.txtCB_Month.value=month;
+                
+        /** Load From Cash Book Month and From Cash Book Year during Form Load */
+     //   document.frmOldTrailbalanceReport.txtCB_Year_from.value=year
+    //    document.frmOldTrailbalanceReport.txtCB_Month_from.value=month;
+        
+        /** Load To Cash Book Month and To Cash Book Year during Form Load */
+   //     document.frmOldTrailbalanceReport.txtCB_Year_to.value=year
+       // document.frmOldTrailbalanceReport.txtCB_Month_to.value=month;
+        
+      }
+    </script>
+    <script language="javascript" type="text/javascript">
+                function closeWindow()
+                {                
+                    window.open('','_parent','');                
+                    window.close(); 
+                    window.opener.focus();
+                }
+    </script>
+    
+      </head>
+  <body class="table" onload="loadyear_month();" >
+  <form name="frmOldTrailbalanceReport" id="frmOldTrailbalanceReport" method="POST" action="" onsubmit="return checknull()">
+    <%
+  Connection con=null;
+  ResultSet rs=null,rs2=null;
+  PreparedStatement ps=null,ps2=null;
+  ResultSet results=null;
+  ResultSet results1=null;
+  ResultSet results2=null;
+  try
+  { 
+  
+            ResourceBundle rs1=ResourceBundle.getBundle("Servlets.Security.servlets.Config");
+            String ConnectionString="";
+            String strDriver=rs1.getString("Config.DATA_BASE_DRIVER");
+            String strdsn=rs1.getString("Config.DSN");
+            String strhostname=rs1.getString("Config.HOST_NAME");
+            String strportno=rs1.getString("Config.PORT_NUMBER");
+            String strsid=rs1.getString("Config.SID");
+            String strdbusername=rs1.getString("Config.USER_NAME");
+            String strdbpassword=rs1.getString("Config.PASSWORD");
+
+            //ConnectionString = strdsn.trim() + "@" + strhostname.trim() + ":" + strportno.trim() + ":" +strsid.trim() ;
+				ConnectionString = strdsn.trim() + "://" + strhostname.trim() + ":" + strportno.trim() + "/" +strsid.trim() ;    // Postgres DB  Connection
+            Class.forName(strDriver.trim());
+            con=DriverManager.getConnection(ConnectionString,strdbusername.trim(),strdbpassword.trim());
+  }
+  catch(Exception e)
+  {
+    System.out.println("Exception in connection...."+e);
+  }
+  int  cmbAcc_UnitCode=0,cmbOffice_code=0;
+
+            
+  %>
+  
+   <% 
+        HttpSession session=request.getSession(false);
+      UserProfile empProfile=(UserProfile)session.getAttribute("UserProfile");
+      
+    System.out.println("user id::"+empProfile.getEmployeeId());
+    int empid=empProfile.getEmployeeId();
+    //int empid=10099;
+    int  oid=0;
+    String oname="";
+    
+    String FAS_SU="";   
+    if(session.getAttribute("FAS_SU")!=null && ((String)session.getAttribute("FAS_SU")).equalsIgnoreCase("YES"))
+         FAS_SU="YES";
+    else
+         FAS_SU="NO";
+   
+    try
+    {
+           
+            ps=con.prepareStatement("select OFFICE_ID from HRM_EMP_CURRENT_POSTING where EMPLOYEE_ID=?" );
+            ps.setInt(1,empid);
+            results=ps.executeQuery();
+                 if(results.next()) 
+                 {
+                    oid=results.getInt("OFFICE_ID");
+                 }
+            results.close();
+            ps.close();
+            ps=con.prepareStatement("select OFFICE_NAME from COM_MST_OFFICES where OFFICE_ID=?" );
+            ps.setInt(1,oid);
+            results=ps.executeQuery();
+                 if(results.next()) 
+                 {
+                    oname=results.getString("OFFICE_NAME");
+                  }
+            results.close();
+            ps.close();
+     /* */      
+                 
+    }
+    catch(Exception e)
+    {
+        System.out.println(e);
+    }
+   
+   %>
+  <table cellspacing="2" cellpadding="3" width="100%" >
+      <tr class="tdH">
+        <td colspan="2">
+          <div align="center">
+              <strong>Old&nbsp;Trailblance Report</strong>
+            </div>
+        </td>
+      </tr>
+    </table>
+     <div align="center">
+            <table cellspacing="1" cellpadding="2" border="1" width="100%">
+            
+                <tr align="left">
+           <td class="table">
+              <div align="left">
+                 Select&nbsp;the&nbsp;Option<font color="#ff2121">*</font>
+              </div>
+           </td>
+          <td>
+         
+          <input type="radio" name="month_year" id="month_year" value="particular_cb" onclick="cb_month_year(this.value)" > MonthWise 
+          <input type="radio" name="month_year" id="month_year" value="more_cb" onclick="cb_month_year(this.value);LoadAccountingUnitIDfin();"> FinancialYearWise 
+          
+          <br><br>       
+          
+          <div id="particular" name="particular" style="display:none">
+          Year 
+          <select name="txtCB_Year" id="txtCB_Year" >
+          <option value="1995">1995</option>
+          <option value="1996">1996</option>
+          <option value="1997">1997</option>
+          <option value="1998">1998</option>
+          <option value="1999">1999</option>
+          <option value="2000">2000</option>
+          <option value="2001">2001</option>
+          <option value="2002">2002</option>
+          <option value="2003">2003</option>
+          <option value="2004">2004</option>
+          <option value="2005">2005</option>
+          <option value="2006">2006</option>
+         
+          </select>
+          
+          Month 
+          <select  name="txtCB_Month"  id="txtCB_Month"   onchange="LoadAccountingUnitID();loadsupp()" >
+          <option value="">select the Month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+          </select>
+           <div id="more_supp" name="more_supp" style="display:none">
+             <div align="left">
+                    Type the supplement NO
+                    <font color="#ff2121">*</font>
+                  </div>
+                               
+                 <input type="text" name="suppmnt"  id="suppmnt"  maxlength="5" size="18"/>
+                 
+              
+            
+                <!--select size="1" name="suppmnt" id="suppmnt" tabindex="1">
+                    <option value="0">All</option>
+                    <option value="1">Supplement</option>
+                    <option value="2">Journal</option>
+                    <option value="3">Supplement3</option>
+             
+                      </select-->
+                       <input type="button" name="Go" id="Go" value="Generate Supplement Report" onclick="loadsupp()"/>
+          </div>
+                  <div align="left">
+                    Accounting Unit Code 
+                    <font color="#ff2121">*</font>
+                  </div>
+                  
+                <select size="1" name="cmbAcc_UnitCode" id="cmbAcc_UnitCode" tabindex="1">
+                     <!-- <option value="0"> Select Account Unit </option>-->
+             
+                      </select>
+          </div>
+          
+          <div id="more" name="more" style="display:none">
+          
+         From 
+          
+          <select name="txtCB_Year_from"  id="txtCB_Year_from" tabindex="4" >
+          <option value="1995-1996">1995-1996</option>
+          <option value="1996-1997">1996-1997</option>
+          <option value="1997-1998">1997-1998</option>
+          <option value="1998-1999">1998-1999</option>
+          <option value="1999-2000">1999-2000</option>
+          <option value="2000-2001">2000-2001</option>
+          <option value="2001-2002">2001-2002</option>
+          <option value="2002-2003">2002-2003</option>
+          <option value="2003-2004">2003-2004</option>
+          <option value="2004-2005">2004-2005</option>
+          <option value="2005-2006">2005-2006</option>
+          <option value="2006-2007">2006-2007</option>
+         
+          </select>
+        To
+        <select name="txtCB_Year_to" id="txtCB_Year_to" tabindex="3" onchange="LoadAccountingUnitIDfin()">
+          <option value="1995-1996">1995-1996</option>
+          <option value="1996-1997">1996-1997</option>
+          <option value="1997-1998">1997-1998</option>
+          <option value="1998-1999">1998-1999</option>
+          <option value="1999-2000">1999-2000</option>
+          <option value="2000-2001">2000-2001</option>
+          <option value="2001-2002">2001-2002</option>
+          <option value="2002-2003">2002-2003</option>
+          <option value="2003-2004">2003-2004</option>
+          <option value="2004-2005">2004-2005</option>
+          <option value="2005-2006">2005-2006</option>
+          <option value="2006-2007">2006-2007</option>
+         
+          </select>
+            <div align="left">
+                    Accounting Unit Code 
+                    <font color="#ff2121">*</font>
+                  </div>
+                  
+                <select size="1" name="cmbAcc_UnitCode2" id="cmbAcc_UnitCode2" tabindex="1">
+                     <!-- <option value="0"> Select Account Unit </option>-->
+             
+                      </select>
+             <input type="button" name="Go" id="Go" value="Generate Unitwise Report" onclick="loadsupp2()"/>
+          </div>      
+           
+          </td>
+        </tr>
+         <tr>
+          <td align="left">Select Specific Account Head Code:<font color="#ff2121">*</font></td>
+          <td align="left">
+                            <input type=radio id="SpecificAHC" name="SpecificAHC" value="All"  onclick="AccHead(this.value)"> All
+                            <input type=radio id="SpecificAHC" name="SpecificAHC" value="Specific" onclick="AccHead(this.value)">Specific
+                            <div id="acchead" name="acchead" style="display:none">
+                            <input type="text" name="txtAcc_HeadCode" id="txtAcc_HeadCode" size=10 maxlength="8" onkeypress="return numbersonly(event)">
+                            <img src="../../../../../../images/c-lovi.gif" alt="AccountHeadList" onclick="AccHeadpopup();"  height="24" width="24"></img>
+                            </div>
+                            
+          </td>
+          </tr>
+        <tr>
+                        <td align="left">
+                            Report Option:
+                        </td>
+                        <td colspan="3" align="left">
+                            <input type=radio name=txtoption id=txtoption value="PDF" checked>PDF
+                            <input type=radio name=txtoption id=txtoption value="EXCEL">Excel
+                            <input type=radio name=txtoption id=txtoption value="HTML">HTML
+                        </td>
+                        
+                    </tr>
+</table>
+          </div>
+          <table align="center"  cellspacing="3" cellpadding="2" border="1" width="100%" >
+  
+      <tr class="tdH">
+      <td>
+          <div align="center">
+          <input type="button"  value="Submit" id="sum" name="sum" onclick="submit_form()" >
+          <input type="button" id="cmdcancel" name="cancel" value="Exit" onclick="closeWindow()">
+       </div>
+      </td>
+      </tr>
+      
+      </table>
+      </form>
+  </body>
+</html>
